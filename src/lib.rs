@@ -22,13 +22,15 @@ struct TagInfo {
     open_close: bool,
 }
 
-type TagId = u64;
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+struct TagId(u64);
 
 struct TagsUsage {
     tags: Vec<TagInfo>,
     tag_lookup: HashMap<TagInfo, TagId>,
     parentheses: BitVec,
-    usage: Vec<TagId>,
+    // stores tag ids, but as u64 for convenience of later construction
+    usage: Vec<u64>,
 }
 
 impl TagsUsage {
@@ -45,7 +47,7 @@ impl TagsUsage {
         if let Some(&idx) = self.tag_lookup.get(&tag) {
             return idx;
         }
-        let idx = self.tags.len() as u64;
+        let idx = TagId(self.tags.len() as u64);
         self.tags.push(tag.clone());
         self.tag_lookup.insert(tag, idx);
         idx
@@ -62,7 +64,7 @@ impl TagsUsage {
             open_close: true,
         };
         let tag_id = self.register_tag(tag_info);
-        self.usage.push(tag_id)
+        self.usage.push(tag_id.0)
     }
 
     fn close(&mut self, tag_type: TagType) {
@@ -72,7 +74,7 @@ impl TagsUsage {
             open_close: false,
         };
         let tag_id = self.register_tag(tag_info);
-        self.usage.push(tag_id)
+        self.usage.push(tag_id.0)
     }
 }
 
@@ -104,20 +106,48 @@ impl Tags {
         })
     }
 
-    fn tag_id(&self, tag_info: &TagInfo) -> Option<TagId> {
+    /// Given a tag info, return the tag id if it exists
+    fn lookup_tag_id(&self, tag_info: &TagInfo) -> Option<TagId> {
         self.tag_lookup.get(tag_info).copied()
     }
 
-    fn tag_info(&self, tag_id: TagId) -> Option<&TagInfo> {
-        self.tags.get(tag_id as usize)
+    /// Given a tag id, return the tag info.
+    ///
+    /// Should always succeed given a valid tag info.
+    fn lookup_tag_info(&self, tag_id: TagId) -> &TagInfo {
+        &self.tags[tag_id.0 as usize]
     }
 
-    fn rank(&self, i: usize, tag_id: TagId) -> Option<usize> {
-        self.usage.rank_u64(i, tag_id)
+    fn get(&self, i: usize) -> Option<u64> {
+        self.parentheses.get(i)
     }
 
-    fn select(&self, rank: usize, tag_id: TagId) -> Option<usize> {
-        self.usage.select_u64(rank, tag_id)
+    fn rank_open(&self, i: usize) -> usize {
+        self.parentheses.rank1(i)
+    }
+
+    fn rank_close(&self, i: usize) -> usize {
+        self.parentheses.rank0(i)
+    }
+
+    fn select_open(&self, rank: usize) -> usize {
+        self.parentheses.select1(rank)
+    }
+
+    fn select_close(&self, rank: usize) -> usize {
+        self.parentheses.select0(rank)
+    }
+
+    fn get_tag(&self, i: usize) -> Option<TagId> {
+        self.usage.get_u64(i).map(TagId)
+    }
+
+    fn rank_tag(&self, i: usize, tag_id: TagId) -> Option<usize> {
+        self.usage.rank_u64(i, tag_id.0)
+    }
+
+    fn select_tag(&self, rank: usize, tag_id: TagId) -> Option<usize> {
+        self.usage.select_u64(rank, tag_id.0)
     }
 }
 
