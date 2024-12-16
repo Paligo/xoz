@@ -1,0 +1,8 @@
+[package]
+name = "xoz"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ahash = "0.8.11"
+vers-vecs = { git = "https://github.com/faassen/vers.git", branch = "dev_bp" }
