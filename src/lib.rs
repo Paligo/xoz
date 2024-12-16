@@ -1,5 +1,5 @@
 use ahash::{HashMap, HashMapExt};
-use vers_vecs::{BitVec, RsVec, WaveletMatrix};
+use vers_vecs::{trees::bp::BpTree, BitVec, RsVec, WaveletMatrix};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 enum TagType {
@@ -81,7 +81,7 @@ impl TagsUsage {
 struct Tags {
     tags: Vec<TagInfo>,
     tag_lookup: HashMap<TagInfo, TagId>,
-    parentheses: RsVec,
+    tree: BpTree,
     usage: WaveletMatrix,
 }
 
@@ -101,7 +101,7 @@ impl Tags {
         Ok(Self {
             tags: tags_usage.tags,
             tag_lookup: tags_usage.tag_lookup,
-            parentheses: RsVec::from_bit_vec(tags_usage.parentheses),
+            tree: BpTree::from_bit_vector(tags_usage.parentheses),
             usage,
         })
     }
@@ -118,25 +118,29 @@ impl Tags {
         &self.tags[tag_id.0 as usize]
     }
 
-    fn get(&self, i: usize) -> Option<u64> {
-        self.parentheses.get(i)
+    fn tree(&self) -> &BpTree {
+        &self.tree
     }
 
-    fn rank_open(&self, i: usize) -> usize {
-        self.parentheses.rank1(i)
-    }
+    // fn get(&self, i: usize) -> Option<u64> {
+    //     self.parentheses.get(i)
+    // }
 
-    fn rank_close(&self, i: usize) -> usize {
-        self.parentheses.rank0(i)
-    }
+    // fn rank_open(&self, i: usize) -> usize {
+    //     self.parentheses.rank1(i)
+    // }
 
-    fn select_open(&self, rank: usize) -> usize {
-        self.parentheses.select1(rank)
-    }
+    // fn rank_close(&self, i: usize) -> usize {
+    //     self.parentheses.rank0(i)
+    // }
 
-    fn select_close(&self, rank: usize) -> usize {
-        self.parentheses.select0(rank)
-    }
+    // fn select_open(&self, rank: usize) -> usize {
+    //     self.parentheses.select1(rank)
+    // }
+
+    // fn select_close(&self, rank: usize) -> usize {
+    //     self.parentheses.select0(rank)
+    // }
 
     fn get_tag(&self, i: usize) -> Option<TagId> {
         self.usage.get_u64(i).map(TagId)
