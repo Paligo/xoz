@@ -1,10 +1,10 @@
-use crate::data::Structure;
+use crate::data::{Structure, Usage};
 
-pub struct Xoz {
-    structure: Structure,
+pub struct Xoz<U: Usage> {
+    structure: Structure<U>,
 }
 
-impl Xoz {
+impl<U: Usage> Xoz<U> {
     // document_element
 
     // top_element
@@ -170,4 +170,7 @@ impl Xoz {
     // shallow_equal_ignore_attributes
 
     // and parsing and serialization
+
+    // need to support new facilities:
+    // jump to tag (or something like that)
 }

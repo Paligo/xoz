@@ -82,22 +82,50 @@ enum Error {
     TooManyBitsPerElement,
 }
 
-pub(crate) struct Structure {
+pub(crate) trait Usage {
+    fn get_tag(&self, i: usize) -> Option<TagId>;
+
+    fn rank_tag(&self, i: usize, tag_id: TagId) -> Option<usize>;
+
+    fn select_tag(&self, rank: usize, tag_id: TagId) -> Option<usize>;
+}
+
+pub(crate) struct Structure<U: Usage> {
     tags: Vec<TagInfo>,
     tag_lookup: HashMap<TagInfo, TagId>,
     tree: BpTree,
-    usage: WaveletMatrix,
+    usage: U,
 }
 
-impl Structure {
-    pub(crate) fn new(tags_usage: TagsUsage) -> Result<Self, Error> {
-        let usage = BitVec::pack_sequence_u64(&tags_usage.usage, tags_usage.bits_per_element());
-        // fallible conversion of usize to u16
-        let bits_per_element: u16 = tags_usage
-            .bits_per_element()
-            .try_into()
-            .map_err(|_| Error::TooManyBitsPerElement)?;
-        let usage = WaveletMatrix::from_bit_vec(&usage, bits_per_element);
+impl Usage for WaveletMatrix {
+    fn get_tag(&self, i: usize) -> Option<TagId> {
+        self.get_u64(i).map(TagId)
+    }
+
+    fn rank_tag(&self, i: usize, tag_id: TagId) -> Option<usize> {
+        self.rank_u64(i, tag_id.0)
+    }
+
+    fn select_tag(&self, rank: usize, tag_id: TagId) -> Option<usize> {
+        self.select_u64(rank, tag_id.0)
+    }
+}
+
+fn make_wavelet_matrix_usage(tags_usage: &TagsUsage) -> Result<WaveletMatrix, Error> {
+    let usage = BitVec::pack_sequence_u64(&tags_usage.usage, tags_usage.bits_per_element());
+    let bits_per_element: u16 = tags_usage
+        .bits_per_element()
+        .try_into()
+        .map_err(|_| Error::TooManyBitsPerElement)?;
+    Ok(WaveletMatrix::from_bit_vec(&usage, bits_per_element))
+}
+
+impl<U: Usage> Structure<U> {
+    pub(crate) fn new(
+        tags_usage: TagsUsage,
+        make_usage: impl Fn(&TagsUsage) -> Result<U, Error>,
+    ) -> Result<Self, Error> {
+        let usage = make_usage(&tags_usage)?;
         Ok(Self {
             tags: tags_usage.tags,
             tag_lookup: tags_usage.tag_lookup,
@@ -143,15 +171,15 @@ impl Structure {
     // }
 
     pub(crate) fn get_tag(&self, i: usize) -> Option<TagId> {
-        self.usage.get_u64(i).map(TagId)
+        self.usage.get_tag(i)
     }
 
     pub(crate) fn rank_tag(&self, i: usize, tag_id: TagId) -> Option<usize> {
-        self.usage.rank_u64(i, tag_id.0)
+        self.usage.rank_tag(i, tag_id)
     }
 
     pub(crate) fn select_tag(&self, rank: usize, tag_id: TagId) -> Option<usize> {
-        self.usage.select_u64(rank, tag_id.0)
+        self.usage.select_tag(rank, tag_id)
     }
 }
 
