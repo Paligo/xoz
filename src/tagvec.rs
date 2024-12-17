@@ -23,8 +23,7 @@ pub(crate) trait TagVec {
     fn select_tag(&self, rank: usize, tag_id: TagId) -> Option<usize>;
 }
 
-// A wavelet matrix implementation.
-
+// A wavelet matrix implementation, based on Vers' wavelet matrix
 impl TagVec for WaveletMatrix {
     fn get_tag(&self, i: usize) -> Option<TagId> {
         self.get_u64(i).map(TagId::new)
@@ -56,6 +55,7 @@ pub(crate) fn make_wavelet_matrix_usage(
 }
 
 // a sarray-based implementation
+// This uses sucds's SArray and CompactVector
 struct SArrayMatrix {
     tags: CompactVector,
     sarrays: Vec<SArray>,
