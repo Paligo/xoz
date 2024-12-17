@@ -1,6 +1,8 @@
 use ahash::{HashMap, HashMapExt};
 use vers_vecs::{trees::bp::BpTree, BitVec, RsVec, WaveletMatrix};
 
+use crate::error::Error;
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 enum TagType {
     Root,
@@ -23,9 +25,19 @@ struct TagInfo {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-struct TagId(u64);
+pub(crate) struct TagId(u64);
 
-struct TagsUsage {
+impl TagId {
+    pub(crate) fn new(id: u64) -> Self {
+        Self(id)
+    }
+
+    pub(crate) fn id(&self) -> u64 {
+        self.0
+    }
+}
+
+pub(crate) struct TagsUsage {
     tags: Vec<TagInfo>,
     tag_lookup: HashMap<TagInfo, TagId>,
     parentheses: BitVec,
@@ -53,8 +65,12 @@ impl TagsUsage {
         idx
     }
 
-    fn bits_per_element(&self) -> usize {
+    pub(crate) fn bits_per_element(&self) -> usize {
         self.tags.len().next_power_of_two().trailing_zeros() as usize
+    }
+
+    pub(crate) fn usage(&self) -> &[u64] {
+        &self.usage
     }
 
     fn open(&mut self, tag_type: TagType) {
@@ -76,10 +92,6 @@ impl TagsUsage {
         let tag_id = self.register_tag(tag_info);
         self.usage.push(tag_id.0)
     }
-}
-
-enum Error {
-    TooManyBitsPerElement,
 }
 
 pub(crate) trait Usage {
