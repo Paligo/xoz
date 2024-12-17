@@ -5,4 +5,5 @@ edition = "2021"
 
 [dependencies]
 ahash = "0.8.11"
+sucds = "0.8.1"
 vers-vecs = { git = "https://github.com/faassen/vers.git", branch = "dev_bp" }
