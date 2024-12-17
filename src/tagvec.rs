@@ -75,6 +75,7 @@ mod tests {
         let wm = make_wavelet_matrix_usage(&[0, 1, 1, 3, 2, 3]).unwrap();
         assert_eq!(wm.select_tag(0, 0, TagId::new(0)), Some(0));
         assert_eq!(wm.select_tag(0, 1, TagId::new(0)), None);
+        assert_eq!(wm.select_tag(1, 0, TagId::new(0)), None);
         assert_eq!(wm.select_tag(0, 0, TagId::new(1)), Some(1));
         assert_eq!(wm.select_tag(0, 1, TagId::new(1)), Some(2));
         assert_eq!(wm.select_tag(0, 0, TagId::new(3)), Some(3));
