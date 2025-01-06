@@ -1,5 +1,4 @@
 use crate::data::{Structure, Usage};
-
 pub struct Xoz<U: Usage> {
     structure: Structure<U>,
 }
