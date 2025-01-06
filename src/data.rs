@@ -4,8 +4,8 @@ use vers_vecs::{trees::bp::BpTree, BitVec, RsVec, WaveletMatrix};
 use crate::error::Error;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-enum TagType {
-    Root,
+pub(crate) enum TagType {
+    Document,
     Namespaces,
     Attributes,
     Text,
@@ -22,11 +22,12 @@ enum TagType {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct TagInfo {
+pub(crate) struct TagInfo {
     tag_type: TagType,
     // this would seem to be redundant as we already store it in the
     // balanced parentheses structure, but we want to be able to
     // look quickly for specifically opening tags, so we need it
+    // open is true
     open_close: bool,
 }
 
@@ -52,7 +53,7 @@ pub(crate) struct TagsUsage {
 }
 
 impl TagsUsage {
-    fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self {
             tags: Vec::new(),
             tag_lookup: HashMap::new(),
@@ -79,7 +80,7 @@ impl TagsUsage {
         &self.usage
     }
 
-    fn open(&mut self, tag_type: TagType) {
+    pub(crate) fn open(&mut self, tag_type: TagType) {
         self.parentheses.append(true);
         let tag_info = TagInfo {
             tag_type,
@@ -89,7 +90,7 @@ impl TagsUsage {
         self.usage.push(tag_id.0)
     }
 
-    fn close(&mut self, tag_type: TagType) {
+    pub(crate) fn close(&mut self, tag_type: TagType) {
         self.parentheses.append(false);
         let tag_info = TagInfo {
             tag_type,

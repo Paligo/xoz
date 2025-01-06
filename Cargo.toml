@@ -8,3 +8,4 @@ ahash = "0.8.11"
 fm-index = "0.2.0"
 sucds = "0.8.1"
 vers-vecs = { path = "../vers" }
+xot = "0.28.0"
