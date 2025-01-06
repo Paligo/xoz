@@ -1,5 +1,6 @@
-use crate::tagvec::SArrayMatrix;
+use crate::{data::Structure, tagvec::SArrayMatrix, text::TextUsage};
 
 pub struct Document {
-    structure: SArrayMatrix,
+    pub(crate) structure: Structure<SArrayMatrix>,
+    pub(crate) text_usage: TextUsage,
 }

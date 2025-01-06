@@ -42,7 +42,7 @@ fn bits_per_element(amount: usize) -> usize {
     amount.next_power_of_two().trailing_zeros() as usize
 }
 
-pub(crate) fn make_wavelet_matrix_usage(
+pub(crate) fn make_wavelet_matrix_tag_vec(
     tags_usage: &[u64],
     tag_amount: usize,
 ) -> Result<WaveletMatrix, Error> {
@@ -118,7 +118,7 @@ mod tests {
 
     #[test]
     fn test_wm_get_tag() {
-        let wm = make_wavelet_matrix_usage(&[0, 1, 2, 3], 4).unwrap();
+        let wm = make_wavelet_matrix_tag_vec(&[0, 1, 2, 3], 4).unwrap();
         assert_eq!(wm.get_tag(0), Some(TagId::new(0)));
         assert_eq!(wm.get_tag(1), Some(TagId::new(1)));
         assert_eq!(wm.get_tag(2), Some(TagId::new(2)));
@@ -127,7 +127,7 @@ mod tests {
 
     #[test]
     fn test_wm_rank_tag() {
-        let wm = make_wavelet_matrix_usage(&[0, 1, 1, 3, 2, 3], 4).unwrap();
+        let wm = make_wavelet_matrix_tag_vec(&[0, 1, 1, 3, 2, 3], 4).unwrap();
         assert_eq!(wm.rank_tag(0, TagId::new(0)), Some(0));
         assert_eq!(wm.rank_tag(1, TagId::new(0)), Some(1));
         assert_eq!(wm.rank_tag(2, TagId::new(1)), Some(1));
@@ -138,7 +138,7 @@ mod tests {
 
     #[test]
     fn test_wm_select_tag() {
-        let wm = make_wavelet_matrix_usage(&[0, 1, 1, 3, 2, 3], 4).unwrap();
+        let wm = make_wavelet_matrix_tag_vec(&[0, 1, 1, 3, 2, 3], 4).unwrap();
         assert_eq!(wm.select_tag(0, TagId::new(0)), Some(0));
         assert_eq!(wm.select_tag(0, TagId::new(1)), Some(1));
         assert_eq!(wm.select_tag(1, TagId::new(1)), Some(2));

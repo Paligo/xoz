@@ -85,6 +85,10 @@ impl TagsBuilder {
         self.tags.len().next_power_of_two().trailing_zeros() as usize
     }
 
+    pub(crate) fn tags_amount(&self) -> usize {
+        self.tags.len()
+    }
+
     pub(crate) fn usage(&self) -> &[u64] {
         &self.usage
     }
@@ -118,21 +122,12 @@ pub(crate) struct Structure<T: TagVec> {
     tag_vec: T,
 }
 
-fn make_wavelet_matrix_usage(tags_builder: &TagsBuilder) -> Result<WaveletMatrix, Error> {
-    let usage = BitVec::pack_sequence_u64(&tags_builder.usage, tags_builder.bits_per_element());
-    let bits_per_element: u16 = tags_builder
-        .bits_per_element()
-        .try_into()
-        .map_err(|_| Error::TooManyBitsPerElement)?;
-    Ok(WaveletMatrix::from_bit_vec(&usage, bits_per_element))
-}
-
 impl<T: TagVec> Structure<T> {
     pub(crate) fn new(
         tags_builder: TagsBuilder,
-        make_usage: impl Fn(&TagsBuilder) -> Result<T, Error>,
+        make_tag_vec: impl Fn(&TagsBuilder) -> Result<T, Error>,
     ) -> Result<Self, Error> {
-        let tag_vec = make_usage(&tags_builder)?;
+        let tag_vec = make_tag_vec(&tags_builder)?;
         Ok(Self {
             tags: tags_builder.tags,
             tag_lookup: tags_builder.tag_lookup,

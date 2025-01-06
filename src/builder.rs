@@ -1,10 +1,13 @@
 use crate::{
-    data::{TagType, TagsBuilder},
+    data::{Structure, TagType, TagsBuilder},
+    document::Document,
+    error::Error,
+    tagvec::SArrayMatrix,
     text::TextBuilder,
 };
 
 /// Given a document node, construct a new Xoz document.
-fn from_xot_node(xot: &xot::Xot, node: xot::Node) {
+fn from_xot_node(xot: &xot::Xot, node: xot::Node) -> Result<Document, Error> {
     assert!(xot.is_document(node));
     let mut tags_builder = TagsBuilder::new();
     let mut text_builder = TextBuilder::new();
@@ -86,6 +89,14 @@ fn from_xot_node(xot: &xot::Xot, node: xot::Node) {
             }
         }
     }
+    let structure = Structure::new(tags_builder, |tags_builder| {
+        SArrayMatrix::new(tags_builder.usage(), tags_builder.tags_amount())
+    })?;
+    let text_usage = text_builder.build();
+    Ok(Document {
+        structure,
+        text_usage,
+    })
 }
 
 fn element_tag_type(element: &xot::Element, xot: &xot::Xot) -> TagType {
