@@ -1,9 +1,9 @@
-use crate::data::{TagType, TagsUsage};
+use crate::data::{TagType, TagsBuilder};
 
 /// Given a document node, construct a new Xoz document.
 fn from_xot_node(xot: &xot::Xot, node: xot::Node) {
     assert!(xot.is_document(node));
-    let mut usage = TagsUsage::new();
+    let mut usage = TagsBuilder::new();
     for edge in xot.all_traverse(node) {
         match edge {
             xot::NodeEdge::Start(node) => {

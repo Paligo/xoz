@@ -44,7 +44,7 @@ impl TagId {
     }
 }
 
-pub(crate) struct TagsUsage {
+pub(crate) struct TagsBuilder {
     tags: Vec<TagInfo>,
     tag_lookup: HashMap<TagInfo, TagId>,
     parentheses: BitVec,
@@ -52,7 +52,7 @@ pub(crate) struct TagsUsage {
     usage: Vec<u64>,
 }
 
-impl TagsUsage {
+impl TagsBuilder {
     pub(crate) fn new() -> Self {
         Self {
             tags: Vec::new(),
@@ -130,9 +130,9 @@ impl Usage for WaveletMatrix {
     }
 }
 
-fn make_wavelet_matrix_usage(tags_usage: &TagsUsage) -> Result<WaveletMatrix, Error> {
-    let usage = BitVec::pack_sequence_u64(&tags_usage.usage, tags_usage.bits_per_element());
-    let bits_per_element: u16 = tags_usage
+fn make_wavelet_matrix_usage(tags_builder: &TagsBuilder) -> Result<WaveletMatrix, Error> {
+    let usage = BitVec::pack_sequence_u64(&tags_builder.usage, tags_builder.bits_per_element());
+    let bits_per_element: u16 = tags_builder
         .bits_per_element()
         .try_into()
         .map_err(|_| Error::TooManyBitsPerElement)?;
@@ -141,14 +141,14 @@ fn make_wavelet_matrix_usage(tags_usage: &TagsUsage) -> Result<WaveletMatrix, Er
 
 impl<U: Usage> Structure<U> {
     pub(crate) fn new(
-        tags_usage: TagsUsage,
-        make_usage: impl Fn(&TagsUsage) -> Result<U, Error>,
+        tags_builder: TagsBuilder,
+        make_usage: impl Fn(&TagsBuilder) -> Result<U, Error>,
     ) -> Result<Self, Error> {
-        let usage = make_usage(&tags_usage)?;
+        let usage = make_usage(&tags_builder)?;
         Ok(Self {
-            tags: tags_usage.tags,
-            tag_lookup: tags_usage.tag_lookup,
-            tree: BpTree::from_bit_vector(tags_usage.parentheses),
+            tags: tags_builder.tags,
+            tag_lookup: tags_builder.tag_lookup,
+            tree: BpTree::from_bit_vector(tags_builder.parentheses),
             usage,
         })
     }
