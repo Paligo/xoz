@@ -56,7 +56,7 @@ pub(crate) fn make_wavelet_matrix_usage(
 
 // a sarray-based implementation
 // This uses sucds's SArray and CompactVector
-struct SArrayMatrix {
+pub(crate) struct SArrayMatrix {
     tags: CompactVector,
     sarrays: Vec<SArray>,
 }

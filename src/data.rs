@@ -1,24 +1,31 @@
 use ahash::{HashMap, HashMapExt};
 use vers_vecs::{trees::bp::BpTree, BitVec, RsVec, WaveletMatrix};
 
-use crate::error::Error;
+use crate::{error::Error, tagvec::TagVec};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub(crate) enum TagType {
+    // contains namespaces, elements, other nodes
     Document,
+    // holds namespace nodes
     Namespaces,
+    // holds attribute nodes
     Attributes,
+    // under namespaces
+    Namespace { prefix: String, uri: String },
+    // under attributes. contains content node
+    Attribute { namespace: String, name: String },
+    // under document or element
+    Element { namespace: String, name: String },
+    // under document or element. contains content
     Text,
     // since there are going to be a limited amount of prefix
     // declarations, we directly encode them as a tag type
-    Namespace { prefix: String, uri: String },
-    NamespaceURI(String),
-    AttributeName { namespace: String, name: String },
-    AttributeValue,
     Comment,
     // TODO: this might have name information too
     ProcessingInstruction,
-    Element { namespace: String, name: String },
+    // text content node
+    Content,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -48,6 +55,7 @@ pub(crate) struct TagsBuilder {
     tags: Vec<TagInfo>,
     tag_lookup: HashMap<TagInfo, TagId>,
     parentheses: BitVec,
+    text_open_parentheses: BitVec,
     // stores tag ids, but as u64 for convenience of later construction
     usage: Vec<u64>,
 }
@@ -58,6 +66,7 @@ impl TagsBuilder {
             tags: Vec::new(),
             tag_lookup: HashMap::new(),
             parentheses: BitVec::new(),
+            text_open_parentheses: BitVec::new(),
             usage: Vec::new(),
         }
     }
@@ -86,6 +95,7 @@ impl TagsBuilder {
             tag_type,
             open_close: true,
         };
+
         let tag_id = self.register_tag(tag_info);
         self.usage.push(tag_id.0)
     }
@@ -101,33 +111,11 @@ impl TagsBuilder {
     }
 }
 
-pub(crate) trait Usage {
-    fn get_tag(&self, i: usize) -> Option<TagId>;
-
-    fn rank_tag(&self, i: usize, tag_id: TagId) -> Option<usize>;
-
-    fn select_tag(&self, rank: usize, tag_id: TagId) -> Option<usize>;
-}
-
-pub(crate) struct Structure<U: Usage> {
+pub(crate) struct Structure<T: TagVec> {
     tags: Vec<TagInfo>,
     tag_lookup: HashMap<TagInfo, TagId>,
     tree: BpTree,
-    usage: U,
-}
-
-impl Usage for WaveletMatrix {
-    fn get_tag(&self, i: usize) -> Option<TagId> {
-        self.get_u64(i).map(TagId)
-    }
-
-    fn rank_tag(&self, i: usize, tag_id: TagId) -> Option<usize> {
-        self.rank_u64(i, tag_id.0)
-    }
-
-    fn select_tag(&self, rank: usize, tag_id: TagId) -> Option<usize> {
-        self.select_u64(rank, tag_id.0)
-    }
+    tag_vec: T,
 }
 
 fn make_wavelet_matrix_usage(tags_builder: &TagsBuilder) -> Result<WaveletMatrix, Error> {
@@ -139,17 +127,17 @@ fn make_wavelet_matrix_usage(tags_builder: &TagsBuilder) -> Result<WaveletMatrix
     Ok(WaveletMatrix::from_bit_vec(&usage, bits_per_element))
 }
 
-impl<U: Usage> Structure<U> {
+impl<T: TagVec> Structure<T> {
     pub(crate) fn new(
         tags_builder: TagsBuilder,
-        make_usage: impl Fn(&TagsBuilder) -> Result<U, Error>,
+        make_usage: impl Fn(&TagsBuilder) -> Result<T, Error>,
     ) -> Result<Self, Error> {
-        let usage = make_usage(&tags_builder)?;
+        let tag_vec = make_usage(&tags_builder)?;
         Ok(Self {
             tags: tags_builder.tags,
             tag_lookup: tags_builder.tag_lookup,
             tree: BpTree::from_bit_vector(tags_builder.parentheses),
-            usage,
+            tag_vec,
         })
     }
 
@@ -190,15 +178,15 @@ impl<U: Usage> Structure<U> {
     // }
 
     pub(crate) fn get_tag(&self, i: usize) -> Option<TagId> {
-        self.usage.get_tag(i)
+        self.tag_vec.get_tag(i)
     }
 
     pub(crate) fn rank_tag(&self, i: usize, tag_id: TagId) -> Option<usize> {
-        self.usage.rank_tag(i, tag_id)
+        self.tag_vec.rank_tag(i, tag_id)
     }
 
     pub(crate) fn select_tag(&self, rank: usize, tag_id: TagId) -> Option<usize> {
-        self.usage.select_tag(rank, tag_id)
+        self.tag_vec.select_tag(rank, tag_id)
     }
 }
 

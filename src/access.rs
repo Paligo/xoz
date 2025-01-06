@@ -1,175 +1,170 @@
-use crate::data::{Structure, Usage};
-pub struct Xoz<U: Usage> {
-    structure: Structure<U>,
-}
+// impl<U: TagUsage> Xoz<U> {
+// document_element
 
-impl<U: Usage> Xoz<U> {
-    // document_element
+// top_element
 
-    // top_element
+// root
 
-    // root
+// parent
 
-    // parent
+// attributes
 
-    // attributes
+// get_attribute
 
-    // get_attribute
+// namespaces
 
-    // namespaces
+// get_namespace
 
-    // get_namespace
+// attribute_nodes
 
-    // attribute_nodes
+// first_child
 
-    // first_child
+// last_child
 
-    // last_child
+// next_sibling
 
-    // next_sibling
+// previous_sibling
 
-    // previous_sibling
+// ancestors
 
-    // ancestors
+// children
 
-    // children
+// child_index
 
-    // child_index
+// reverse_children
 
-    // reverse_children
+// descendants
 
-    // descendants
+// all_descendants
 
-    // all_descendants
+// following_siblings
 
-    // following_siblings
+// preceding_siblings
 
-    // preceding_siblings
+// following
 
-    // following
+// preceding
 
-    // preceding
+// traverse
 
-    // traverse
+// all_traverse
 
-    // all_traverse
+// reverse_traverse
 
-    // reverse_traverse
+// level_order
 
-    // level_order
+// axis
 
-    // axis
+// name
 
-    // name
+// name_ns
 
-    // name_ns
+// namespace
 
-    // namespace
+// prefix
 
-    // prefix
+// no_namespace
 
-    // no_namespace
+// empty_prefix
 
-    // empty_prefix
+// xml_prefix
 
-    // xml_prefix
+// xml_namespace
 
-    // xml_namespace
+// xml_id_name
 
-    // xml_id_name
+// name_ref
 
-    // name_ref
+// name_ns_str
 
-    // name_ns_str
+// local_name_str
 
-    // local_name_str
+// uri_str
 
-    // uri_str
+// namespace_str
 
-    // namespace_str
+// prefix_str
 
-    // prefix_str
+// namespace_for_name
 
-    // namespace_for_name
+// full_name
 
-    // full_name
+// node_name
 
-    // node_name
+// node_name_ref
 
-    // node_name_ref
+// is_prefix_defined
 
-    // is_prefix_defined
+// inherited_prefixes
 
-    // inherited_prefixes
+// prefix_for_namespace
 
-    // prefix_for_namespace
+// namespace_for_prefix
 
-    // namespace_for_prefix
+// unresolved_namespaces
 
-    // unresolved_namespaces
+// namespaces_in_scope
 
-    // namespaces_in_scope
+// value
 
-    // value
+// value_type
 
-    // value_type
+// has_document_parent
 
-    // has_document_parent
+// is_document_element
 
-    // is_document_element
+// is_document
 
-    // is_document
+// is_element
 
-    // is_element
+// is_text
 
-    // is_text
+// is_comment
 
-    // is_comment
+// is_processing_instruction
 
-    // is_processing_instruction
+// is_namespace_node
 
-    // is_namespace_node
+// is_attribute_node
 
-    // is_attribute_node
+// text (maybe)
 
-    // text (maybe)
+// text_str
 
-    // text_str
+// get_element_name
 
-    // get_element_name
+// element
 
-    // element
+// text_content
 
-    // text_content
+// text_content_str
 
-    // text_content_str
+// comment
 
-    // comment
+// comment_str
 
-    // comment_str
+// processing_instruction
 
-    // processing_instruction
+// namespace_node
 
-    // namespace_node
+// attribute_node
 
-    // attribute_node
+// string_value
 
-    // string_value
+// deep_equal
 
-    // deep_equal
+// deep_equal_children
 
-    // deep_equal_children
+// deep_equal_xpath
 
-    // deep_equal_xpath
+// advanced_deep_equal
 
-    // advanced_deep_equal
+// shallow_equal
 
-    // shallow_equal
+// shallow_equal_ignore_attributes
 
-    // shallow_equal_ignore_attributes
+// and parsing and serialization
 
-    // and parsing and serialization
-
-    // need to support new facilities:
-    // jump to tag (or something like that)
-}
+// need to support new facilities:
+// jump to tag (or something like that)
+// }

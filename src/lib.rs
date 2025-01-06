@@ -1,7 +1,8 @@
 mod access;
+mod builder;
 mod data;
+mod document;
 mod error;
-mod parser;
 mod serializer;
 mod tagvec;
 mod text;
