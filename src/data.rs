@@ -9,6 +9,12 @@ enum TagType {
     Namespaces,
     Attributes,
     Text,
+    // since there are going to be a limited amount of prefix
+    // declarations, we directly encode them as a tag type
+    Namespace { prefix: String, uri: String },
+    NamespaceURI(String),
+    AttributeName { namespace: String, name: String },
+    AttributeValue,
     Comment,
     // TODO: this might have name information too
     ProcessingInstruction,
