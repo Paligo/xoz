@@ -4,3 +4,4 @@ mod error;
 mod parser;
 mod serializer;
 mod tagvec;
+mod text;
