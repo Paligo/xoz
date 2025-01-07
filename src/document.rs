@@ -56,6 +56,19 @@ impl Document {
         unreachable!()
     }
 
+    pub fn parent(&self, node: Node) -> Option<Node> {
+        // two strategies are possible: skipping the attributes and namespaces nodes
+        // if found, or checking whether we are an attribute or namespace node before
+        // we even try. I've chosen the first strategy.
+        let parent = self.primitive_parent(node)?;
+        match self.node_value(parent) {
+            // if the parent is an attribute or namespace node, we skip it
+            Some(TagType::Attributes) | Some(TagType::Namespaces) => self.primitive_parent(parent),
+            // if it's not, then it's a parent
+            _ => Some(parent),
+        }
+    }
+
     pub fn first_child(&self, node: Node) -> Option<Node> {
         let node = self.primitive_first_child(node)?;
         match self.node_value(node) {
@@ -78,10 +91,6 @@ impl Document {
         }
     }
 
-    pub(crate) fn primitive_first_child(&self, node: Node) -> Option<Node> {
-        self.structure.tree().first_child(node.0).map(Node)
-    }
-
     pub fn next_sibling(&self, node: Node) -> Option<Node> {
         self.structure.tree().next_sibling(node.0).map(Node)
     }
@@ -96,10 +105,6 @@ impl Document {
             // if it's not a special node, then it's definitely a previous sibling
             _ => Some(prev),
         }
-    }
-
-    pub fn primitive_previous_sibling(&self, node: Node) -> Option<Node> {
-        self.structure.tree().previous_sibling(node.0).map(Node)
     }
 
     pub(crate) fn attributes_child(&self, node: Node) -> Option<Node> {
@@ -177,6 +182,20 @@ impl Document {
             node: self.first_child(node),
         }
     }
+
+    pub(crate) fn primitive_parent(&self, node: Node) -> Option<Node> {
+        self.structure.tree().parent(node.0).map(Node)
+    }
+
+    pub(crate) fn primitive_first_child(&self, node: Node) -> Option<Node> {
+        self.structure.tree().first_child(node.0).map(Node)
+    }
+
+    pub(crate) fn primitive_previous_sibling(&self, node: Node) -> Option<Node> {
+        self.structure.tree().previous_sibling(node.0).map(Node)
+    }
+
+    // next_sibling is itself already primitive in behavior
 
     pub(crate) fn primitive_children(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
         NextSiblingIter {

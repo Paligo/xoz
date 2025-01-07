@@ -87,3 +87,29 @@ fn test_previous_sibling_with_attributes() {
     assert_eq!(a, a_prev);
     assert_eq!(doc.previous_sibling(a), None);
 }
+
+#[test]
+fn test_element_parent() {
+    let doc = parse_document(r#"<doc><a/><b/></doc>"#).unwrap();
+    let doc_el = doc.document_element();
+    let a = doc.first_child(doc_el).unwrap();
+    let b = doc.next_sibling(a).unwrap();
+    assert_eq!(doc.parent(a), Some(doc_el));
+    assert_eq!(doc.parent(b), Some(doc_el));
+    assert_eq!(doc.parent(doc_el), Some(doc.root()));
+    assert_eq!(doc.parent(doc.root()), None);
+}
+
+#[test]
+fn test_attribute_parent() {
+    let doc = parse_document(r#"<doc a="A" b="B" />"#).unwrap();
+    let doc_el = doc.document_element();
+    let a = doc
+        .attribute_node(doc_el, &Name::name_without_namespace("a"))
+        .unwrap();
+    let b = doc
+        .attribute_node(doc_el, &Name::name_without_namespace("b"))
+        .unwrap();
+    assert_eq!(doc.parent(a), Some(doc_el));
+    assert_eq!(doc.parent(b), Some(doc_el));
+}
