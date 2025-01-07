@@ -45,7 +45,13 @@ pub(crate) struct TextUsage {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-struct TextId(usize);
+pub struct TextId(usize);
+
+impl TextId {
+    pub fn new(id: usize) -> Self {
+        Self(id)
+    }
+}
 
 impl TextUsage {
     pub(crate) fn text_id(&self, index: usize) -> TextId {

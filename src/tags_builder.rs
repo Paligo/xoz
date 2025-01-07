@@ -10,6 +10,10 @@ pub(crate) struct TagsBuilder {
     pub(crate) tags: Vec<TagInfo>,
     pub(crate) tag_lookup: HashMap<TagInfo, TagId>,
     pub(crate) parentheses: BitVec,
+    // store the opening parens of all text content, i.e. text nodes
+    // and attribute values. We store this separately even though there's
+    // some overlap with the tag table as it's more convenient to calculate text id
+    pub(crate) text_opening_parens: BitVec,
     // stores tag ids, but as u64 for convenience of later construction
     usage: Vec<u64>,
 }
@@ -20,6 +24,7 @@ impl TagsBuilder {
             tags: Vec::new(),
             tag_lookup: HashMap::new(),
             parentheses: BitVec::new(),
+            text_opening_parens: BitVec::new(),
             usage: Vec::new(),
         }
     }
@@ -48,8 +53,16 @@ impl TagsBuilder {
 
     pub(crate) fn open(&mut self, tag_type: TagType) {
         self.parentheses.append(true);
-        let tag_info = TagInfo::open(tag_type);
 
+        match tag_type {
+            TagType::Attribute { .. } | TagType::Text => {
+                self.text_opening_parens.append(true);
+            }
+            _ => {
+                self.text_opening_parens.append(false);
+            }
+        }
+        let tag_info = TagInfo::open(tag_type);
         let tag_id = self.register_tag(tag_info);
         self.usage.push(tag_id.id())
     }

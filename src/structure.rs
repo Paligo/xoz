@@ -1,16 +1,18 @@
 use ahash::HashMap;
-use vers_vecs::trees::bp::BpTree;
+use vers_vecs::{trees::bp::BpTree, RsVec};
 
 use crate::{
     error::Error,
     tag::TagInfo,
     tags_builder::TagsBuilder,
     tagvec::{TagId, TagVec},
+    text::TextId,
 };
 
 pub(crate) struct Structure<T: TagVec> {
     tags: Vec<TagInfo>,
     tag_lookup: HashMap<TagInfo, TagId>,
+    text_opening_parens: RsVec,
     tree: BpTree,
     tag_vec: T,
 }
@@ -24,6 +26,7 @@ impl<T: TagVec> Structure<T> {
         Ok(Self {
             tags: tags_builder.tags,
             tag_lookup: tags_builder.tag_lookup,
+            text_opening_parens: RsVec::from_bit_vec(tags_builder.text_opening_parens),
             tree: BpTree::from_bit_vector(tags_builder.parentheses),
             tag_vec,
         })
@@ -67,6 +70,12 @@ impl<T: TagVec> Structure<T> {
 
     pub(crate) fn get_tag(&self, i: usize) -> Option<&TagInfo> {
         self.tag_vec.get_tag(i).map(|id| self.lookup_tag_info(id))
+    }
+
+    // get text id based on location, given we already know this location has text
+    pub(crate) fn text_id(&self, i: usize) -> TextId {
+        let text_id = self.text_opening_parens.rank1(i);
+        TextId::new(text_id)
     }
 
     // TODO: for efficiency we want to skip lookup_tag_id, so we probably

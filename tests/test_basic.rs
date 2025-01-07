@@ -114,10 +114,10 @@ fn test_attribute_parent() {
     assert_eq!(doc.parent(b), Some(doc_el));
 }
 
-// #[test]
-// fn test_text() {
-//     let doc = parse_document(r#"<doc>text</doc>"#).unwrap();
-//     let doc_el = doc.document_element();
-//     let text = doc.first_child(doc_el).unwrap();
-//     assert_eq!(doc.text_str(text), Some("text"));
-// }
+#[test]
+fn test_text() {
+    let doc = parse_document(r#"<doc>text</doc>"#).unwrap();
+    let doc_el = doc.document_element();
+    let text = doc.first_child(doc_el).unwrap();
+    assert_eq!(doc.text_str(text), Some("text"));
+}

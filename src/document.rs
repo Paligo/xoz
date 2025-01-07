@@ -183,9 +183,14 @@ impl Document {
         }
     }
 
-    // pub fn text_str(&self, node: Node) -> Option<&str> {
-    //     self.text_usage.get_text(node.0)
-    // }
+    pub fn text_str(&self, node: Node) -> Option<&str> {
+        if matches!(self.node_value(node)?, TagType::Text) {
+            let text_id = self.structure.text_id(node.0);
+            Some(self.text_usage.text_value(text_id))
+        } else {
+            None
+        }
+    }
 
     pub(crate) fn primitive_parent(&self, node: Node) -> Option<Node> {
         self.structure.tree().parent(node.0).map(Node)
