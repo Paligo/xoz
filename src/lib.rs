@@ -5,6 +5,7 @@ mod document;
 mod error;
 mod serializer;
 mod tag;
+mod tags_builder;
 mod tagvec;
 mod text;
 

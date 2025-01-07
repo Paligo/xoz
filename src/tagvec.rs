@@ -4,8 +4,20 @@ use sucds::{
 };
 use vers_vecs::{BitVec, WaveletMatrix};
 
-use crate::{data::TagId, error::Error};
+use crate::error::Error;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct TagId(u64);
+
+impl TagId {
+    pub(crate) fn new(id: u64) -> Self {
+        Self(id)
+    }
+
+    pub(crate) fn id(&self) -> u64 {
+        self.0
+    }
+}
 pub(crate) trait TagVec {
     /// Returns the tag at position `i`.
     ///
