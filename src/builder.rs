@@ -46,10 +46,10 @@ fn from_xot_node(xot: &xot::Xot, node: xot::Node) -> Result<Document, Error> {
                         if !attributes.is_empty() {
                             tags_builder.open(TagType::Attributes);
                             for (name_id, value) in attributes.iter() {
-                                let (name, uri) = xot.name_ns_str(name_id);
+                                let (local_name, namespace) = xot.name_ns_str(name_id);
                                 let t = TagType::Attribute {
-                                    namespace: name.to_string(),
-                                    local_name: uri.to_string(),
+                                    namespace: namespace.to_string(),
+                                    local_name: local_name.to_string(),
                                 };
                                 tags_builder.open(t.clone());
                                 tags_builder.open(TagType::Content);

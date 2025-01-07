@@ -10,3 +10,4 @@ mod tagvec;
 mod text;
 
 pub use builder::parse_document;
+pub use document::Name;

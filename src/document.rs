@@ -17,7 +17,15 @@ pub struct Name<'a> {
     prefix: &'a str,
 }
 
-impl Name<'_> {
+impl<'a> Name<'a> {
+    pub fn name_without_namespace(name: &'a str) -> Self {
+        Self {
+            local_name: name,
+            namespace: "",
+            prefix: "",
+        }
+    }
+
     pub fn local_name(&self) -> &str {
         self.local_name
     }
@@ -54,6 +62,40 @@ impl Document {
 
     pub fn next_sibling(&self, node: Node) -> Option<Node> {
         self.structure.tree().next_sibling(node.0).map(Node)
+    }
+
+    pub(crate) fn attributes_child(&self, node: Node) -> Option<Node> {
+        let node = self.first_child(node);
+        if let Some(node) = node {
+            match self.node_value(node) {
+                // the first child is the attributes node
+                Some(TagType::Attributes) => Some(node),
+                // the first child is the namespaces node, check for attributes node
+                Some(TagType::Namespaces) => {
+                    let next = self.next_sibling(node);
+                    next.filter(|next| matches!(self.node_value(*next), Some(TagType::Attributes)))
+                }
+                _ => None,
+            }
+        } else {
+            None
+        }
+    }
+
+    pub fn attribute_node(&self, node: Node, name: &Name) -> Option<Node> {
+        let attributes = self.attributes_child(node)?;
+        for child in self.children(attributes) {
+            if let Some(TagType::Attribute {
+                namespace,
+                local_name,
+            }) = self.node_value(child)
+            {
+                if namespace == name.namespace && local_name == name.local_name {
+                    return Some(child);
+                }
+            }
+        }
+        None
     }
 
     pub fn node_name(&self, node: Node) -> Option<Name> {

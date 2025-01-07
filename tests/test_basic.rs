@@ -1,4 +1,4 @@
-use xoz::parse_document;
+use xoz::{parse_document, Name};
 
 #[test]
 fn test_elements() {
@@ -30,4 +30,22 @@ fn test_elements_multiple_a() {
     assert_eq!(doc_el_name.local_name(), "doc");
     assert_eq!(a1_name.local_name(), "a");
     assert_eq!(a2_name.local_name(), "a");
+}
+
+#[test]
+fn test_attribute_names() {
+    let doc = parse_document(r#"<doc a="A" b="B" />"#).unwrap();
+    let doc_el = doc.document_element();
+    let a = doc
+        .attribute_node(doc_el, &Name::name_without_namespace("a"))
+        .unwrap();
+    let b = doc
+        .attribute_node(doc_el, &Name::name_without_namespace("b"))
+        .unwrap();
+
+    let a_name = doc.node_name(a).unwrap();
+    let b_name = doc.node_name(b).unwrap();
+
+    assert_eq!(a_name.local_name(), "a");
+    assert_eq!(b_name.local_name(), "b");
 }
