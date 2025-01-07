@@ -141,6 +141,12 @@ impl Document {
         None
     }
 
+    pub fn attribute_value(&self, node: Node, name: &Name) -> Option<&str> {
+        let attribute_node = self.attribute_node(node, name)?;
+        let text_id = self.structure.text_id(attribute_node.0);
+        Some(self.text_usage.text_value(text_id))
+    }
+
     pub fn node_name(&self, node: Node) -> Option<Name> {
         if let Some(value) = self.node_value(node) {
             match value {

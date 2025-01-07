@@ -134,3 +134,15 @@ fn test_multiple_text() {
     assert_eq!(doc.text_str(a_text), Some("A"));
     assert_eq!(doc.text_str(b_text), Some("B"));
 }
+
+#[test]
+fn test_attribute_value() {
+    let doc = parse_document(r#"<doc a="A" b="B" />"#).unwrap();
+    let doc_el = doc.document_element();
+    let a = doc.attribute_value(doc_el, &Name::name_without_namespace("a"));
+    let b = doc.attribute_value(doc_el, &Name::name_without_namespace("b"));
+    let c = doc.attribute_value(doc_el, &Name::name_without_namespace("c"));
+    assert_eq!(a, Some("A"));
+    assert_eq!(b, Some("B"));
+    assert_eq!(c, None);
+}
