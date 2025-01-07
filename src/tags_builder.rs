@@ -1,10 +1,9 @@
 use ahash::{HashMap, HashMapExt};
-use vers_vecs::{trees::bp::BpTree, BitVec, RsVec, WaveletMatrix};
+use vers_vecs::BitVec;
 
 use crate::{
-    error::Error,
     tag::{TagInfo, TagType},
-    tagvec::{TagId, TagVec},
+    tagvec::TagId,
 };
 
 pub(crate) struct TagsBuilder {
@@ -64,4 +63,72 @@ impl TagsBuilder {
 }
 
 #[cfg(test)]
-mod tests {}
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_tags_builder() {
+        let mut builder = TagsBuilder::new();
+        // <doc><a/><b/></doc>
+        builder.open(TagType::Element {
+            namespace: "".to_string(),
+            local_name: "doc".to_string(),
+        });
+        builder.open(TagType::Element {
+            namespace: "".to_string(),
+            local_name: "a".to_string(),
+        });
+        builder.close(TagType::Element {
+            namespace: "".to_string(),
+            local_name: "a".to_string(),
+        });
+        builder.open(TagType::Element {
+            namespace: "".to_string(),
+            local_name: "b".to_string(),
+        });
+        builder.close(TagType::Element {
+            namespace: "".to_string(),
+            local_name: "b".to_string(),
+        });
+        builder.close(TagType::Element {
+            namespace: "".to_string(),
+            local_name: "doc".to_string(),
+        });
+
+        let usage = builder.usage();
+        assert_eq!(usage, &[0, 1, 2, 3, 4, 5]);
+    }
+
+    #[test]
+    fn test_tags_builder_multiple_a() {
+        let mut builder = TagsBuilder::new();
+        // <doc><a/><a/></doc>
+        builder.open(TagType::Element {
+            namespace: "".to_string(),
+            local_name: "doc".to_string(),
+        });
+        builder.open(TagType::Element {
+            namespace: "".to_string(),
+            local_name: "a".to_string(),
+        });
+        builder.close(TagType::Element {
+            namespace: "".to_string(),
+            local_name: "a".to_string(),
+        });
+        builder.open(TagType::Element {
+            namespace: "".to_string(),
+            local_name: "a".to_string(),
+        });
+        builder.close(TagType::Element {
+            namespace: "".to_string(),
+            local_name: "a".to_string(),
+        });
+        builder.close(TagType::Element {
+            namespace: "".to_string(),
+            local_name: "doc".to_string(),
+        });
+
+        let usage = builder.usage();
+        assert_eq!(usage, &[0, 1, 2, 1, 2, 3]);
+    }
+}

@@ -83,4 +83,6 @@ impl<T: TagVec> Structure<T> {
 }
 
 #[cfg(test)]
-mod tests {}
+mod tests {
+    use super::*;
+}
