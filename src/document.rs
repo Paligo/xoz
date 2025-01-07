@@ -86,6 +86,22 @@ impl Document {
         self.structure.tree().next_sibling(node.0).map(Node)
     }
 
+    pub fn previous_sibling(&self, node: Node) -> Option<Node> {
+        let prev = self.primitive_previous_sibling(node)?;
+        match self.node_value(prev) {
+            // the previous sibling is the attributes node, we are at the beginning
+            Some(TagType::Attributes) => None,
+            // the previous sibling is the namespaces node, we're at the beginning too
+            Some(TagType::Namespaces) => None,
+            // if it's not a special node, then it's definitely a previous sibling
+            _ => Some(prev),
+        }
+    }
+
+    pub fn primitive_previous_sibling(&self, node: Node) -> Option<Node> {
+        self.structure.tree().previous_sibling(node.0).map(Node)
+    }
+
     pub(crate) fn attributes_child(&self, node: Node) -> Option<Node> {
         let node = self.primitive_first_child(node);
         if let Some(node) = node {
