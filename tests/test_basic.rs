@@ -146,3 +146,18 @@ fn test_attribute_value() {
     assert_eq!(b, Some("B"));
     assert_eq!(c, None);
 }
+
+#[test]
+fn test_following_siblings() {
+    let doc = parse_document(r#"<doc><a/><b/><c/></doc>"#).unwrap();
+    let doc_el = doc.document_element();
+    let a = doc.first_child(doc_el).unwrap();
+    let b = doc.next_sibling(a).unwrap();
+    let c = doc.next_sibling(b).unwrap();
+    let a_siblings: Vec<_> = doc.following_siblings(a).collect();
+    let b_siblings: Vec<_> = doc.following_siblings(b).collect();
+    let c_siblings: Vec<_> = doc.following_siblings(c).collect();
+    assert_eq!(a_siblings, vec![a, b, c]);
+    assert_eq!(b_siblings, vec![b, c]);
+    assert_eq!(c_siblings, vec![c]);
+}

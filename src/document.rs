@@ -189,6 +189,13 @@ impl Document {
         }
     }
 
+    pub fn following_siblings(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
+        NextSiblingIter {
+            doc: self,
+            node: Some(node),
+        }
+    }
+
     pub fn text_str(&self, node: Node) -> Option<&str> {
         if matches!(self.node_value(node)?, TagType::Text) {
             let text_id = self.structure.text_id(node.0);
