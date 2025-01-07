@@ -60,4 +60,12 @@ impl TagInfo {
     pub(crate) fn tag_type(&self) -> &TagType {
         &self.tag_type
     }
+
+    pub(crate) fn is_open_tag(&self) -> bool {
+        self.open_close
+    }
+
+    pub(crate) fn is_close_tag(&self) -> bool {
+        !self.open_close
+    }
 }

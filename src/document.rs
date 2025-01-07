@@ -90,10 +90,10 @@ impl Document {
     }
 
     pub fn node_value(&self, node: Node) -> Option<&TagType> {
-        let index = self.structure.tree().node_index(node.0);
-        self.structure
-            .get_tag(index)
-            .map(|tag_info| tag_info.tag_type())
+        self.structure.get_tag(node.0).map(|tag_info| {
+            assert!(tag_info.is_open_tag());
+            tag_info.tag_type()
+        })
     }
 
     pub fn children(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
