@@ -1,7 +1,8 @@
 use crate::{
-    data::{Structure, TagType, TagsBuilder},
+    data::{Structure, TagsBuilder},
     document::Document,
     error::Error,
+    tag::TagType,
     tagvec::SArrayMatrix,
     text::TextBuilder,
 };

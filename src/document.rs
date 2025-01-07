@@ -1,10 +1,6 @@
 use vers_vecs::trees::Tree;
 
-use crate::{
-    data::{Structure, TagInfo, TagType},
-    tagvec::SArrayMatrix,
-    text::TextUsage,
-};
+use crate::{data::Structure, tag::TagType, tagvec::SArrayMatrix, text::TextUsage};
 
 pub struct Document {
     pub(crate) structure: Structure<SArrayMatrix>,

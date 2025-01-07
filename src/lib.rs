@@ -4,6 +4,7 @@ mod data;
 mod document;
 mod error;
 mod serializer;
+mod tag;
 mod tagvec;
 mod text;
 
