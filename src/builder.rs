@@ -1,6 +1,6 @@
 use crate::{
-    data::Structure, document::Document, error::Error, tag::TagType, tags_builder::TagsBuilder,
-    tagvec::SArrayMatrix, text::TextBuilder,
+    document::Document, error::Error, structure::Structure, tag::TagType,
+    tags_builder::TagsBuilder, tagvec::SArrayMatrix, text::TextBuilder,
 };
 
 pub fn parse_document(xml: &str) -> Result<Document, xot::ParseError> {
