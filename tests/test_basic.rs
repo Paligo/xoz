@@ -161,3 +161,18 @@ fn test_following_siblings() {
     assert_eq!(b_siblings, vec![b, c]);
     assert_eq!(c_siblings, vec![c]);
 }
+
+#[test]
+fn test_preorder() {
+    let doc = parse_document(r#"<doc><a/><b><c/><d/></b></doc>"#).unwrap();
+    let doc_el = doc.document_element();
+    let a = doc.first_child(doc_el).unwrap();
+    let b = doc.next_sibling(a).unwrap();
+    let c = doc.first_child(b).unwrap();
+    let d = doc.next_sibling(c).unwrap();
+    // now put nodes in arbitrary order
+    let mut nodes = [b, d, c, a, doc_el];
+    // sort them by preorder
+    nodes.sort_by_key(|&node| doc.preorder(node));
+    assert_eq!(nodes, [doc_el, a, b, c, d]);
+}

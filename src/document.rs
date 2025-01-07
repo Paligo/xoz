@@ -47,6 +47,16 @@ impl Document {
         )
     }
 
+    /// Preorder number of node
+    ///
+    /// This can be used to sort nodes by preorder.
+    ///
+    /// Note that since attributes and namespaces are also nodes in the tree,
+    /// as well as the nodes that hold them, the preorder may have gaps.
+    pub fn preorder(&self, node: Node) -> usize {
+        self.structure.tree().node_index(node.0)
+    }
+
     pub fn document_element(&self) -> Node {
         for child in self.children(self.root()) {
             if let Some(TagType::Element { .. }) = self.node_value(child) {
