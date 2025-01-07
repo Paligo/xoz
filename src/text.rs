@@ -1,3 +1,5 @@
+use std::ops::Range;
+
 use sucds::bit_vectors::{Rank, SArray, Select};
 use vers_vecs::{BitVec, RsVec};
 
@@ -12,10 +14,9 @@ impl TextBuilder {
         // add terminator in the beginning, so if select of 1 happens, we get
         // the start of the text
         bitmap.append(true);
-        Self {
-            s: String::new(),
-            bitmap,
-        }
+        let mut s = String::new();
+        s.push(0.into());
+        Self { s, bitmap }
     }
 
     pub(crate) fn text_node(&mut self, text: &str) {
@@ -64,6 +65,17 @@ impl TextUsage {
         // unwrap is okay as we know we have a text id already
         self.sarray.select1(text_id.0).unwrap() + 1
     }
+
+    pub(crate) fn text_range(&self, text_id: TextId) -> Range<usize> {
+        let start = self.text_index(text_id);
+        let end = self.text_index(TextId(text_id.0 + 1));
+        start..(end - 1)
+    }
+
+    pub(crate) fn text_value(&self, text_id: TextId) -> &str {
+        let range = self.text_range(text_id);
+        &self.text[range]
+    }
 }
 
 #[cfg(test)]
@@ -108,5 +120,29 @@ mod tests {
         assert_eq!(usage.text_index(text_id), 7);
         let text_id = usage.text_id(8);
         assert_eq!(usage.text_index(text_id), 7);
+    }
+
+    #[test]
+    fn test_two_texts_range() {
+        let mut builder = TextBuilder::new();
+        // 1..6
+        builder.text_node("hello");
+        // 7..12
+        builder.text_node("world");
+        let usage = builder.build();
+
+        assert_eq!(usage.text_range(TextId(0)), 1..6);
+        assert_eq!(usage.text_range(TextId(1)), 7..12);
+    }
+
+    #[test]
+    fn test_two_texts_value() {
+        let mut builder = TextBuilder::new();
+        builder.text_node("hello");
+        builder.text_node("world");
+        let usage = builder.build();
+
+        assert_eq!(usage.text_value(TextId(0)), "hello");
+        assert_eq!(usage.text_value(TextId(1)), "world");
     }
 }
