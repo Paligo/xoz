@@ -1,7 +1,5 @@
-use std::os::unix::ffi::OsStringExt;
-
-use ahash::{HashMap, HashMapExt};
-use vers_vecs::{trees::bp::BpTree, BitVec, RsVec, WaveletMatrix};
+use ahash::HashMap;
+use vers_vecs::trees::bp::BpTree;
 
 use crate::{
     error::Error,
