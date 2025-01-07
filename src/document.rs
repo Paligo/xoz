@@ -57,6 +57,28 @@ impl Document {
     }
 
     pub fn first_child(&self, node: Node) -> Option<Node> {
+        let node = self.primitive_first_child(node)?;
+        match self.node_value(node) {
+            // the first child is the attributes node, skip it
+            Some(TagType::Attributes) => self.next_sibling(node),
+            // the first child is the namespaces node
+            Some(TagType::Namespaces) => {
+                // check if the next sibling is the attributes node
+                let next = self.next_sibling(node)?;
+                // if so, the first child is the next sibling
+                if let Some(TagType::Attributes) = self.node_value(next) {
+                    self.next_sibling(next)
+                } else {
+                    // if not, the first child is this sibling
+                    Some(next)
+                }
+            }
+            // if it's not a special node, then it's definitely a first child
+            _ => Some(node),
+        }
+    }
+
+    pub(crate) fn primitive_first_child(&self, node: Node) -> Option<Node> {
         self.structure.tree().first_child(node.0).map(Node)
     }
 
@@ -65,7 +87,7 @@ impl Document {
     }
 
     pub(crate) fn attributes_child(&self, node: Node) -> Option<Node> {
-        let node = self.first_child(node);
+        let node = self.primitive_first_child(node);
         if let Some(node) = node {
             match self.node_value(node) {
                 // the first child is the attributes node
@@ -84,7 +106,7 @@ impl Document {
 
     pub fn attribute_node(&self, node: Node, name: &Name) -> Option<Node> {
         let attributes = self.attributes_child(node)?;
-        for child in self.children(attributes) {
+        for child in self.primitive_children(attributes) {
             if let Some(TagType::Attribute {
                 namespace,
                 local_name,
@@ -137,6 +159,13 @@ impl Document {
         NextSiblingIter {
             doc: self,
             node: self.first_child(node),
+        }
+    }
+
+    pub(crate) fn primitive_children(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
+        NextSiblingIter {
+            doc: self,
+            node: self.primitive_first_child(node),
         }
     }
 }

@@ -58,6 +58,7 @@ fn from_xot_node(xot: &xot::Xot, node: xot::Node) -> Result<Document, Error> {
                                 tags_builder.close(TagType::Content);
                                 tags_builder.close(t);
                             }
+                            tags_builder.close(TagType::Attributes);
                         }
                     }
                     xot::Value::Text(text) => {

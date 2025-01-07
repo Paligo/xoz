@@ -49,3 +49,17 @@ fn test_attribute_names() {
     assert_eq!(a_name.local_name(), "a");
     assert_eq!(b_name.local_name(), "b");
 }
+
+#[test]
+fn test_attributes_and_children() {
+    let doc = parse_document(r#"<doc c="C"><a/><b/></doc>"#).unwrap();
+    let doc_el = doc.document_element();
+    let a = doc.first_child(doc_el).unwrap();
+    let b = doc.next_sibling(a).unwrap();
+
+    let a_name = doc.node_name(a).unwrap();
+    let b_name = doc.node_name(b).unwrap();
+
+    assert_eq!(a_name.local_name(), "a");
+    assert_eq!(b_name.local_name(), "b");
+}
