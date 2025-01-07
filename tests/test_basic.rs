@@ -212,3 +212,42 @@ fn test_subtree_tags_deeper() {
         .unwrap();
     assert_eq!(doc.subtree_tags(doc.document_element(), tag_id), 2);
 }
+
+#[test]
+fn test_tagged_descendant() {
+    let doc = parse_document(r#"<doc><a><b/></a></doc>"#).unwrap();
+    let tag_id = doc
+        .tag(&TagInfo::open(TagType::Element {
+            namespace: "".to_string(),
+            local_name: "b".to_string(),
+        }))
+        .unwrap();
+    let b = doc
+        .tagged_descendant(doc.document_element(), tag_id)
+        .unwrap();
+    assert_eq!(doc.node_name(b).unwrap().local_name(), "b");
+}
+
+#[test]
+fn test_tagged_descendant2() {
+    let doc = parse_document(r#"<doc><a><b><a><b/></a></b></a></doc>"#).unwrap();
+    let doc_el = doc.document_element();
+    let a = doc.first_child(doc_el).unwrap();
+    let first_b = doc.first_child(a).unwrap();
+    let a2 = doc.first_child(first_b).unwrap();
+    let second_b = doc.first_child(a2).unwrap();
+
+    let tag_id = doc
+        .tag(&TagInfo::open(TagType::Element {
+            namespace: "".to_string(),
+            local_name: "b".to_string(),
+        }))
+        .unwrap();
+
+    let b = doc
+        .tagged_descendant(doc.document_element(), tag_id)
+        .unwrap();
+    assert_eq!(b, first_b);
+    let b = doc.tagged_descendant(b, tag_id).unwrap();
+    assert_eq!(b, second_b);
+}

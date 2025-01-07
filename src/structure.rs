@@ -95,6 +95,20 @@ impl<T: TagVec> Structure<T> {
             Some(self.rank_tag(self.tree.close(i)?, tag_id)? - (self.rank_tag(i - 1, tag_id)?))
         }
     }
+
+    // The first node (in preorder) labeled tag strictly within the subtree
+    // rooted at i. If there is no such node the function returns None.
+    pub(crate) fn tagged_descendant(&self, i: usize, tag_id: TagId) -> Option<usize> {
+        // Note: the "Fast in-memory XPath search using compressed trees" contains
+        // a bug where the i is added to the result of rank, but that doesn't work.
+        let d = self.select_tag(self.rank_tag(i + 1, tag_id)?, tag_id)?;
+        if d <= self.tree.close(i)? {
+            Some(d)
+        } else {
+            println!("not within close");
+            None
+        }
+    }
 }
 
 #[cfg(test)]

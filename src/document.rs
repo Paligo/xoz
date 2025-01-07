@@ -228,6 +228,10 @@ impl Document {
         self.structure.subtree_tags(node.0, tag_id).unwrap_or(0)
     }
 
+    pub fn tagged_descendant(&self, node: Node, tag_id: TagId) -> Option<Node> {
+        self.structure.tagged_descendant(node.0, tag_id).map(Node)
+    }
+
     pub(crate) fn primitive_parent(&self, node: Node) -> Option<Node> {
         self.structure.tree().parent(node.0).map(Node)
     }
