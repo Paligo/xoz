@@ -84,5 +84,163 @@ impl<T: TagVec> Structure<T> {
 
 #[cfg(test)]
 mod tests {
+    use crate::{tag::TagType, tagvec::SArrayMatrix};
+
     use super::*;
+
+    #[test]
+    fn test_structure() {
+        let mut builder = TagsBuilder::new();
+        // <doc><a/><b/></doc>
+        builder.open(TagType::Element {
+            namespace: "".to_string(),
+            local_name: "doc".to_string(),
+        });
+        builder.open(TagType::Element {
+            namespace: "".to_string(),
+            local_name: "a".to_string(),
+        });
+        builder.close(TagType::Element {
+            namespace: "".to_string(),
+            local_name: "a".to_string(),
+        });
+        builder.open(TagType::Element {
+            namespace: "".to_string(),
+            local_name: "b".to_string(),
+        });
+        builder.close(TagType::Element {
+            namespace: "".to_string(),
+            local_name: "b".to_string(),
+        });
+        builder.close(TagType::Element {
+            namespace: "".to_string(),
+            local_name: "doc".to_string(),
+        });
+
+        let structure = Structure::new(builder, |builder| {
+            SArrayMatrix::new(builder.usage(), builder.tags_amount())
+        })
+        .unwrap();
+
+        assert_eq!(
+            structure.get_tag(0),
+            Some(&TagInfo::open(TagType::Element {
+                namespace: "".to_string(),
+                local_name: "doc".to_string()
+            }))
+        );
+        assert_eq!(
+            structure.get_tag(1),
+            Some(&TagInfo::open(TagType::Element {
+                namespace: "".to_string(),
+                local_name: "a".to_string()
+            }))
+        );
+        assert_eq!(
+            structure.get_tag(2),
+            Some(&TagInfo::close(TagType::Element {
+                namespace: "".to_string(),
+                local_name: "a".to_string()
+            }))
+        );
+        assert_eq!(
+            structure.get_tag(3),
+            Some(&TagInfo::open(TagType::Element {
+                namespace: "".to_string(),
+                local_name: "b".to_string()
+            }))
+        );
+        assert_eq!(
+            structure.get_tag(4),
+            Some(&TagInfo::close(TagType::Element {
+                namespace: "".to_string(),
+                local_name: "b".to_string()
+            }))
+        );
+        assert_eq!(
+            structure.get_tag(5),
+            Some(&TagInfo::close(TagType::Element {
+                namespace: "".to_string(),
+                local_name: "doc".to_string()
+            }))
+        );
+    }
+
+    #[test]
+    fn test_structure_multiple_a() {
+        let mut builder = TagsBuilder::new();
+        // <doc><a/><a/></doc>
+        builder.open(TagType::Element {
+            namespace: "".to_string(),
+            local_name: "doc".to_string(),
+        });
+        builder.open(TagType::Element {
+            namespace: "".to_string(),
+            local_name: "a".to_string(),
+        });
+        builder.close(TagType::Element {
+            namespace: "".to_string(),
+            local_name: "a".to_string(),
+        });
+        builder.open(TagType::Element {
+            namespace: "".to_string(),
+            local_name: "a".to_string(),
+        });
+        builder.close(TagType::Element {
+            namespace: "".to_string(),
+            local_name: "a".to_string(),
+        });
+        builder.close(TagType::Element {
+            namespace: "".to_string(),
+            local_name: "doc".to_string(),
+        });
+
+        let structure = Structure::new(builder, |builder| {
+            SArrayMatrix::new(builder.usage(), builder.tags_amount())
+        })
+        .unwrap();
+
+        assert_eq!(
+            structure.get_tag(0),
+            Some(&TagInfo::open(TagType::Element {
+                namespace: "".to_string(),
+                local_name: "doc".to_string()
+            }))
+        );
+        assert_eq!(
+            structure.get_tag(1),
+            Some(&TagInfo::open(TagType::Element {
+                namespace: "".to_string(),
+                local_name: "a".to_string()
+            }))
+        );
+        assert_eq!(
+            structure.get_tag(2),
+            Some(&TagInfo::close(TagType::Element {
+                namespace: "".to_string(),
+                local_name: "a".to_string()
+            }))
+        );
+        assert_eq!(
+            structure.get_tag(3),
+            Some(&TagInfo::open(TagType::Element {
+                namespace: "".to_string(),
+                local_name: "a".to_string()
+            }))
+        );
+        assert_eq!(
+            structure.get_tag(4),
+            Some(&TagInfo::close(TagType::Element {
+                namespace: "".to_string(),
+                local_name: "a".to_string()
+            }))
+        );
+        assert_eq!(
+            structure.get_tag(5),
+            Some(&TagInfo::close(TagType::Element {
+                namespace: "".to_string(),
+                local_name: "doc".to_string()
+            }))
+        );
+    }
 }
