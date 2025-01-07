@@ -183,6 +183,10 @@ impl Document {
         }
     }
 
+    // pub fn text_str(&self, node: Node) -> Option<&str> {
+    //     self.text_usage.get_text(node.0)
+    // }
+
     pub(crate) fn primitive_parent(&self, node: Node) -> Option<Node> {
         self.structure.tree().parent(node.0).map(Node)
     }
