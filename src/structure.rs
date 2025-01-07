@@ -1,5 +1,10 @@
+use std::ops::Range;
+
 use ahash::HashMap;
-use vers_vecs::{trees::bp::BpTree, RsVec};
+use vers_vecs::{
+    trees::{bp::BpTree, Tree},
+    RsVec,
+};
 
 use crate::{
     error::Error,
@@ -78,6 +83,25 @@ impl<T: TagVec> Structure<T> {
         TextId::new(text_id)
     }
 
+    // paper calls this xml id text
+    // TODO: write a test for this inverse operation
+    pub(crate) fn text_index(&self, text_id: TextId) -> usize {
+        self.tree()
+            .node_index(self.text_opening_parens.select1(text_id.id()))
+    }
+
+    pub(crate) fn leaf_number(&self, i: usize) -> usize {
+        self.text_opening_parens.rank1(i)
+    }
+
+    // TODO: write tests
+    pub(crate) fn text_ids(&self, i: usize) -> Range<usize> {
+        // TODO: what if i is 0, the root
+        let start = self.leaf_number(i - 1) + 1;
+        let end = self.leaf_number(self.tree.close(i).unwrap());
+        start..end
+    }
+
     pub(crate) fn rank_tag(&self, i: usize, tag_id: TagId) -> Option<usize> {
         self.tag_vec.rank_tag(i, tag_id)
     }
@@ -113,7 +137,7 @@ impl<T: TagVec> Structure<T> {
     // The last node labeled tag with preorder smaller than that of node i, and
     // not an ancestor of i. Returns None if no such node exists.
     pub(crate) fn tagged_preceding(&self, i: usize, tag_id: TagId) -> Option<usize> {
-        todo!();
+        todo!()
     }
 
     // The first node labeled tag with preorder larger than that of node i,
