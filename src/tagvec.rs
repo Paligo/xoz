@@ -7,7 +7,7 @@ use vers_vecs::{BitVec, WaveletMatrix};
 use crate::error::Error;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub(crate) struct TagId(u64);
+pub struct TagId(u64);
 
 impl TagId {
     pub(crate) fn new(id: u64) -> Self {

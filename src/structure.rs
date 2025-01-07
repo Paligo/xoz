@@ -78,16 +78,22 @@ impl<T: TagVec> Structure<T> {
         TextId::new(text_id)
     }
 
-    // TODO: for efficiency we want to skip lookup_tag_id, so we probably
-    // want to make this work in terms of tag_id directly
-    pub(crate) fn rank_tag(&self, i: usize, tag_info: &TagInfo) -> Option<usize> {
-        let tag_id = self.lookup_tag_id(tag_info)?;
+    pub(crate) fn rank_tag(&self, i: usize, tag_id: TagId) -> Option<usize> {
         self.tag_vec.rank_tag(i, tag_id)
     }
 
-    pub(crate) fn select_tag(&self, rank: usize, tag_info: &TagInfo) -> Option<usize> {
-        let tag_id = self.lookup_tag_id(tag_info)?;
+    pub(crate) fn select_tag(&self, rank: usize, tag_id: TagId) -> Option<usize> {
         self.tag_vec.select_tag(rank, tag_id)
+    }
+
+    // the number of occurrences of tag within the subtree rooted at i
+    pub(crate) fn subtree_tags(&self, i: usize, tag_id: TagId) -> Option<usize> {
+        if i == 0 {
+            // root node has no parent
+            Some(self.rank_tag(self.tree.close(i)?, tag_id)?)
+        } else {
+            Some(self.rank_tag(self.tree.close(i)?, tag_id)? - (self.rank_tag(i - 1, tag_id)?))
+        }
     }
 }
 

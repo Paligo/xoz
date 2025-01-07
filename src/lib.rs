@@ -11,3 +11,5 @@ mod text;
 
 pub use builder::parse_document;
 pub use document::Name;
+pub use tag::{TagInfo, TagType};
+pub use tagvec::TagId;

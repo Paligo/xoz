@@ -1,6 +1,11 @@
 use vers_vecs::trees::Tree;
 
-use crate::{structure::Structure, tag::TagType, tagvec::SArrayMatrix, text::TextUsage};
+use crate::{
+    structure::Structure,
+    tag::{TagInfo, TagType},
+    tagvec::{SArrayMatrix, TagId},
+    text::TextUsage,
+};
 
 pub struct Document {
     pub(crate) structure: Structure<SArrayMatrix>,
@@ -38,6 +43,10 @@ impl<'a> Name<'a> {
 }
 
 impl Document {
+    pub fn tag(&self, tag_info: &TagInfo) -> Option<TagId> {
+        self.structure.lookup_tag_id(tag_info)
+    }
+
     pub fn root(&self) -> Node {
         Node(
             self.structure
@@ -213,6 +222,10 @@ impl Document {
         } else {
             None
         }
+    }
+
+    pub fn subtree_tags(&self, node: Node, tag_id: TagId) -> usize {
+        self.structure.subtree_tags(node.0, tag_id).unwrap_or(0)
     }
 
     pub(crate) fn primitive_parent(&self, node: Node) -> Option<Node> {

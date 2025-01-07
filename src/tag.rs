@@ -31,7 +31,7 @@ pub enum TagType {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub(crate) struct TagInfo {
+pub struct TagInfo {
     tag_type: TagType,
     // this would seem to be redundant as we already store it in the
     // balanced parentheses structure, but we want to be able to
@@ -41,14 +41,14 @@ pub(crate) struct TagInfo {
 }
 
 impl TagInfo {
-    pub(crate) fn open(tag_type: TagType) -> Self {
+    pub fn open(tag_type: TagType) -> Self {
         Self {
             tag_type,
             open_close: true,
         }
     }
 
-    pub(crate) fn close(tag_type: TagType) -> Self {
+    pub fn close(tag_type: TagType) -> Self {
         Self {
             tag_type,
             open_close: false,

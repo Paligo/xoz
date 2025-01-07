@@ -1,4 +1,4 @@
-use xoz::{parse_document, Name};
+use xoz::{parse_document, Name, TagInfo, TagType};
 
 #[test]
 fn test_elements() {
@@ -175,4 +175,40 @@ fn test_preorder() {
     // sort them by preorder
     nodes.sort_by_key(|&node| doc.preorder(node));
     assert_eq!(nodes, [doc_el, a, b, c, d]);
+}
+
+#[test]
+fn test_subtree_tags() {
+    let doc = parse_document(r#"<doc><a/><a/></doc>"#).unwrap();
+    let tag_id = doc
+        .tag(&TagInfo::open(TagType::Element {
+            namespace: "".to_string(),
+            local_name: "a".to_string(),
+        }))
+        .unwrap();
+    assert_eq!(doc.subtree_tags(doc.document_element(), tag_id), 2);
+}
+
+#[test]
+fn test_subtree_tags_root() {
+    let doc = parse_document(r#"<doc><a/><a/></doc>"#).unwrap();
+    let tag_id = doc
+        .tag(&TagInfo::open(TagType::Element {
+            namespace: "".to_string(),
+            local_name: "a".to_string(),
+        }))
+        .unwrap();
+    assert_eq!(doc.subtree_tags(doc.root(), tag_id), 2);
+}
+
+#[test]
+fn test_subtree_tags_deeper() {
+    let doc = parse_document(r#"<doc><b><a/></b><a/></doc>"#).unwrap();
+    let tag_id = doc
+        .tag(&TagInfo::open(TagType::Element {
+            namespace: "".to_string(),
+            local_name: "a".to_string(),
+        }))
+        .unwrap();
+    assert_eq!(doc.subtree_tags(doc.document_element(), tag_id), 2);
 }
