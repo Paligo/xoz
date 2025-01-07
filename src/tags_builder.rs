@@ -69,6 +69,7 @@ impl TagsBuilder {
 
     pub(crate) fn close(&mut self, tag_type: TagType) {
         self.parentheses.append(false);
+        self.text_opening_parens.append(false);
         let tag_info = TagInfo::close(tag_type);
         let tag_id = self.register_tag(tag_info);
         self.usage.push(tag_id.id())

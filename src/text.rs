@@ -51,6 +51,10 @@ impl TextId {
     pub fn new(id: usize) -> Self {
         Self(id)
     }
+
+    pub fn id(&self) -> usize {
+        self.0
+    }
 }
 
 impl TextUsage {

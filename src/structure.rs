@@ -252,4 +252,56 @@ mod tests {
             }))
         );
     }
+
+    #[test]
+    fn test_structure_multiple_text() {
+        // <doc><a>A</a><b>B</b>/doc>
+        let mut builder = TagsBuilder::new();
+        // 0
+        builder.open(TagType::Element {
+            namespace: "".to_string(),
+            local_name: "doc".to_string(),
+        });
+        // 1
+        builder.open(TagType::Element {
+            namespace: "".to_string(),
+            local_name: "a".to_string(),
+        });
+        // 2
+        builder.open(TagType::Text);
+        // 3
+        builder.close(TagType::Text);
+        // 4
+        builder.close(TagType::Element {
+            namespace: "".to_string(),
+            local_name: "a".to_string(),
+        });
+        // 5
+        builder.open(TagType::Element {
+            namespace: "".to_string(),
+            local_name: "b".to_string(),
+        });
+        // 6
+        builder.open(TagType::Text);
+        // 7
+        builder.close(TagType::Text);
+        // 8
+        builder.close(TagType::Element {
+            namespace: "".to_string(),
+            local_name: "b".to_string(),
+        });
+        // 9
+        builder.close(TagType::Element {
+            namespace: "".to_string(),
+            local_name: "doc".to_string(),
+        });
+
+        let structure = Structure::new(builder, |builder| {
+            SArrayMatrix::new(builder.usage(), builder.tags_amount())
+        })
+        .unwrap();
+
+        assert_eq!(structure.text_id(2).id(), 0);
+        assert_eq!(structure.text_id(6).id(), 1);
+    }
 }
