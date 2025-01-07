@@ -53,9 +53,7 @@ fn from_xot_node(xot: &xot::Xot, node: xot::Node) -> Result<Document, Error> {
                                     local_name: local_name.to_string(),
                                 };
                                 tags_builder.open(t.clone());
-                                tags_builder.open(TagType::Content);
                                 text_builder.text_node(value);
-                                tags_builder.close(TagType::Content);
                                 tags_builder.close(t);
                             }
                             tags_builder.close(TagType::Attributes);
@@ -63,9 +61,7 @@ fn from_xot_node(xot: &xot::Xot, node: xot::Node) -> Result<Document, Error> {
                     }
                     xot::Value::Text(text) => {
                         tags_builder.open(TagType::Text);
-                        tags_builder.open(TagType::Content);
                         text_builder.text_node(text.get());
-                        tags_builder.close(TagType::Content);
                     }
                     xot::Value::Comment(comment) => {
                         tags_builder.open(TagType::Comment);

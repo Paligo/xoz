@@ -11,7 +11,7 @@ pub enum TagType {
         prefix: String,
         uri: String,
     },
-    // under attributes. contains content node
+    // under attributes. has associated text
     Attribute {
         namespace: String,
         local_name: String,
@@ -21,15 +21,13 @@ pub enum TagType {
         namespace: String,
         local_name: String,
     },
-    // under document or element. contains content
+    // under document or element. has associated text
     Text,
     // since there are going to be a limited amount of prefix
     // declarations, we directly encode them as a tag type
     Comment,
     // TODO: this might have name information too
     ProcessingInstruction,
-    // text content node
-    Content,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
