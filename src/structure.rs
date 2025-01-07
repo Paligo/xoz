@@ -109,6 +109,19 @@ impl<T: TagVec> Structure<T> {
             None
         }
     }
+
+    // The last node labeled tag with preorder smaller than that of node i, and
+    // not an ancestor of i. Returns None if no such node exists.
+    pub(crate) fn tagged_preceding(&self, i: usize, tag_id: TagId) -> Option<usize> {
+        todo!();
+    }
+
+    // The first node labeled tag with preorder larger than that of node i,
+    // and not in the subtree of i. Returns None if there is no such node
+    pub(crate) fn tagged_following(&self, i: usize, tag_id: TagId) -> Option<usize> {
+        // TODO: no tests yet
+        self.select_tag(self.rank_tag(self.tree.close(i)?, tag_id)? + 1, tag_id)
+    }
 }
 
 #[cfg(test)]
