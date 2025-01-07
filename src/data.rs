@@ -72,7 +72,6 @@ pub(crate) struct TagsBuilder {
     tags: Vec<TagInfo>,
     tag_lookup: HashMap<TagInfo, TagId>,
     parentheses: BitVec,
-    text_open_parentheses: BitVec,
     // stores tag ids, but as u64 for convenience of later construction
     usage: Vec<u64>,
 }
@@ -83,7 +82,6 @@ impl TagsBuilder {
             tags: Vec::new(),
             tag_lookup: HashMap::new(),
             parentheses: BitVec::new(),
-            text_open_parentheses: BitVec::new(),
             usage: Vec::new(),
         }
     }
