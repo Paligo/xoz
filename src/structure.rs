@@ -86,6 +86,7 @@ impl<T: TagVec> Structure<T> {
     // paper calls this xml id text
     // TODO: write a test for this inverse operation
     pub(crate) fn text_index(&self, text_id: TextId) -> usize {
+        // TODO: is node_index really needed? don't we get the index if we simply do select?
         self.tree()
             .node_index(self.text_opening_parens.select1(text_id.id()))
     }
