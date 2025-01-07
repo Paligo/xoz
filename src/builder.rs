@@ -4,6 +4,7 @@ use crate::{
 };
 
 pub fn parse_document(xml: &str) -> Result<Document, xot::ParseError> {
+    // TODO: for now go through Xot to parse a new XML document
     let mut xot = xot::Xot::new();
     let doc = xot.parse(xml)?;
     Ok(from_xot_node(&xot, doc).unwrap())
