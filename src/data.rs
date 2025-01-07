@@ -1,10 +1,12 @@
+use std::os::unix::ffi::OsStringExt;
+
 use ahash::{HashMap, HashMapExt};
 use vers_vecs::{trees::bp::BpTree, BitVec, RsVec, WaveletMatrix};
 
 use crate::{error::Error, tagvec::TagVec};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub(crate) enum TagType {
+pub enum TagType {
     // contains namespaces, elements, other nodes
     Document,
     // holds namespace nodes
@@ -12,11 +14,20 @@ pub(crate) enum TagType {
     // holds attribute nodes
     Attributes,
     // under namespaces
-    Namespace { prefix: String, uri: String },
+    Namespace {
+        prefix: String,
+        uri: String,
+    },
     // under attributes. contains content node
-    Attribute { namespace: String, name: String },
+    Attribute {
+        namespace: String,
+        local_name: String,
+    },
     // under document or element
-    Element { namespace: String, name: String },
+    Element {
+        namespace: String,
+        local_name: String,
+    },
     // under document or element. contains content
     Text,
     // since there are going to be a limited amount of prefix
@@ -36,6 +47,12 @@ pub(crate) struct TagInfo {
     // look quickly for specifically opening tags, so we need it
     // open is true
     open_close: bool,
+}
+
+impl TagInfo {
+    pub(crate) fn tag_type(&self) -> &TagType {
+        &self.tag_type
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -172,15 +189,19 @@ impl<T: TagVec> Structure<T> {
     //     self.parentheses.select0(rank)
     // }
 
-    pub(crate) fn get_tag(&self, i: usize) -> Option<TagId> {
-        self.tag_vec.get_tag(i)
+    pub(crate) fn get_tag(&self, i: usize) -> Option<&TagInfo> {
+        self.tag_vec.get_tag(i).map(|id| self.lookup_tag_info(id))
     }
 
-    pub(crate) fn rank_tag(&self, i: usize, tag_id: TagId) -> Option<usize> {
+    // TODO: for efficiency we want to skip lookup_tag_id, so we probably
+    // want to make this work in terms of tag_id directly
+    pub(crate) fn rank_tag(&self, i: usize, tag_info: &TagInfo) -> Option<usize> {
+        let tag_id = self.lookup_tag_id(tag_info)?;
         self.tag_vec.rank_tag(i, tag_id)
     }
 
-    pub(crate) fn select_tag(&self, rank: usize, tag_id: TagId) -> Option<usize> {
+    pub(crate) fn select_tag(&self, rank: usize, tag_info: &TagInfo) -> Option<usize> {
+        let tag_id = self.lookup_tag_id(tag_info)?;
         self.tag_vec.select_tag(rank, tag_id)
     }
 }

@@ -6,6 +6,12 @@ use crate::{
     text::TextBuilder,
 };
 
+pub fn parse_document(xml: &str) -> Result<Document, xot::ParseError> {
+    let mut xot = xot::Xot::new();
+    let doc = xot.parse(xml)?;
+    Ok(from_xot_node(&xot, doc).unwrap())
+}
+
 /// Given a document node, construct a new Xoz document.
 fn from_xot_node(xot: &xot::Xot, node: xot::Node) -> Result<Document, Error> {
     assert!(xot.is_document(node));
@@ -46,7 +52,7 @@ fn from_xot_node(xot: &xot::Xot, node: xot::Node) -> Result<Document, Error> {
                                 let (name, uri) = xot.name_ns_str(name_id);
                                 let t = TagType::Attribute {
                                     namespace: name.to_string(),
-                                    name: uri.to_string(),
+                                    local_name: uri.to_string(),
                                 };
                                 tags_builder.open(t.clone());
                                 tags_builder.open(TagType::Content);
@@ -100,9 +106,9 @@ fn from_xot_node(xot: &xot::Xot, node: xot::Node) -> Result<Document, Error> {
 }
 
 fn element_tag_type(element: &xot::Element, xot: &xot::Xot) -> TagType {
-    let (name, uri) = xot.name_ns_str(element.name());
+    let (local_name, namespace) = xot.name_ns_str(element.name());
     TagType::Element {
-        namespace: name.to_string(),
-        name: uri.to_string(),
+        namespace: namespace.to_string(),
+        local_name: local_name.to_string(),
     }
 }
