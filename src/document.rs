@@ -29,11 +29,6 @@ impl Name<'_> {
     }
 }
 
-pub enum Value<'a> {
-    Element(Name<'a>),
-    Text(&'a str),
-}
-
 impl Document {
     pub fn root(&self) -> Node {
         Node(
