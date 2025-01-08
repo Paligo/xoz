@@ -148,6 +148,16 @@ fn test_attribute_value() {
 }
 
 #[test]
+fn test_text_and_attribute_value() {
+    let doc = parse_document(r#"<doc a="A">text</doc>"#).unwrap();
+    let doc_el = doc.document_element();
+    let text = doc.first_child(doc_el).unwrap();
+    let a = doc.attribute_value(doc_el, &Name::name_without_namespace("a"));
+    assert_eq!(doc.text_str(text), Some("text"));
+    assert_eq!(a, Some("A"));
+}
+
+#[test]
 fn test_following_siblings() {
     let doc = parse_document(r#"<doc><a/><b/><c/></doc>"#).unwrap();
     let doc_el = doc.document_element();
