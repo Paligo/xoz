@@ -32,17 +32,23 @@ impl TextBuilder {
     }
 
     pub(crate) fn build(self) -> TextUsage {
+        let s = if self.s.is_empty() {
+            // we always need to end with 0, even if we have no texts
+            // TODO: we need to make this long enough, as a single 0 also breaks
+            // fm index
+            String::from("FOOBAR\0")
+        } else {
+            self.s
+        };
         TextUsage {
-            // search: TextSearch::new(&self.s),
-            text: self.s,
+            search: TextSearch::new(s),
             sarray: SArray::from_bits(self.bitmap.iter().map(|b| b != 0)).enable_rank(),
         }
     }
 }
 
 pub(crate) struct TextUsage {
-    // search: TextSearch,
-    text: String,
+    search: TextSearch,
     sarray: SArray,
 }
 
@@ -88,17 +94,16 @@ impl TextUsage {
 
     pub(crate) fn text_value(&self, text_id: TextId) -> &str {
         let range = self.text_range(text_id);
-        &self.text[range]
+        self.search.text_in_range(range)
     }
 
-    // pub(crate) fn search_text_ids(&self, query: &str) -> Vec<TextId> {
-    //     let s = self.search.index.search_backward(query);
-    //     let locations = s.locate();
-    //     locations
-    //         .iter()
-    //         .map(|&i| self.text_id(i.try_into().unwrap()))
-    //         .collect()
-    // }
+    pub(crate) fn search_text_ids(&self, query: &str) -> Vec<TextId> {
+        self.search
+            .locate(query)
+            .iter()
+            .map(|&i| self.text_id(i))
+            .collect()
+    }
 }
 
 #[cfg(test)]
@@ -169,13 +174,26 @@ mod tests {
         assert_eq!(usage.text_value(TextId(1)), "world");
     }
 
-    // #[test]
-    // fn test_simple_search() {
-    //     let mut builder = TextBuilder::new();
-    //     builder.text_node("a");
-    //     builder.text_node("b");
-    //     let usage = builder.build();
+    #[test]
+    fn test_tiny_search() {
+        let mut builder = TextBuilder::new();
+        builder.text_node("a");
+        builder.text_node("b");
+        let usage = builder.build();
 
-    //     assert_eq!(usage.search_text_ids("a"), vec![TextId(0)]);
-    // }
+        assert_eq!(usage.search_text_ids("a"), vec![TextId(0)]);
+        assert_eq!(usage.search_text_ids("b"), vec![TextId(1)]);
+    }
+
+    #[test]
+    fn test_search_bigger_text() {
+        let mut builder = TextBuilder::new();
+        builder.text_node("hello");
+        builder.text_node("world");
+        let usage = builder.build();
+
+        assert_eq!(usage.search_text_ids("hello"), vec![TextId(0)]);
+        assert_eq!(usage.search_text_ids("world"), vec![TextId(1)]);
+        assert_eq!(usage.search_text_ids("wor"), vec![TextId(1)]);
+    }
 }
