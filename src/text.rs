@@ -13,13 +13,10 @@ pub(crate) struct TextBuilder {
 
 impl TextBuilder {
     pub(crate) fn new() -> Self {
-        let mut bitmap = BitVec::new();
-        // add terminator in the beginning, so if select of 1 happens, we get
-        // the start of the text
-        bitmap.append(true);
-        let mut s = String::new();
-        s.push(0.into());
-        Self { s, bitmap }
+        Self {
+            s: String::new(),
+            bitmap: BitVec::new(),
+        }
     }
 
     pub(crate) fn text_node(&mut self, text: &str) {
@@ -64,21 +61,23 @@ impl TextId {
 
 impl TextUsage {
     pub(crate) fn text_id(&self, index: usize) -> TextId {
-        // we subtract 1 here, as we have a terminator in the beginning
-        // and we want to start from 0
         TextId(
             self.sarray
                 .rank1(index)
-                .expect("Text index should be in bounds")
-                - 1,
+                .expect("Text index should be in bounds"),
         )
     }
 
     pub(crate) fn text_index(&self, text_id: TextId) -> usize {
-        // we add 1 here as we want the index of the actual start of the
-        // text rather than the terminator
-        // unwrap is okay as we know we have a text id already
-        self.sarray.select1(text_id.0).unwrap() + 1
+        let id = text_id.0;
+        if id == 0 {
+            0
+        } else {
+            // we add 1 here as we want the index of the actual start of the
+            // text rather than the terminator
+            // unwrap is okay as we know we have a text id already
+            self.sarray.select1(id - 1).unwrap() + 1
+        }
     }
 
     pub(crate) fn text_range(&self, text_id: TextId) -> Range<usize> {
@@ -111,8 +110,8 @@ mod tests {
         let mut builder = TextBuilder::new();
         builder.text_node("hello");
         let usage = builder.build();
-        let text_id = usage.text_id(1);
-        assert_eq!(usage.text_index(text_id), 1);
+        let text_id = usage.text_id(0);
+        assert_eq!(usage.text_index(text_id), 0);
     }
 
     #[test]
@@ -120,43 +119,43 @@ mod tests {
         let mut builder = TextBuilder::new();
         builder.text_node("hello");
         let usage = builder.build();
-        let text_id = usage.text_id(2);
-        assert_eq!(usage.text_index(text_id), 1);
+        let text_id = usage.text_id(3);
+        assert_eq!(usage.text_index(text_id), 0);
     }
 
     #[test]
     fn test_two_texts() {
         let mut builder = TextBuilder::new();
-        // 1..6
+        // 0..5
         builder.text_node("hello");
-        // 7..12
+        // 6..11
         builder.text_node("world");
         let usage = builder.build();
 
         // in 'hello' text
+        let text_id = usage.text_id(0);
+        assert_eq!(usage.text_index(text_id), 0);
         let text_id = usage.text_id(1);
-        assert_eq!(usage.text_index(text_id), 1);
-        let text_id = usage.text_id(2);
-        assert_eq!(usage.text_index(text_id), 1);
+        assert_eq!(usage.text_index(text_id), 0);
 
         // in 'world' text
-        let text_id = usage.text_id(7);
-        assert_eq!(usage.text_index(text_id), 7);
+        let text_id = usage.text_id(6);
+        assert_eq!(usage.text_index(text_id), 6);
         let text_id = usage.text_id(8);
-        assert_eq!(usage.text_index(text_id), 7);
+        assert_eq!(usage.text_index(text_id), 6);
     }
 
     #[test]
     fn test_two_texts_range() {
         let mut builder = TextBuilder::new();
-        // 1..6
+        // 0..5
         builder.text_node("hello");
-        // 7..12
+        // 6..11
         builder.text_node("world");
         let usage = builder.build();
 
-        assert_eq!(usage.text_range(TextId(0)), 1..6);
-        assert_eq!(usage.text_range(TextId(1)), 7..12);
+        assert_eq!(usage.text_range(TextId(0)), 0..5);
+        assert_eq!(usage.text_range(TextId(1)), 6..11);
     }
 
     #[test]
