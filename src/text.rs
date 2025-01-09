@@ -1,7 +1,10 @@
 use std::ops::Range;
 
+use fm_index::BackwardSearchIndex;
 use sucds::bit_vectors::{Rank, SArray, Select};
 use vers_vecs::{BitVec, RsVec};
+
+use crate::textsearch::TextSearch;
 
 pub(crate) struct TextBuilder {
     s: String,
@@ -33,6 +36,7 @@ impl TextBuilder {
 
     pub(crate) fn build(self) -> TextUsage {
         TextUsage {
+            // search: TextSearch::new(&self.s),
             text: self.s,
             sarray: SArray::from_bits(self.bitmap.iter().map(|b| b != 0)).enable_rank(),
         }
@@ -40,6 +44,7 @@ impl TextBuilder {
 }
 
 pub(crate) struct TextUsage {
+    // search: TextSearch,
     text: String,
     sarray: SArray,
 }
@@ -86,6 +91,15 @@ impl TextUsage {
         let range = self.text_range(text_id);
         &self.text[range]
     }
+
+    // pub(crate) fn search_text_ids(&self, query: &str) -> Vec<TextId> {
+    //     let s = self.search.index.search_backward(query);
+    //     let locations = s.locate();
+    //     locations
+    //         .iter()
+    //         .map(|&i| self.text_id(i.try_into().unwrap()))
+    //         .collect()
+    // }
 }
 
 #[cfg(test)]
@@ -155,4 +169,14 @@ mod tests {
         assert_eq!(usage.text_value(TextId(0)), "hello");
         assert_eq!(usage.text_value(TextId(1)), "world");
     }
+
+    // #[test]
+    // fn test_simple_search() {
+    //     let mut builder = TextBuilder::new();
+    //     builder.text_node("a");
+    //     builder.text_node("b");
+    //     let usage = builder.build();
+
+    //     assert_eq!(usage.search_text_ids("a"), vec![TextId(0)]);
+    // }
 }

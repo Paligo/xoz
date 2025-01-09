@@ -8,6 +8,7 @@ mod tag;
 mod tags_builder;
 mod tagvec;
 mod text;
+mod textsearch;
 
 pub use builder::parse_document;
 pub use document::Name;
