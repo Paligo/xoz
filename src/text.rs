@@ -1,5 +1,6 @@
 use std::ops::Range;
 
+use ahash::{HashSet, HashSetExt};
 use fm_index::BackwardSearchIndex;
 use sucds::bit_vectors::{Rank, SArray, Select};
 use vers_vecs::{BitVec, RsVec};
@@ -52,7 +53,7 @@ pub(crate) struct TextUsage {
     sarray: SArray,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, Ord, PartialOrd, PartialEq, Eq, Hash)]
 pub struct TextId(usize);
 
 impl TextId {
@@ -103,6 +104,42 @@ impl TextUsage {
             .iter()
             .map(|&i| self.text_id(i))
             .collect()
+    }
+
+    pub(crate) fn search_starts_with(&self, query: &str) -> Vec<TextId> {
+        self.search
+            .starts_with(query)
+            .iter()
+            .map(|&i| self.text_id(i))
+            .collect()
+    }
+
+    pub(crate) fn search_ends_with(&self, query: &str) -> Vec<TextId> {
+        self.search
+            .ends_with(query)
+            .iter()
+            .map(|&i| self.text_id(i))
+            .collect()
+    }
+
+    pub(crate) fn search_equals(&self, query: &str) -> Vec<TextId> {
+        self.search
+            .equals(query)
+            .iter()
+            .map(|&i| self.text_id(i))
+            .collect()
+    }
+
+    pub(crate) fn search_contains(&self, query: &str) -> Vec<TextId> {
+        let text_ids: Vec<TextId> = self
+            .search
+            .locate(query)
+            .iter()
+            .map(|&i| self.text_id(i))
+            .collect();
+        // we may find multiple matches in a single text, so we need to deduplicate
+        let mut seen = HashSet::new();
+        text_ids.into_iter().filter(|id| seen.insert(*id)).collect()
     }
 }
 
@@ -195,5 +232,62 @@ mod tests {
         assert_eq!(usage.search_text_ids("hello"), vec![TextId(0)]);
         assert_eq!(usage.search_text_ids("world"), vec![TextId(1)]);
         assert_eq!(usage.search_text_ids("wor"), vec![TextId(1)]);
+    }
+
+    #[test]
+    fn test_search_starts_with() {
+        let mut builder = TextBuilder::new();
+        builder.text_node("hello");
+        builder.text_node("world");
+        builder.text_node("hello world");
+        builder.text_node("world hello");
+
+        let usage = builder.build();
+        let mut text_ids = usage.search_starts_with("hello");
+        text_ids.sort();
+        assert_eq!(text_ids, vec![TextId(0), TextId(2)]);
+    }
+
+    #[test]
+    fn test_search_ends_with() {
+        let mut builder = TextBuilder::new();
+        builder.text_node("hello");
+        builder.text_node("world");
+        builder.text_node("hello world");
+        builder.text_node("world hello");
+
+        let usage = builder.build();
+        let mut text_ids = usage.search_ends_with("world");
+        text_ids.sort();
+        assert_eq!(text_ids, vec![TextId(1), TextId(2)]);
+    }
+
+    #[test]
+    fn test_search_equals() {
+        let mut builder = TextBuilder::new();
+        builder.text_node("hello");
+        builder.text_node("world");
+        builder.text_node("hello world");
+        builder.text_node("world hello");
+
+        let usage = builder.build();
+        let mut text_ids = usage.search_equals("hello");
+        text_ids.sort();
+        assert_eq!(text_ids, vec![TextId(0)]);
+    }
+
+    #[test]
+    fn test_search_contains() {
+        let mut builder = TextBuilder::new();
+        builder.text_node("hello");
+        builder.text_node("world");
+        builder.text_node("hello world");
+        builder.text_node("world hello");
+        builder.text_node("world world");
+
+        let usage = builder.build();
+        let mut text_ids = usage.search_contains("world");
+        text_ids.sort();
+        assert_eq!(text_ids, vec![TextId(1), TextId(2), TextId(3), TextId(4)]);
     }
 }
