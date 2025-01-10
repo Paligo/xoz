@@ -71,6 +71,10 @@ impl TextSearch {
             .collect()
     }
 
+    // TODO: to implement efficient count we really need to be able to use
+    // an FM Index that starts with \0. This would allow efficient count for
+    // everything except contains
+
     pub(crate) fn starts_with(&self, pattern: &str) -> Vec<usize> {
         // find those text indices that start with the pattern
         // this means i - 1 is \0, or alternative i == 0
