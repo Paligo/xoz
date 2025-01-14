@@ -204,6 +204,34 @@ impl Document {
         tag_info.tag_type()
     }
 
+    pub fn is_document(&self, node: Node) -> bool {
+        matches!(self.value(node), TagType::Document)
+    }
+
+    pub fn is_element(&self, node: Node) -> bool {
+        matches!(self.value(node), TagType::Element { .. })
+    }
+
+    pub fn is_text(&self, node: Node) -> bool {
+        matches!(self.value(node), TagType::Text)
+    }
+
+    pub fn is_comment(&self, node: Node) -> bool {
+        matches!(self.value(node), TagType::Comment)
+    }
+
+    pub fn is_processing_instruction(&self, node: Node) -> bool {
+        matches!(self.value(node), TagType::ProcessingInstruction)
+    }
+
+    pub fn is_attribute(&self, node: Node) -> bool {
+        matches!(self.value(node), TagType::Attribute { .. })
+    }
+
+    pub fn is_namespace(&self, node: Node) -> bool {
+        matches!(self.value(node), TagType::Namespace { .. })
+    }
+
     pub fn child_index(&self, node: Node) -> Option<usize> {
         let parent = self.parent(node)?;
         for (i, child) in self.children(parent).enumerate() {

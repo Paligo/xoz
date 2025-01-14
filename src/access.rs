@@ -13,8 +13,6 @@
 
 // attribute_nodes
 
-// child_index
-
 // reverse_children
 
 // descendants
