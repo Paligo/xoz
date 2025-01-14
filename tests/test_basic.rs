@@ -173,6 +173,21 @@ fn test_following_siblings() {
 }
 
 #[test]
+fn test_preceding_siblings() {
+    let doc = parse_document(r#"<doc><a/><b/><c/></doc>"#).unwrap();
+    let doc_el = doc.document_element();
+    let a = doc.first_child(doc_el).unwrap();
+    let b = doc.next_sibling(a).unwrap();
+    let c = doc.next_sibling(b).unwrap();
+    let a_siblings: Vec<_> = doc.preceding_siblings(a).collect();
+    let b_siblings: Vec<_> = doc.preceding_siblings(b).collect();
+    let c_siblings: Vec<_> = doc.preceding_siblings(c).collect();
+    assert_eq!(a_siblings, vec![a]);
+    assert_eq!(b_siblings, vec![b, a]);
+    assert_eq!(c_siblings, vec![c, b, a]);
+}
+
+#[test]
 fn test_preorder() {
     let doc = parse_document(r#"<doc><a/><b><c/><d/></b></doc>"#).unwrap();
     let doc_el = doc.document_element();
@@ -328,4 +343,18 @@ fn test_child_index() {
     assert_eq!(doc.child_index(b), Some(1));
     assert_eq!(doc.child_index(c), Some(2));
     assert_eq!(doc.child_index(root), None);
+}
+
+#[test]
+fn test_descendants() {
+    let doc = parse_document(r#"<doc><a><b><c/></b><d><e/><f/></d></a></doc>"#).unwrap();
+    let doc_el = doc.document_element();
+    let a = doc.first_child(doc_el).unwrap();
+    let b = doc.first_child(a).unwrap();
+    let c = doc.first_child(b).unwrap();
+    let d = doc.next_sibling(b).unwrap();
+    let e = doc.first_child(d).unwrap();
+    let f = doc.next_sibling(e).unwrap();
+    let descendants: Vec<_> = doc.descendants(doc_el).collect();
+    assert_eq!(descendants, vec![doc_el, a, b, c, d, e, f]);
 }
