@@ -536,8 +536,6 @@ impl<T: Descender> Iterator for DescenderWrapper<T> {
     }
 }
 
-// impl Iterator for Descender {}
-
 struct FollowingIter<'a> {
     doc: &'a Document,
     node: Option<Node>,
