@@ -437,17 +437,32 @@ fn test_tagged_descendants() {
     assert_eq!(tagged_descendants.len(), 2);
 }
 
-// #[test]
-// fn test_tagged_descendants_including_self() {
-//     let doc = parse_document(r#"<doc><b><b/><b/></b></doc>"#).unwrap();
-//     let doc_el = doc.document_element();
-//     let outer_b = doc.first_child(doc_el).unwrap();
-//     let tag_id = doc
-//         .tag(&TagInfo::open(TagType::Element {
-//             namespace: "".to_string(),
-//             local_name: "b".to_string(),
-//         }))
-//         .unwrap();
-//     let tagged_descendants: Vec<_> = doc.tagged_descendants(outer_b, tag_id).collect();
-//     assert_eq!(tagged_descendants.len(), 3);
-// }
+#[test]
+fn test_tagged_descendants_including_self() {
+    let doc = parse_document(r#"<doc><b><b/><b/></b></doc>"#).unwrap();
+    let doc_el = doc.document_element();
+    let outer_b = doc.first_child(doc_el).unwrap();
+    let tag_id = doc
+        .tag(&TagInfo::open(TagType::Element {
+            namespace: "".to_string(),
+            local_name: "b".to_string(),
+        }))
+        .unwrap();
+    let tagged_descendants: Vec<_> = doc.tagged_descendants(outer_b, tag_id).collect();
+    assert_eq!(tagged_descendants.len(), 3);
+}
+
+#[test]
+fn test_tagged_descendants_including_self2() {
+    let doc = parse_document(r#"<doc><b/></doc>"#).unwrap();
+    let doc_el = doc.document_element();
+    let outer_b = doc.first_child(doc_el).unwrap();
+    let tag_id = doc
+        .tag(&TagInfo::open(TagType::Element {
+            namespace: "".to_string(),
+            local_name: "b".to_string(),
+        }))
+        .unwrap();
+    let tagged_descendants: Vec<_> = doc.tagged_descendants(outer_b, tag_id).collect();
+    assert_eq!(tagged_descendants.len(), 1);
+}

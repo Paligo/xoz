@@ -275,6 +275,10 @@ impl Document {
     }
 
     pub fn descendants(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
+        self.descendants_iter(node)
+    }
+
+    fn descendants_iter(&self, node: Node) -> WithSelfIter<DescenderWrapper<Descendants>> {
         WithSelfIter::new(node, DescenderWrapper(Descendants::new(self, node)))
     }
 
@@ -572,10 +576,7 @@ impl Iterator for FollowingIter<'_> {
             loop {
                 if let Some(next_sibling) = self.doc.next_sibling(current) {
                     self.node = Some(next_sibling);
-                    self.descendant_iter = Some(WithSelfIter::new(
-                        next_sibling,
-                        DescenderWrapper(Descendants::new(self.doc, next_sibling)),
-                    ));
+                    self.descendant_iter = Some(self.doc.descendants_iter(next_sibling));
                     return self.next();
                 } else {
                     let parent = self.doc.parent(current);
