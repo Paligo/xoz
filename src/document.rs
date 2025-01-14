@@ -275,11 +275,7 @@ impl Document {
     }
 
     pub fn following(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
-        FollowingIter {
-            doc: self,
-            node: Some(node),
-            descendant_iter: None,
-        }
+        FollowingIter::new(self, node)
     }
 
     pub fn text_str(&self, node: Node) -> Option<&str> {
@@ -440,6 +436,16 @@ struct FollowingIter<'a> {
     doc: &'a Document,
     node: Option<Node>,
     descendant_iter: Option<DescendantIter<'a>>,
+}
+
+impl<'a> FollowingIter<'a> {
+    fn new(doc: &'a Document, node: Node) -> Self {
+        Self {
+            doc,
+            node: Some(node),
+            descendant_iter: None,
+        }
+    }
 }
 
 impl Iterator for FollowingIter<'_> {
