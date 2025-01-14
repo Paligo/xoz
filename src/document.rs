@@ -271,9 +271,14 @@ impl Document {
     }
 
     pub fn descendants(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
-        DescendantIter {
+        DescendantIter::new(self, node)
+    }
+
+    pub fn following(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
+        FollowingIter {
             doc: self,
             node: Some(node),
+            descendant_iter: None,
         }
     }
 
@@ -381,40 +386,104 @@ impl Iterator for AncestorIter<'_> {
 
 struct DescendantIter<'a> {
     doc: &'a Document,
+    root: Node,
     node: Option<Node>,
+}
+
+impl<'a> DescendantIter<'a> {
+    fn new(doc: &'a Document, root: Node) -> Self {
+        Self {
+            doc,
+            root,
+            node: Some(root),
+        }
+    }
 }
 
 impl Iterator for DescendantIter<'_> {
     type Item = Node;
 
     fn next(&mut self) -> Option<Self::Item> {
+        // get the current node
         let node = self.node?;
-        // now set the next node
-        let first_child = self.doc.primitive_first_child(node);
+
+        let first_child = self.doc.first_child(node);
         if let Some(first_child) = first_child {
+            // if there is a first child, take it
             self.node = Some(first_child);
         } else {
-            let next_sibling = self.doc.next_sibling(node);
-            if let Some(next_sibling) = next_sibling {
-                self.node = Some(next_sibling);
+            // if there is no first child, try to look for next sibling. if
+            // it doesn't exist for current, go up the ancestor chain
+            let mut current = node;
+            loop {
+                if current == self.root {
+                    // we're done
+                    self.node = None;
+                    break;
+                }
+                if let Some(next_sibling) = self.doc.next_sibling(current) {
+                    self.node = Some(next_sibling);
+                    break;
+                } else {
+                    current = self
+                        .doc
+                        .parent(current)
+                        .expect("We should have a parent for a descendant");
+                }
+            }
+        }
+        Some(node)
+    }
+}
+
+struct FollowingIter<'a> {
+    doc: &'a Document,
+    node: Option<Node>,
+    descendant_iter: Option<DescendantIter<'a>>,
+}
+
+impl Iterator for FollowingIter<'_> {
+    type Item = Node;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        // we if we have a descendant iter, keep getting nodes from it until
+        // it's empty
+        if let Some(descendant_iter) = &mut self.descendant_iter {
+            let next = descendant_iter.next();
+            if let Some(next) = next {
+                Some(next)
             } else {
-                // no children and no siblings, go up to first ancestor
-                // with a next sibling
+                self.descendant_iter = None;
+                self.next()
+            }
+        } else if let Some(node) = self.node {
+            // if we don't have a descendant iter
+            if let Some(next_sibling) = self.doc.next_sibling(node) {
+                // we take the next sibling and initialize a descendant iter
+                // for that
+                self.node = Some(next_sibling);
+                self.descendant_iter = Some(DescendantIter::new(self.doc, next_sibling));
+                self.next()
+            } else {
+                // if we don't have a next sibling, go up parent chain until
+                // we find a parent with a next sibling
                 let mut parent = self.doc.parent(node);
                 while let Some(found_parent) = parent {
                     let next_sibling = self.doc.next_sibling(found_parent);
                     if let Some(next_sibling) = next_sibling {
                         self.node = Some(next_sibling);
-                        break;
+                        self.descendant_iter = Some(DescendantIter::new(self.doc, next_sibling));
+                        return self.next();
                     }
                     parent = self.doc.parent(found_parent);
                 }
                 // if we cannot find such a parent, we're done
-                if parent.is_none() {
-                    self.node = None;
-                }
+                self.node = None;
+                None
             }
+        } else {
+            // if there is no more parent, we're done
+            None
         }
-        Some(node)
     }
 }

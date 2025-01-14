@@ -355,6 +355,53 @@ fn test_descendants() {
     let d = doc.next_sibling(b).unwrap();
     let e = doc.first_child(d).unwrap();
     let f = doc.next_sibling(e).unwrap();
+
     let descendants: Vec<_> = doc.descendants(doc_el).collect();
     assert_eq!(descendants, vec![doc_el, a, b, c, d, e, f]);
+
+    let descendants: Vec<_> = doc.descendants(a).collect();
+    assert_eq!(descendants, vec![a, b, c, d, e, f]);
+
+    let descendants: Vec<_> = doc.descendants(b).collect();
+    assert_eq!(descendants, vec![b, c]);
 }
+
+#[test]
+fn test_descendants_one_node() {
+    let doc = parse_document(r#"<doc/>"#).unwrap();
+    let doc_el = doc.document_element();
+    let descendants: Vec<_> = doc.descendants(doc_el).collect();
+
+    assert_eq!(descendants, vec![doc_el]);
+}
+
+// #[test]
+// fn test_following() {
+//     let doc = parse_document(r#"<doc><a><b><c/></b><d><e/><f/></d></a></doc>"#).unwrap();
+//     let doc_el = doc.document_element();
+//     let a = doc.first_child(doc_el).unwrap();
+//     let b = doc.first_child(a).unwrap();
+//     let c = doc.first_child(b).unwrap();
+//     let d = doc.next_sibling(b).unwrap();
+//     let e = doc.first_child(d).unwrap();
+//     let f = doc.next_sibling(e).unwrap();
+//     let following: Vec<_> = doc.following(c).collect();
+//     assert_eq!(following, vec![d, e, f]);
+// }
+
+// #[test]
+// fn test_following_two() {
+//     let doc = parse_document(r#"<x><a><b><d/><e/></b><c><f/><g/></c></a><y/></x>"#).unwrap();
+//     let x = doc.document_element();
+//     let a = doc.first_child(x).unwrap();
+//     let b = doc.first_child(a).unwrap();
+//     let d = doc.first_child(b).unwrap();
+//     let e = doc.next_sibling(d).unwrap();
+//     let c = doc.next_sibling(b).unwrap();
+//     let f = doc.first_child(c).unwrap();
+//     let g = doc.next_sibling(f).unwrap();
+//     let y = doc.next_sibling(a).unwrap();
+
+//     let following: Vec<_> = doc.following(d).collect();
+//     assert_eq!(following, vec![e, c, f, g, y]);
+// }

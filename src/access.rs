@@ -15,8 +15,6 @@
 
 // reverse_children
 
-// descendants
-
 // all_descendants
 
 // following_siblings
