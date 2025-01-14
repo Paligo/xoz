@@ -3,10 +3,6 @@
 
 // top_element
 
-// root
-
-// parent
-
 // attributes
 
 // get_attribute

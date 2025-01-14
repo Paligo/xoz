@@ -261,3 +261,33 @@ fn test_tagged_descendant2() {
     let b = doc.tagged_descendant(b, tag_id).unwrap();
     assert_eq!(b, second_b);
 }
+
+#[test]
+fn test_last_child() {
+    let doc = parse_document(r#"<doc><a/><b/><c/></doc>"#).unwrap();
+    let doc_el = doc.document_element();
+    let a = doc.first_child(doc_el).unwrap();
+    let b = doc.next_sibling(a).unwrap();
+    let c = doc.next_sibling(b).unwrap();
+    let c_last = doc.last_child(doc_el).unwrap();
+    assert_eq!(c, c_last);
+}
+
+#[test]
+fn test_last_child_with_attributes() {
+    let doc = parse_document(r#"<doc a="A"><a/><b/><c/></doc>"#).unwrap();
+    let doc_el = doc.document_element();
+    let a = doc.first_child(doc_el).unwrap();
+    let b = doc.next_sibling(a).unwrap();
+    let c = doc.next_sibling(b).unwrap();
+    let c_last = doc.last_child(doc_el).unwrap();
+    assert_eq!(c, c_last);
+}
+
+#[test]
+fn test_no_last_child_if_only_attributes() {
+    let doc = parse_document(r#"<doc a="A" b="B" />"#).unwrap();
+    let doc_el = doc.document_element();
+    let last = doc.last_child(doc_el);
+    assert_eq!(last, None);
+}

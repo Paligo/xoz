@@ -110,6 +110,14 @@ impl Document {
         }
     }
 
+    pub fn last_child(&self, node: Node) -> Option<Node> {
+        let child = self.primitive_last_child(node)?;
+        match self.node_value(child) {
+            Some(TagType::Attributes) | Some(TagType::Namespaces) => None,
+            _ => Some(child),
+        }
+    }
+
     pub fn next_sibling(&self, node: Node) -> Option<Node> {
         self.structure.tree().next_sibling(node.0).map(Node)
     }
@@ -238,6 +246,10 @@ impl Document {
 
     pub(crate) fn primitive_first_child(&self, node: Node) -> Option<Node> {
         self.structure.tree().first_child(node.0).map(Node)
+    }
+
+    pub(crate) fn primitive_last_child(&self, node: Node) -> Option<Node> {
+        self.structure.tree().last_child(node.0).map(Node)
     }
 
     pub(crate) fn primitive_previous_sibling(&self, node: Node) -> Option<Node> {
