@@ -6,9 +6,46 @@ use crate::{
     tagvec::TagId,
 };
 
-pub(crate) struct TagsBuilder {
+pub(crate) struct TagsLookup {
     pub(crate) tags: Vec<TagInfo>,
     pub(crate) tag_lookup: HashMap<TagInfo, TagId>,
+}
+
+impl TagsLookup {
+    pub(crate) fn new() -> Self {
+        Self {
+            tags: Vec::new(),
+            tag_lookup: HashMap::new(),
+        }
+    }
+
+    fn register(&mut self, tag_info: TagInfo) -> TagId {
+        if let Some(&idx) = self.tag_lookup.get(&tag_info) {
+            return idx;
+        }
+        let idx = TagId::new(self.tags.len() as u64);
+        self.tags.push(tag_info.clone());
+        self.tag_lookup.insert(tag_info, idx);
+        idx
+    }
+
+    pub(crate) fn by_tag_info(&self, tag_info: &TagInfo) -> Option<TagId> {
+        self.tag_lookup.get(tag_info).copied()
+    }
+
+    pub(crate) fn by_tag_id(&self, tag_id: TagId) -> &TagInfo {
+        self.tags
+            .get(tag_id.id() as usize)
+            .expect("Tag id does not exist in this document")
+    }
+
+    pub(crate) fn len(&self) -> usize {
+        self.tags.len()
+    }
+}
+
+pub(crate) struct TagsBuilder {
+    pub(crate) tags_lookup: TagsLookup,
     pub(crate) parentheses: BitVec,
     // store the opening parens of all text content, i.e. text nodes
     // and attribute values. We store this separately even though there's
@@ -21,30 +58,23 @@ pub(crate) struct TagsBuilder {
 impl TagsBuilder {
     pub(crate) fn new() -> Self {
         Self {
-            tags: Vec::new(),
-            tag_lookup: HashMap::new(),
+            tags_lookup: TagsLookup::new(),
             parentheses: BitVec::new(),
             text_opening_parens: BitVec::new(),
             usage: Vec::new(),
         }
     }
 
-    fn register_tag(&mut self, tag: TagInfo) -> TagId {
-        if let Some(&idx) = self.tag_lookup.get(&tag) {
-            return idx;
-        }
-        let idx = TagId::new(self.tags.len() as u64);
-        self.tags.push(tag.clone());
-        self.tag_lookup.insert(tag, idx);
-        idx
+    fn register_tag(&mut self, tag_info: TagInfo) -> TagId {
+        self.tags_lookup.register(tag_info)
     }
 
     pub(crate) fn bits_per_element(&self) -> usize {
-        self.tags.len().next_power_of_two().trailing_zeros() as usize
+        self.tags_lookup.len().next_power_of_two().trailing_zeros() as usize
     }
 
     pub(crate) fn tags_amount(&self) -> usize {
-        self.tags.len()
+        self.tags_lookup.len()
     }
 
     pub(crate) fn usage(&self) -> &[u64] {

@@ -9,16 +9,17 @@ use vers_vecs::{
 use crate::{
     error::Error,
     tag::TagInfo,
-    tags_builder::TagsBuilder,
+    tags_builder::{TagsBuilder, TagsLookup},
     tagvec::{TagId, TagVec},
     text::TextId,
 };
 
 pub(crate) struct Structure<T: TagVec> {
-    tags: Vec<TagInfo>,
-    tag_lookup: HashMap<TagInfo, TagId>,
+    tags_lookup: TagsLookup,
     text_opening_parens: RsVec,
     tree: BpTree,
+    // namespaces_tag_id: TagId,
+    // attributes_tag_id: TagId,
     tag_vec: T,
 }
 
@@ -29,8 +30,7 @@ impl<T: TagVec> Structure<T> {
     ) -> Result<Self, Error> {
         let tag_vec = make_tag_vec(&tags_builder)?;
         Ok(Self {
-            tags: tags_builder.tags,
-            tag_lookup: tags_builder.tag_lookup,
+            tags_lookup: tags_builder.tags_lookup,
             text_opening_parens: RsVec::from_bit_vec(tags_builder.text_opening_parens),
             tree: BpTree::from_bit_vector(tags_builder.parentheses),
             tag_vec,
@@ -39,14 +39,14 @@ impl<T: TagVec> Structure<T> {
 
     /// Given a tag info, return the tag id if it exists
     pub(crate) fn lookup_tag_id(&self, tag_info: &TagInfo) -> Option<TagId> {
-        self.tag_lookup.get(tag_info).copied()
+        self.tags_lookup.by_tag_info(tag_info)
     }
 
     /// Given a tag id, return the tag info.
     ///
     /// Should always succeed given a valid tag info.
     pub(crate) fn lookup_tag_info(&self, tag_id: TagId) -> &TagInfo {
-        &self.tags[tag_id.id() as usize]
+        self.tags_lookup.by_tag_id(tag_id)
     }
 
     pub(crate) fn tree(&self) -> &BpTree {
