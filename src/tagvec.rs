@@ -13,16 +13,18 @@ pub struct TagId(u64);
 pub(crate) const NAMESPACES_TAG_ID: TagId = TagId(0);
 pub(crate) const ATTRIBUTES_TAG_ID: TagId = TagId(1);
 
-pub(crate) fn is_special_tag(tag_id: TagId) -> bool {
-    tag_id == NAMESPACES_TAG_ID || tag_id == ATTRIBUTES_TAG_ID
-}
+impl TagId {
+    pub(crate) fn is_special(&self) -> bool {
+        *self == NAMESPACES_TAG_ID || *self == ATTRIBUTES_TAG_ID
+    }
 
-pub(crate) fn is_namespaces_tag_id(tag_id: TagId) -> bool {
-    tag_id == NAMESPACES_TAG_ID
-}
+    pub(crate) fn is_namespaces(&self) -> bool {
+        *self == NAMESPACES_TAG_ID
+    }
 
-pub(crate) fn is_attributes_tag_id(tag_id: TagId) -> bool {
-    tag_id == ATTRIBUTES_TAG_ID
+    pub(crate) fn is_attributes(&self) -> bool {
+        *self == ATTRIBUTES_TAG_ID
+    }
 }
 
 impl TagId {

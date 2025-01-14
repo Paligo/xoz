@@ -5,9 +5,9 @@ use crate::{
         AncestorIter, Descendants, DescenderWrapper, FollowingIter, NextSiblingIter,
         PreviousSiblingIter, TaggedDescendants, WithSelfIter, WithTaggedSelfIter,
     },
-    structure::{self, Structure},
+    structure::Structure,
     tag::{TagInfo, TagType},
-    tagvec::{is_attributes_tag_id, is_namespaces_tag_id, is_special_tag, SArrayMatrix, TagId},
+    tagvec::{SArrayMatrix, TagId},
     text::TextUsage,
 };
 
@@ -84,7 +84,7 @@ impl Document {
         // if found, or checking whether we are an attribute or namespace node before
         // we even try. I've chosen the first strategy.
         let parent = self.primitive_parent(node)?;
-        if is_special_tag(self.tag_id(parent)) {
+        if self.tag_id(parent).is_special() {
             // if the parent is an attribute or namespace node, we skip it
             self.primitive_parent(parent)
         } else {
@@ -96,15 +96,15 @@ impl Document {
     pub fn first_child(&self, node: Node) -> Option<Node> {
         let node = self.primitive_first_child(node)?;
         let tag_id = self.tag_id(node);
-        if is_attributes_tag_id(tag_id) {
+        if tag_id.is_attributes() {
             // the first child is the attributes node, skip it
             self.next_sibling(node)
-        } else if is_namespaces_tag_id(tag_id) {
+        } else if tag_id.is_namespaces() {
             // the first child is the namespaces node
             // check if the next sibling is the attributes node
             let next = self.next_sibling(node)?;
             // if so, the first child is the next sibling
-            if is_attributes_tag_id(self.tag_id(next)) {
+            if self.tag_id(next).is_attributes() {
                 self.next_sibling(next)
             } else {
                 // if not, the first child is this sibling
@@ -118,7 +118,7 @@ impl Document {
 
     pub fn last_child(&self, node: Node) -> Option<Node> {
         let child = self.primitive_last_child(node)?;
-        if is_special_tag(self.tag_id(child)) {
+        if self.tag_id(child).is_special() {
             None
         } else {
             Some(child)
@@ -131,7 +131,7 @@ impl Document {
 
     pub fn previous_sibling(&self, node: Node) -> Option<Node> {
         let prev = self.primitive_previous_sibling(node)?;
-        if is_special_tag(self.tag_id(prev)) {
+        if self.tag_id(prev).is_special() {
             // attributes and namespaces nodes are not siblings
             None
         } else {
@@ -143,13 +143,13 @@ impl Document {
         let node = self.primitive_first_child(node);
         if let Some(node) = node {
             let tag_id = self.tag_id(node);
-            if is_attributes_tag_id(tag_id) {
+            if tag_id.is_attributes() {
                 // the first child is the attributes node
                 Some(node)
-            } else if is_namespaces_tag_id(tag_id) {
+            } else if tag_id.is_namespaces() {
                 // the first child is the namespaces node, check for attributes node
                 let next = self.next_sibling(node);
-                next.filter(|next| is_attributes_tag_id(self.tag_id(*next)))
+                next.filter(|next| self.tag_id(*next).is_attributes())
             } else {
                 None
             }
