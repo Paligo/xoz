@@ -68,7 +68,7 @@ impl Document {
 
     pub fn document_element(&self) -> Node {
         for child in self.children(self.root()) {
-            if let Some(TagType::Element { .. }) = self.node_value(child) {
+            if let TagType::Element { .. } = self.value(child) {
                 return child;
             }
         }
@@ -80,9 +80,9 @@ impl Document {
         // if found, or checking whether we are an attribute or namespace node before
         // we even try. I've chosen the first strategy.
         let parent = self.primitive_parent(node)?;
-        match self.node_value(parent) {
+        match self.value(parent) {
             // if the parent is an attribute or namespace node, we skip it
-            Some(TagType::Attributes) | Some(TagType::Namespaces) => self.primitive_parent(parent),
+            TagType::Attributes | TagType::Namespaces => self.primitive_parent(parent),
             // if it's not, then it's a parent
             _ => Some(parent),
         }
@@ -90,15 +90,15 @@ impl Document {
 
     pub fn first_child(&self, node: Node) -> Option<Node> {
         let node = self.primitive_first_child(node)?;
-        match self.node_value(node) {
+        match self.value(node) {
             // the first child is the attributes node, skip it
-            Some(TagType::Attributes) => self.next_sibling(node),
+            TagType::Attributes => self.next_sibling(node),
             // the first child is the namespaces node
-            Some(TagType::Namespaces) => {
+            TagType::Namespaces => {
                 // check if the next sibling is the attributes node
                 let next = self.next_sibling(node)?;
                 // if so, the first child is the next sibling
-                if let Some(TagType::Attributes) = self.node_value(next) {
+                if let TagType::Attributes = self.value(next) {
                     self.next_sibling(next)
                 } else {
                     // if not, the first child is this sibling
@@ -112,8 +112,8 @@ impl Document {
 
     pub fn last_child(&self, node: Node) -> Option<Node> {
         let child = self.primitive_last_child(node)?;
-        match self.node_value(child) {
-            Some(TagType::Attributes) | Some(TagType::Namespaces) => None,
+        match self.value(child) {
+            TagType::Attributes | TagType::Namespaces => None,
             _ => Some(child),
         }
     }
@@ -124,11 +124,11 @@ impl Document {
 
     pub fn previous_sibling(&self, node: Node) -> Option<Node> {
         let prev = self.primitive_previous_sibling(node)?;
-        match self.node_value(prev) {
+        match self.value(prev) {
             // the previous sibling is the attributes node, we are at the beginning
-            Some(TagType::Attributes) => None,
+            TagType::Attributes => None,
             // the previous sibling is the namespaces node, we're at the beginning too
-            Some(TagType::Namespaces) => None,
+            TagType::Namespaces => None,
             // if it's not a special node, then it's definitely a previous sibling
             _ => Some(prev),
         }
@@ -137,13 +137,13 @@ impl Document {
     pub(crate) fn attributes_child(&self, node: Node) -> Option<Node> {
         let node = self.primitive_first_child(node);
         if let Some(node) = node {
-            match self.node_value(node) {
+            match self.value(node) {
                 // the first child is the attributes node
-                Some(TagType::Attributes) => Some(node),
+                TagType::Attributes => Some(node),
                 // the first child is the namespaces node, check for attributes node
-                Some(TagType::Namespaces) => {
+                TagType::Namespaces => {
                     let next = self.next_sibling(node);
-                    next.filter(|next| matches!(self.node_value(*next), Some(TagType::Attributes)))
+                    next.filter(|next| matches!(self.value(*next), TagType::Attributes))
                 }
                 _ => None,
             }
@@ -155,10 +155,10 @@ impl Document {
     pub fn attribute_node(&self, node: Node, name: &Name) -> Option<Node> {
         let attributes = self.attributes_child(node)?;
         for child in self.primitive_children(attributes) {
-            if let Some(TagType::Attribute {
+            if let TagType::Attribute {
                 namespace,
                 local_name,
-            }) = self.node_value(child)
+            } = self.value(child)
             {
                 if namespace == name.namespace && local_name == name.local_name {
                     return Some(child);
@@ -175,38 +175,33 @@ impl Document {
     }
 
     pub fn node_name(&self, node: Node) -> Option<Name> {
-        if let Some(value) = self.node_value(node) {
-            match value {
-                TagType::Element {
-                    namespace,
-                    local_name,
-                } => Some(Name {
-                    local_name,
-                    namespace,
-                    // TODO: proper prefix lookup
-                    prefix: "",
-                }),
-                TagType::Attribute {
-                    namespace,
-                    local_name,
-                } => Some(Name {
-                    local_name,
-                    namespace,
-                    // TODO: proper prefix lookup
-                    prefix: "",
-                }),
-                _ => None,
-            }
-        } else {
-            None
+        match self.value(node) {
+            TagType::Element {
+                namespace,
+                local_name,
+            } => Some(Name {
+                local_name,
+                namespace,
+                // TODO: proper prefix lookup
+                prefix: "",
+            }),
+            TagType::Attribute {
+                namespace,
+                local_name,
+            } => Some(Name {
+                local_name,
+                namespace,
+                // TODO: proper prefix lookup
+                prefix: "",
+            }),
+            _ => None,
         }
     }
 
-    pub fn node_value(&self, node: Node) -> Option<&TagType> {
-        self.structure.get_tag(node.0).map(|tag_info| {
-            assert!(tag_info.is_open_tag());
-            tag_info.tag_type()
-        })
+    pub fn value(&self, node: Node) -> &TagType {
+        let tag_info = self.structure.get_tag(node.0);
+        debug_assert!(tag_info.is_open_tag());
+        tag_info.tag_type()
     }
 
     pub fn children(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
@@ -231,7 +226,7 @@ impl Document {
     }
 
     pub fn text_str(&self, node: Node) -> Option<&str> {
-        if matches!(self.node_value(node)?, TagType::Text) {
+        if matches!(self.value(node), TagType::Text) {
             let text_id = self.structure.text_id(node.0);
             Some(self.text_usage.text_value(text_id))
         } else {
@@ -300,8 +295,8 @@ impl Iterator for AncestorIter<'_> {
         let node = self.node?;
         let new_node = self.doc.parent(node);
         if let Some(new_node) = new_node {
-            match self.doc.node_value(new_node) {
-                Some(TagType::Attributes) | Some(TagType::Namespaces) => {
+            match self.doc.value(new_node) {
+                TagType::Attributes | TagType::Namespaces => {
                     // skip the attributes and namespaces nodes
                     self.node = self.doc.parent(new_node);
                 }

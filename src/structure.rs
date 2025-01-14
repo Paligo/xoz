@@ -73,8 +73,9 @@ impl<T: TagVec> Structure<T> {
     //     self.parentheses.select0(rank)
     // }
 
-    pub(crate) fn get_tag(&self, i: usize) -> Option<&TagInfo> {
-        self.tag_vec.get_tag(i).map(|id| self.lookup_tag_info(id))
+    pub(crate) fn get_tag(&self, i: usize) -> &TagInfo {
+        let id = self.tag_vec.get_tag(i).expect("Tag information to exist");
+        self.lookup_tag_info(id)
     }
 
     // get text id based on location, given we already know this location has text
@@ -191,45 +192,45 @@ mod tests {
 
         assert_eq!(
             structure.get_tag(0),
-            Some(&TagInfo::open(TagType::Element {
+            &TagInfo::open(TagType::Element {
                 namespace: "".to_string(),
                 local_name: "doc".to_string()
-            }))
+            })
         );
         assert_eq!(
             structure.get_tag(1),
-            Some(&TagInfo::open(TagType::Element {
+            &TagInfo::open(TagType::Element {
                 namespace: "".to_string(),
                 local_name: "a".to_string()
-            }))
+            })
         );
         assert_eq!(
             structure.get_tag(2),
-            Some(&TagInfo::close(TagType::Element {
+            &TagInfo::close(TagType::Element {
                 namespace: "".to_string(),
                 local_name: "a".to_string()
-            }))
+            })
         );
         assert_eq!(
             structure.get_tag(3),
-            Some(&TagInfo::open(TagType::Element {
+            &TagInfo::open(TagType::Element {
                 namespace: "".to_string(),
                 local_name: "b".to_string()
-            }))
+            })
         );
         assert_eq!(
             structure.get_tag(4),
-            Some(&TagInfo::close(TagType::Element {
+            &TagInfo::close(TagType::Element {
                 namespace: "".to_string(),
                 local_name: "b".to_string()
-            }))
+            })
         );
         assert_eq!(
             structure.get_tag(5),
-            Some(&TagInfo::close(TagType::Element {
+            &TagInfo::close(TagType::Element {
                 namespace: "".to_string(),
                 local_name: "doc".to_string()
-            }))
+            })
         );
     }
 
@@ -269,45 +270,45 @@ mod tests {
 
         assert_eq!(
             structure.get_tag(0),
-            Some(&TagInfo::open(TagType::Element {
+            &TagInfo::open(TagType::Element {
                 namespace: "".to_string(),
                 local_name: "doc".to_string()
-            }))
+            })
         );
         assert_eq!(
             structure.get_tag(1),
-            Some(&TagInfo::open(TagType::Element {
+            &TagInfo::open(TagType::Element {
                 namespace: "".to_string(),
                 local_name: "a".to_string()
-            }))
+            })
         );
         assert_eq!(
             structure.get_tag(2),
-            Some(&TagInfo::close(TagType::Element {
+            &TagInfo::close(TagType::Element {
                 namespace: "".to_string(),
                 local_name: "a".to_string()
-            }))
+            })
         );
         assert_eq!(
             structure.get_tag(3),
-            Some(&TagInfo::open(TagType::Element {
+            &TagInfo::open(TagType::Element {
                 namespace: "".to_string(),
                 local_name: "a".to_string()
-            }))
+            })
         );
         assert_eq!(
             structure.get_tag(4),
-            Some(&TagInfo::close(TagType::Element {
+            &TagInfo::close(TagType::Element {
                 namespace: "".to_string(),
                 local_name: "a".to_string()
-            }))
+            })
         );
         assert_eq!(
             structure.get_tag(5),
-            Some(&TagInfo::close(TagType::Element {
+            &TagInfo::close(TagType::Element {
                 namespace: "".to_string(),
                 local_name: "doc".to_string()
-            }))
+            })
         );
     }
 
