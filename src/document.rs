@@ -275,7 +275,7 @@ impl Document {
     }
 
     pub fn descendants(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
-        DescendantIter::new(self, node)
+        DescenderWrapper(DescendantIter::new(self, node))
     }
 
     pub fn following(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
@@ -410,37 +410,82 @@ impl<'a> DescendantIter<'a> {
 
 // a descender defines how we descend in the tree
 trait Descender {
+    type Item;
+
+    // the root node
+    fn root(&self) -> Node;
+
+    // the current node
+    fn node(&self) -> Option<Node>;
+    // update the current node
+    fn set_node(&mut self, node: Option<Node>);
+
+    // the parent of a node
+    fn parent(&self, node: Node) -> Option<Node>;
+
+    // the first matching descendant (in document order)
     fn descendant(&self, node: Node) -> Option<Node>;
+    // the next matching sibling (in document order)
     fn sibling(&self, node: Node) -> Option<Node>;
 }
 
-impl Iterator for DescendantIter<'_> {
+impl Descender for DescendantIter<'_> {
+    type Item = Node;
+
+    fn root(&self) -> Self::Item {
+        self.root
+    }
+
+    fn node(&self) -> Option<Node> {
+        self.node
+    }
+
+    fn set_node(&mut self, node: Option<Node>) {
+        self.node = node;
+    }
+
+    fn parent(&self, node: Node) -> Option<Node> {
+        self.doc.parent(node)
+    }
+
+    fn descendant(&self, node: Node) -> Option<Node> {
+        self.doc.first_child(node)
+    }
+
+    fn sibling(&self, node: Node) -> Option<Node> {
+        self.doc.next_sibling(node)
+    }
+}
+
+struct DescenderWrapper<T: Descender>(T);
+
+impl<T: Descender> Iterator for DescenderWrapper<T> {
     type Item = Node;
 
     fn next(&mut self) -> Option<Self::Item> {
+        let s = &mut self.0;
         // get the current node
-        let node = self.node?;
+        let node = s.node()?;
 
-        let first_child = self.doc.first_child(node);
+        let first_child = s.descendant(node);
         if let Some(first_child) = first_child {
             // if there is a first child, take it
-            self.node = Some(first_child);
+            self.0.set_node(Some(first_child));
         } else {
             // if there is no first child, try to look for next sibling. if
             // it doesn't exist for current, go up the ancestor chain
             let mut current = node;
             loop {
-                if current == self.root {
+                if current == s.root() {
                     // we're done
-                    self.node = None;
+                    s.set_node(None);
                     break;
                 }
-                if let Some(next_sibling) = self.doc.next_sibling(current) {
-                    self.node = Some(next_sibling);
+                if let Some(next_sibling) = s.sibling(current) {
+                    s.set_node(Some(next_sibling));
                     break;
                 } else {
-                    current = self
-                        .doc
+                    current = s
                         .parent(current)
                         .expect("We should have a parent for a descendant");
                 }
@@ -450,10 +495,12 @@ impl Iterator for DescendantIter<'_> {
     }
 }
 
+// impl Iterator for Descender {}
+
 struct FollowingIter<'a> {
     doc: &'a Document,
     node: Option<Node>,
-    descendant_iter: Option<DescendantIter<'a>>,
+    descendant_iter: Option<DescenderWrapper<DescendantIter<'a>>>,
 }
 
 impl<'a> FollowingIter<'a> {
@@ -488,7 +535,10 @@ impl Iterator for FollowingIter<'_> {
             loop {
                 if let Some(next_sibling) = self.doc.next_sibling(current) {
                     self.node = Some(next_sibling);
-                    self.descendant_iter = Some(DescendantIter::new(self.doc, next_sibling));
+                    self.descendant_iter = Some(DescenderWrapper(DescendantIter::new(
+                        self.doc,
+                        next_sibling,
+                    )));
                     return self.next();
                 } else {
                     let parent = self.doc.parent(current);
