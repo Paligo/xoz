@@ -18,8 +18,6 @@ pub(crate) struct Structure<T: TagVec> {
     tags_lookup: TagsLookup,
     text_opening_parens: RsVec,
     tree: BpTree,
-    // namespaces_tag_id: TagId,
-    // attributes_tag_id: TagId,
     tag_vec: T,
 }
 
@@ -52,26 +50,6 @@ impl<T: TagVec> Structure<T> {
     pub(crate) fn tree(&self) -> &BpTree {
         &self.tree
     }
-
-    // fn get(&self, i: usize) -> Option<u64> {
-    //     self.parentheses.get(i)
-    // }
-
-    // fn rank_open(&self, i: usize) -> usize {
-    //     self.parentheses.rank1(i)
-    // }
-
-    // fn rank_close(&self, i: usize) -> usize {
-    //     self.parentheses.rank0(i)
-    // }
-
-    // fn select_open(&self, rank: usize) -> usize {
-    //     self.parentheses.select1(rank)
-    // }
-
-    // fn select_close(&self, rank: usize) -> usize {
-    //     self.parentheses.select0(rank)
-    // }
 
     pub(crate) fn get_tag(&self, i: usize) -> &TagInfo {
         let id = self.tag_id(i);

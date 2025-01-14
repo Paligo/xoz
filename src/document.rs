@@ -5,9 +5,9 @@ use crate::{
         AncestorIter, Descendants, DescenderWrapper, FollowingIter, NextSiblingIter,
         PreviousSiblingIter, TaggedDescendants, WithSelfIter, WithTaggedSelfIter,
     },
-    structure::Structure,
+    structure::{self, Structure},
     tag::{TagInfo, TagType},
-    tagvec::{SArrayMatrix, TagId},
+    tagvec::{is_attributes_tag_id, is_namespaces_tag_id, is_special_tag, SArrayMatrix, TagId},
     text::TextUsage,
 };
 
@@ -84,33 +84,35 @@ impl Document {
         // if found, or checking whether we are an attribute or namespace node before
         // we even try. I've chosen the first strategy.
         let parent = self.primitive_parent(node)?;
-        match self.value(parent) {
+        if is_special_tag(self.tag_id(parent)) {
             // if the parent is an attribute or namespace node, we skip it
-            TagType::Attributes | TagType::Namespaces => self.primitive_parent(parent),
+            self.primitive_parent(parent)
+        } else {
             // if it's not, then it's a parent
-            _ => Some(parent),
+            Some(parent)
         }
     }
 
     pub fn first_child(&self, node: Node) -> Option<Node> {
         let node = self.primitive_first_child(node)?;
-        match self.value(node) {
+        let tag_id = self.tag_id(node);
+        if is_attributes_tag_id(tag_id) {
             // the first child is the attributes node, skip it
-            TagType::Attributes => self.next_sibling(node),
+            self.next_sibling(node)
+        } else if is_namespaces_tag_id(tag_id) {
             // the first child is the namespaces node
-            TagType::Namespaces => {
-                // check if the next sibling is the attributes node
-                let next = self.next_sibling(node)?;
-                // if so, the first child is the next sibling
-                if let TagType::Attributes = self.value(next) {
-                    self.next_sibling(next)
-                } else {
-                    // if not, the first child is this sibling
-                    Some(next)
-                }
+            // check if the next sibling is the attributes node
+            let next = self.next_sibling(node)?;
+            // if so, the first child is the next sibling
+            if is_attributes_tag_id(self.tag_id(next)) {
+                self.next_sibling(next)
+            } else {
+                // if not, the first child is this sibling
+                Some(next)
             }
+        } else {
             // if it's not a special node, then it's definitely a first child
-            _ => Some(node),
+            Some(node)
         }
     }
 

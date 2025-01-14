@@ -3,7 +3,7 @@ use vers_vecs::BitVec;
 
 use crate::{
     tag::{TagInfo, TagType},
-    tagvec::TagId,
+    tagvec::{TagId, ATTRIBUTES_TAG_ID, NAMESPACES_TAG_ID},
 };
 
 pub(crate) struct TagsLookup {
@@ -46,6 +46,7 @@ impl TagsLookup {
 
 pub(crate) struct TagsBuilder {
     pub(crate) tags_lookup: TagsLookup,
+
     pub(crate) parentheses: BitVec,
     // store the opening parens of all text content, i.e. text nodes
     // and attribute values. We store this separately even though there's
@@ -57,8 +58,15 @@ pub(crate) struct TagsBuilder {
 
 impl TagsBuilder {
     pub(crate) fn new() -> Self {
+        let mut tags_lookup = TagsLookup::new();
+        // we ensure these always exist, so that we quickly compare with tag id
+        let namespaces_tag_id = tags_lookup.register(TagInfo::open(TagType::Namespaces));
+        let attributes_tag_id = tags_lookup.register(TagInfo::open(TagType::Attributes));
+        debug_assert_eq!(namespaces_tag_id.id(), NAMESPACES_TAG_ID.id());
+        debug_assert_eq!(attributes_tag_id.id(), ATTRIBUTES_TAG_ID.id());
         Self {
-            tags_lookup: TagsLookup::new(),
+            tags_lookup,
+
             parentheses: BitVec::new(),
             text_opening_parens: BitVec::new(),
             usage: Vec::new(),
@@ -140,7 +148,8 @@ mod tests {
         });
 
         let usage = builder.usage();
-        assert_eq!(usage, &[0, 1, 2, 3, 4, 5]);
+        // starts at 2 because of the namespaces and attributes tags
+        assert_eq!(usage, &[2, 3, 4, 5, 6, 7]);
     }
 
     #[test]
@@ -173,6 +182,6 @@ mod tests {
         });
 
         let usage = builder.usage();
-        assert_eq!(usage, &[0, 1, 2, 1, 2, 3]);
+        assert_eq!(usage, &[2, 3, 4, 3, 4, 5]);
     }
 }
