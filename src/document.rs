@@ -204,6 +204,16 @@ impl Document {
         tag_info.tag_type()
     }
 
+    pub fn child_index(&self, node: Node) -> Option<usize> {
+        let parent = self.parent(node)?;
+        for (i, child) in self.children(parent).enumerate() {
+            if child == node {
+                return Some(i);
+            }
+        }
+        None
+    }
+
     pub fn children(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
         NextSiblingIter {
             doc: self,

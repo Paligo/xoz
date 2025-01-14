@@ -315,3 +315,17 @@ fn test_ancestors_of_attribute() {
     let ancestors: Vec<_> = doc.ancestors(a).collect();
     assert_eq!(ancestors, vec![a, doc_el, root]);
 }
+
+#[test]
+fn test_child_index() {
+    let doc = parse_document(r#"<doc><a/><b/><c/></doc>"#).unwrap();
+    let root = doc.root();
+    let doc_el = doc.document_element();
+    let a = doc.first_child(doc_el).unwrap();
+    let b = doc.next_sibling(a).unwrap();
+    let c = doc.next_sibling(b).unwrap();
+    assert_eq!(doc.child_index(a), Some(0));
+    assert_eq!(doc.child_index(b), Some(1));
+    assert_eq!(doc.child_index(c), Some(2));
+    assert_eq!(doc.child_index(root), None);
+}
