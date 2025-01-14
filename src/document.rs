@@ -118,9 +118,10 @@ impl Document {
 
     pub fn last_child(&self, node: Node) -> Option<Node> {
         let child = self.primitive_last_child(node)?;
-        match self.value(child) {
-            TagType::Attributes | TagType::Namespaces => None,
-            _ => Some(child),
+        if is_special_tag(self.tag_id(child)) {
+            None
+        } else {
+            Some(child)
         }
     }
 
@@ -130,28 +131,27 @@ impl Document {
 
     pub fn previous_sibling(&self, node: Node) -> Option<Node> {
         let prev = self.primitive_previous_sibling(node)?;
-        match self.value(prev) {
-            // the previous sibling is the attributes node, we are at the beginning
-            TagType::Attributes => None,
-            // the previous sibling is the namespaces node, we're at the beginning too
-            TagType::Namespaces => None,
-            // if it's not a special node, then it's definitely a previous sibling
-            _ => Some(prev),
+        if is_special_tag(self.tag_id(prev)) {
+            // attributes and namespaces nodes are not siblings
+            None
+        } else {
+            Some(prev)
         }
     }
 
     pub(crate) fn attributes_child(&self, node: Node) -> Option<Node> {
         let node = self.primitive_first_child(node);
         if let Some(node) = node {
-            match self.value(node) {
+            let tag_id = self.tag_id(node);
+            if is_attributes_tag_id(tag_id) {
                 // the first child is the attributes node
-                TagType::Attributes => Some(node),
+                Some(node)
+            } else if is_namespaces_tag_id(tag_id) {
                 // the first child is the namespaces node, check for attributes node
-                TagType::Namespaces => {
-                    let next = self.next_sibling(node);
-                    next.filter(|next| matches!(self.value(*next), TagType::Attributes))
-                }
-                _ => None,
+                let next = self.next_sibling(node);
+                next.filter(|next| is_attributes_tag_id(self.tag_id(*next)))
+            } else {
+                None
             }
         } else {
             None
