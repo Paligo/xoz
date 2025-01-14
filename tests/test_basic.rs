@@ -254,6 +254,23 @@ fn test_tagged_descendant() {
 }
 
 #[test]
+fn test_tagged_descendant_node_itself() {
+    let doc = parse_document(r#"<doc><a><b/></a></doc>"#).unwrap();
+    let doc_el = doc.document_element();
+    let a = doc.first_child(doc_el).unwrap();
+    let b = doc.first_child(a).unwrap();
+
+    let tag_id = doc
+        .tag(&TagInfo::open(TagType::Element {
+            namespace: "".to_string(),
+            local_name: "b".to_string(),
+        }))
+        .unwrap();
+    let found = doc.tagged_descendant(b, tag_id);
+    assert!(found.is_none());
+}
+
+#[test]
 fn test_tagged_descendant2() {
     let doc = parse_document(r#"<doc><a><b><a><b/></a></b></a></doc>"#).unwrap();
     let doc_el = doc.document_element();
@@ -405,3 +422,32 @@ fn test_following_two() {
     let following: Vec<_> = doc.following(d).collect();
     assert_eq!(following, vec![e, c, f, g, y]);
 }
+
+#[test]
+fn test_tagged_descendants() {
+    let doc = parse_document(r#"<doc><a><b/><b/></a></doc>"#).unwrap();
+    let doc_el = doc.document_element();
+    let tag_id = doc
+        .tag(&TagInfo::open(TagType::Element {
+            namespace: "".to_string(),
+            local_name: "b".to_string(),
+        }))
+        .unwrap();
+    let tagged_descendants: Vec<_> = doc.tagged_descendants(doc_el, tag_id).collect();
+    assert_eq!(tagged_descendants.len(), 2);
+}
+
+// #[test]
+// fn test_tagged_descendants_including_self() {
+//     let doc = parse_document(r#"<doc><b><b/><b/></b></doc>"#).unwrap();
+//     let doc_el = doc.document_element();
+//     let outer_b = doc.first_child(doc_el).unwrap();
+//     let tag_id = doc
+//         .tag(&TagInfo::open(TagType::Element {
+//             namespace: "".to_string(),
+//             local_name: "b".to_string(),
+//         }))
+//         .unwrap();
+//     let tagged_descendants: Vec<_> = doc.tagged_descendants(outer_b, tag_id).collect();
+//     assert_eq!(tagged_descendants.len(), 3);
+// }

@@ -204,6 +204,10 @@ impl Document {
         tag_info.tag_type()
     }
 
+    pub fn tag_id(&self, node: Node) -> TagId {
+        self.structure.tag_id(node.0)
+    }
+
     pub fn is_document(&self, node: Node) -> bool {
         matches!(self.value(node), TagType::Document)
     }
@@ -293,6 +297,14 @@ impl Document {
 
     pub fn tagged_descendant(&self, node: Node, tag_id: TagId) -> Option<Node> {
         self.structure.tagged_descendant(node.0, tag_id).map(Node)
+    }
+
+    pub fn tagged_descendants(
+        &self,
+        node: Node,
+        tag_id: TagId,
+    ) -> impl Iterator<Item = Node> + use<'_> {
+        TaggedDescendantIter::new(self, node, tag_id)
     }
 
     pub(crate) fn primitive_parent(&self, node: Node) -> Option<Node> {
@@ -396,6 +408,12 @@ impl<'a> DescendantIter<'a> {
     }
 }
 
+// a descender defines how we descend in the tree
+trait Descender {
+    fn descendant(&self, node: Node) -> Option<Node>;
+    fn sibling(&self, node: Node) -> Option<Node>;
+}
+
 impl Iterator for DescendantIter<'_> {
     type Item = Node;
 
@@ -485,6 +503,39 @@ impl Iterator for FollowingIter<'_> {
         } else {
             // if there is no more parent, we're done
             None
+        }
+    }
+}
+
+struct TaggedDescendantIter<'a> {
+    doc: &'a Document,
+    node: Option<Node>,
+    tag_id: TagId,
+}
+
+impl<'a> TaggedDescendantIter<'a> {
+    fn new(doc: &'a Document, node: Node, tag_id: TagId) -> Self {
+        Self {
+            doc,
+            node: Some(node),
+            tag_id,
+        }
+    }
+}
+
+impl Iterator for TaggedDescendantIter<'_> {
+    type Item = Node;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        // get the current node. if it's the tagged descendant, return it
+        let node = self.node?;
+        if self.doc.tag_id(node) == self.tag_id {
+            self.node = self.doc.tagged_descendant(node, self.tag_id);
+            Some(node)
+        } else {
+            let tagged_descendant = self.doc.tagged_descendant(node, self.tag_id);
+            self.node = tagged_descendant;
+            tagged_descendant
         }
     }
 }

@@ -74,8 +74,12 @@ impl<T: TagVec> Structure<T> {
     // }
 
     pub(crate) fn get_tag(&self, i: usize) -> &TagInfo {
-        let id = self.tag_vec.get_tag(i).expect("Tag information to exist");
+        let id = self.tag_id(i);
         self.lookup_tag_info(id)
+    }
+
+    pub(crate) fn tag_id(&self, i: usize) -> TagId {
+        self.tag_vec.get_tag(i).expect("Tag information to exist")
     }
 
     // get text id based on location, given we already know this location has text
