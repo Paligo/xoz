@@ -446,40 +446,35 @@ impl Iterator for FollowingIter<'_> {
     type Item = Node;
 
     fn next(&mut self) -> Option<Self::Item> {
-        // we if we have a descendant iter, keep getting nodes from it until
-        // it's empty
         if let Some(descendant_iter) = &mut self.descendant_iter {
+            // we if we have a descendant iter, keep getting nodes from it until
+            // it's empty
             let next = descendant_iter.next();
             if let Some(next) = next {
                 Some(next)
             } else {
+                // if it's empty, get the next item using the normal strategy
                 self.descendant_iter = None;
                 self.next()
             }
         } else if let Some(node) = self.node {
-            // if we don't have a descendant iter
-            if let Some(next_sibling) = self.doc.next_sibling(node) {
-                // we take the next sibling and initialize a descendant iter
-                // for that
-                self.node = Some(next_sibling);
-                self.descendant_iter = Some(DescendantIter::new(self.doc, next_sibling));
-                self.next()
-            } else {
-                // if we don't have a next sibling, go up parent chain until
-                // we find a parent with a next sibling
-                let mut parent = self.doc.parent(node);
-                while let Some(found_parent) = parent {
-                    let next_sibling = self.doc.next_sibling(found_parent);
-                    if let Some(next_sibling) = next_sibling {
-                        self.node = Some(next_sibling);
-                        self.descendant_iter = Some(DescendantIter::new(self.doc, next_sibling));
-                        return self.next();
+            // if there is no descendant iter, try to look for next sibling. if
+            // it doesn't exist for current, go up the ancestor chain
+            let mut current = node;
+            loop {
+                if let Some(next_sibling) = self.doc.next_sibling(current) {
+                    self.node = Some(next_sibling);
+                    self.descendant_iter = Some(DescendantIter::new(self.doc, next_sibling));
+                    return self.next();
+                } else {
+                    let parent = self.doc.parent(current);
+                    if let Some(parent) = parent {
+                        current = parent;
+                    } else {
+                        self.node = None;
+                        return None;
                     }
-                    parent = self.doc.parent(found_parent);
                 }
-                // if we cannot find such a parent, we're done
-                self.node = None;
-                None
             }
         } else {
             // if there is no more parent, we're done
