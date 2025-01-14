@@ -51,8 +51,6 @@ dependencies = [
 [[package]]
 name = "fm-index"
 version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2f8cb8232c559b77552e746a24f8c6c177b2ffbf8d4b8263efd30fcfcf5f2c0d"
 dependencies = [
  "num-traits",
  "serde",

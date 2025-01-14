@@ -1,7 +1,6 @@
 use std::ops::Range;
 
 use ahash::{HashSet, HashSetExt};
-use fm_index::BackwardSearchIndex;
 use sucds::bit_vectors::{Rank, SArray, Select};
 use vers_vecs::{BitVec, RsVec};
 

@@ -1,8 +1,4 @@
-use fm_index::{
-    converter::IdConverter,
-    suffix_array::{SuffixOrderSampledArray, SuffixOrderSampler},
-    BackwardSearchIndex, FMIndex,
-};
+use fm_index::{converter::IdConverter, suffix_array::SuffixOrderSampledArray, FMIndex};
 
 pub(crate) struct TextSearch {
     text: String,
@@ -19,7 +15,7 @@ impl TextSearch {
         // a higher level allows for more compressed storage but less
         // efficient search
         // https://github.com/ajalab/fm-index/issues/24
-        let sampler = SuffixOrderSampler::new().level(0);
+        let level = 0;
 
         // If the text length is tiny, FMIndex starts to break down, so
         // use a workaround
@@ -29,9 +25,9 @@ impl TextSearch {
         let index = if is_tiny {
             // construct a dummy text index where we know construction will succeed
             // we don't use it
-            FMIndex::new("dummy text".as_bytes().to_vec(), converter, sampler)
+            FMIndex::new("dummy text".as_bytes().to_vec(), converter, level)
         } else {
-            FMIndex::new(text.as_bytes().to_vec(), converter, sampler)
+            FMIndex::new(text.as_bytes().to_vec(), converter, level)
         };
         Self {
             text,
@@ -61,7 +57,7 @@ impl TextSearch {
             return self.text.match_indices(pattern).map(|(i, _)| i).collect();
         }
         self.index
-            .search_backward(pattern)
+            .search(pattern)
             .locate()
             .iter()
             .map(|i| {
