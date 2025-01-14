@@ -13,17 +13,7 @@
 
 // attribute_nodes
 
-// first_child
-
-// last_child
-
-// next_sibling
-
-// previous_sibling
-
 // ancestors
-
-// children
 
 // child_index
 

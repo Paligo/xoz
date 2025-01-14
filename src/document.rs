@@ -223,6 +223,13 @@ impl Document {
         }
     }
 
+    pub fn ancestors(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
+        AncestorIter {
+            doc: self,
+            node: Some(node),
+        }
+    }
+
     pub fn text_str(&self, node: Node) -> Option<&str> {
         if matches!(self.node_value(node)?, TagType::Text) {
             let text_id = self.structure.text_id(node.0);
@@ -277,6 +284,35 @@ impl Iterator for NextSiblingIter<'_> {
     fn next(&mut self) -> Option<Self::Item> {
         let node = self.node?;
         self.node = self.doc.next_sibling(node);
+        Some(node)
+    }
+}
+
+struct AncestorIter<'a> {
+    doc: &'a Document,
+    node: Option<Node>,
+}
+
+impl Iterator for AncestorIter<'_> {
+    type Item = Node;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let node = self.node?;
+        let new_node = self.doc.parent(node);
+        if let Some(new_node) = new_node {
+            match self.doc.node_value(new_node) {
+                Some(TagType::Attributes) | Some(TagType::Namespaces) => {
+                    // skip the attributes and namespaces nodes
+                    self.node = self.doc.parent(new_node);
+                }
+                _ => {
+                    // if it's not a special node, then it's a parent
+                    self.node = Some(new_node);
+                }
+            }
+        } else {
+            self.node = None;
+        }
         Some(node)
     }
 }
