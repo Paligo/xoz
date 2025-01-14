@@ -2,6 +2,7 @@ mod access;
 mod builder;
 mod document;
 mod error;
+mod iter;
 mod serializer;
 mod structure;
 mod tag;
