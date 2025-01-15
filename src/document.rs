@@ -297,8 +297,7 @@ impl Document {
     }
 
     pub fn following(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
-        let ops = NodeTreeOps::new(self);
-        FollowingIter::new(node, ops)
+        FollowingIter::new(node, NodeTreeOps::new(self))
     }
 
     pub fn tagged_following(
@@ -306,8 +305,7 @@ impl Document {
         node: Node,
         tag_id: TagId,
     ) -> impl Iterator<Item = Node> + use<'_> {
-        let ops = TaggedTreeOps::new(self, tag_id);
-        FollowingIter::new(node, ops)
+        FollowingIter::new(node, TaggedTreeOps::new(self, tag_id))
     }
 
     pub fn text_str(&self, node: Node) -> Option<&str> {
