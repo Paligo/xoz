@@ -115,26 +115,8 @@ where
     }
 }
 
-pub(crate) struct Descendants<'a> {
-    doc: &'a Document,
-}
-
-impl<'a> Descendants<'a> {
-    pub(crate) fn new(doc: &'a Document) -> Self {
-        Self { doc }
-    }
-}
-
 pub(crate) trait TreeOps {
     type Item;
-
-    // // the root node
-    // fn root(&self) -> Node;
-
-    // // the current node
-    // fn node(&self) -> Option<Node>;
-    // // update the current node
-    // fn set_node(&mut self, node: Option<Node>);
 
     // the parent of a node
     fn parent(&self, node: Node) -> Option<Node>;
@@ -145,7 +127,17 @@ pub(crate) trait TreeOps {
     fn sibling(&self, node: Node) -> Option<Node>;
 }
 
-impl TreeOps for Descendants<'_> {
+pub(crate) struct NodeTreeOps<'a> {
+    doc: &'a Document,
+}
+
+impl<'a> NodeTreeOps<'a> {
+    pub(crate) fn new(doc: &'a Document) -> Self {
+        Self { doc }
+    }
+}
+
+impl TreeOps for NodeTreeOps<'_> {
     type Item = Node;
 
     fn parent(&self, node: Node) -> Option<Node> {
@@ -237,7 +229,7 @@ impl<T: TreeOps> Iterator for DescendantsIter<T> {
 pub(crate) struct FollowingIter<'a> {
     doc: &'a Document,
     node: Option<Node>,
-    descendant_iter: Option<WithSelfIter<DescendantsIter<Descendants<'a>>>>,
+    descendant_iter: Option<WithSelfIter<DescendantsIter<NodeTreeOps<'a>>>>,
 }
 
 impl<'a> FollowingIter<'a> {
@@ -291,19 +283,18 @@ impl Iterator for FollowingIter<'_> {
     }
 }
 
-pub(crate) struct TaggedDescendants<'a> {
+pub(crate) struct TaggedTreeOps<'a> {
     doc: &'a Document,
-
     tag_id: TagId,
 }
 
-impl<'a> TaggedDescendants<'a> {
+impl<'a> TaggedTreeOps<'a> {
     pub(crate) fn new(doc: &'a Document, tag_id: TagId) -> Self {
         Self { doc, tag_id }
     }
 }
 
-impl TreeOps for TaggedDescendants<'_> {
+impl TreeOps for TaggedTreeOps<'_> {
     type Item = Node;
 
     fn parent(&self, node: Node) -> Option<Node> {
