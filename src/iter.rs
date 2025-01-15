@@ -122,12 +122,8 @@ pub(crate) struct Descendants<'a> {
 }
 
 impl<'a> Descendants<'a> {
-    pub(crate) fn new(doc: &'a Document, root: Node) -> Self {
-        Self {
-            doc,
-            root,
-            node: doc.first_child(root),
-        }
+    pub(crate) fn new(doc: &'a Document, root: Node, node: Option<Node>) -> Self {
+        Self { doc, root, node }
     }
 }
 
@@ -310,11 +306,11 @@ pub(crate) struct TaggedDescendants<'a> {
 }
 
 impl<'a> TaggedDescendants<'a> {
-    pub(crate) fn new(doc: &'a Document, root: Node, tag_id: TagId) -> Self {
+    pub(crate) fn new(doc: &'a Document, root: Node, node: Option<Node>, tag_id: TagId) -> Self {
         Self {
             doc,
             root,
-            node: doc.tagged_descendant(root, tag_id),
+            node,
             tag_id,
         }
     }

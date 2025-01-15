@@ -276,7 +276,10 @@ impl Document {
         &self,
         node: Node,
     ) -> WithSelfIter<DescenderWrapper<Descendants>> {
-        WithSelfIter::new(node, DescenderWrapper::new(Descendants::new(self, node)))
+        WithSelfIter::new(
+            node,
+            DescenderWrapper::new(Descendants::new(self, node, self.first_child(node))),
+        )
     }
 
     pub fn tagged_descendants(
@@ -287,7 +290,12 @@ impl Document {
         WithTaggedSelfIter::new(
             self,
             node,
-            DescenderWrapper::new(TaggedDescendants::new(self, node, tag_id)),
+            DescenderWrapper::new(TaggedDescendants::new(
+                self,
+                node,
+                self.tagged_descendant(node, tag_id),
+                tag_id,
+            )),
             tag_id,
         )
     }
