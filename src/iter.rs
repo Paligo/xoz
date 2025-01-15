@@ -1,6 +1,6 @@
 use crate::{
     document::{Document, Node},
-    TagId, TagType,
+    TagId,
 };
 
 pub(crate) struct NextSiblingIter<'a> {
@@ -86,7 +86,7 @@ impl<'a> AttributesIter<'a> {
     }
 }
 
-impl<'a> Iterator for AttributesIter<'a> {
+impl Iterator for AttributesIter<'_> {
     type Item = Node;
 
     fn next(&mut self) -> Option<Self::Item> {
