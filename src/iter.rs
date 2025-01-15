@@ -123,6 +123,36 @@ pub(crate) trait TreeOps {
     fn descendant(&self, node: Node) -> Option<Node>;
     // the next matching sibling (in document order)
     fn sibling(&self, node: Node) -> Option<Node>;
+
+    fn sibling_up(&self, node: Node) -> Option<Node> {
+        let mut current = node;
+        loop {
+            if let Some(sibling) = self.sibling(current) {
+                return Some(sibling);
+            } else if let Some(parent) = self.parent(current) {
+                current = parent;
+            } else {
+                return None;
+            }
+        }
+    }
+
+    fn rooted_sibling_up(&self, node: Node, root: Node) -> Option<Node> {
+        let mut current = node;
+        loop {
+            if current == root {
+                // we're done
+                return None;
+            }
+            if let Some(sibling) = self.sibling(current) {
+                return Some(sibling);
+            } else {
+                current = self
+                    .parent(current)
+                    .expect("We should have a parent for a descendant");
+            }
+        }
+    }
 }
 
 pub(crate) struct NodeTreeOps<'a> {
@@ -159,29 +189,11 @@ impl<T> DescendantsIter<T>
 where
     T: TreeOps,
 {
-    pub(crate) fn new(root: Node, node: Option<Node>, tree_ops: T) -> Self {
+    pub(crate) fn new(root: Node, tree_ops: T) -> Self {
         Self {
             root,
-            node,
+            node: tree_ops.descendant(root),
             ops: tree_ops,
-        }
-    }
-
-    fn sibling_up(&self, node: Node) -> Option<Node> {
-        let mut current = node;
-        loop {
-            if current == self.root {
-                // we're done
-                return None;
-            }
-            if let Some(sibling) = self.ops.sibling(current) {
-                return Some(sibling);
-            } else {
-                current = self
-                    .ops
-                    .parent(current)
-                    .expect("We should have a parent for a descendant");
-            }
         }
     }
 }
@@ -191,93 +203,103 @@ impl<T: TreeOps> Iterator for DescendantsIter<T> {
 
     fn next(&mut self) -> Option<Node> {
         let node = self.node?;
-
-        let descendant = self.ops.descendant(node);
-        self.node = if let Some(descendant) = descendant {
-            // if there is a first child, take it
+        self.node = if let Some(descendant) = self.ops.descendant(node) {
             Some(descendant)
         } else {
-            self.sibling_up(node)
+            self.ops.rooted_sibling_up(node, self.root)
         };
         Some(node)
     }
 }
 
-// pub(crate) struct FollowingIter<T: TreeOps>(T);
-
-// impl<T: TreeOps> Iterator for FollowingIter<T> {
-//     type Item = Node;
-
-//     fn next(&mut self) -> Option<Self::Item> {
-//         todo!()
-//     }
-// }
-
-// impl<T> FollowingIter<T>
-// where
-//     T: TreeOps,
-// {
-//     pub(crate) fn new(tree_ops: T) -> Self {
-//         Self(tree_ops)
-//     }
-// }
-
-pub(crate) struct FollowingIter<'a> {
-    doc: &'a Document,
+pub(crate) struct FollowingIter<T: TreeOps> {
     node: Option<Node>,
-    descendant_iter: Option<WithSelfIter<DescendantsIter<NodeTreeOps<'a>>>>,
+    ops: T,
 }
 
-impl<'a> FollowingIter<'a> {
-    pub(crate) fn new(doc: &'a Document, node: Node) -> Self {
+impl<T> FollowingIter<T>
+where
+    T: TreeOps,
+{
+    pub(crate) fn new(node: Node, tree_ops: T) -> Self {
         Self {
-            doc,
-            node: Some(node),
-            descendant_iter: None,
+            node: tree_ops.sibling_up(node),
+            ops: tree_ops,
         }
     }
 }
 
-impl Iterator for FollowingIter<'_> {
+impl<T: TreeOps> Iterator for FollowingIter<T> {
     type Item = Node;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if let Some(descendant_iter) = &mut self.descendant_iter {
-            // we if we have a descendant iter, keep getting nodes from it until
-            // it's empty
-            let next = descendant_iter.next();
-            if let Some(next) = next {
-                Some(next)
-            } else {
-                // if it's empty, get the next item using the normal strategy
-                self.descendant_iter = None;
-                self.next()
-            }
-        } else if let Some(node) = self.node {
-            // if there is no descendant iter, try to look for next sibling. if
-            // it doesn't exist for current, go up the ancestor chain
-            let mut current = node;
-            loop {
-                if let Some(next_sibling) = self.doc.next_sibling(current) {
-                    self.node = Some(next_sibling);
-                    self.descendant_iter = Some(self.doc.descendants_iter(next_sibling));
-                    return self.next();
-                } else {
-                    let parent = self.doc.parent(current);
-                    if let Some(parent) = parent {
-                        current = parent;
-                    } else {
-                        self.node = None;
-                        return None;
-                    }
-                }
-            }
+        let node = self.node?;
+
+        self.node = if let Some(descendant) = self.ops.descendant(node) {
+            Some(descendant)
         } else {
-            // if there is no more parent, we're done
-            None
-        }
+            self.ops.sibling_up(node)
+        };
+        Some(node)
     }
 }
+
+// pub(crate) struct FollowingIter<'a> {
+//     doc: &'a Document,
+//     node: Option<Node>,
+//     descendant_iter: Option<WithSelfIter<DescendantsIter<NodeTreeOps<'a>>>>,
+// }
+
+// impl<'a> FollowingIter<'a> {
+//     pub(crate) fn new(doc: &'a Document, node: Node) -> Self {
+//         Self {
+//             doc,
+//             node: Some(node),
+//             descendant_iter: None,
+//         }
+//     }
+// }
+
+// impl Iterator for FollowingIter<'_> {
+//     type Item = Node;
+
+//     fn next(&mut self) -> Option<Self::Item> {
+//         if let Some(descendant_iter) = &mut self.descendant_iter {
+//             // we if we have a descendant iter, keep getting nodes from it until
+//             // it's empty
+//             let next = descendant_iter.next();
+//             if let Some(next) = next {
+//                 Some(next)
+//             } else {
+//                 // if it's empty, get the next item using the normal strategy
+//                 self.descendant_iter = None;
+//                 self.next()
+//             }
+//         } else if let Some(node) = self.node {
+//             // if there is no descendant iter, try to look for next sibling. if
+//             // it doesn't exist for current, go up the ancestor chain
+//             let mut current = node;
+//             loop {
+//                 if let Some(next_sibling) = self.doc.next_sibling(current) {
+//                     self.node = Some(next_sibling);
+//                     self.descendant_iter = Some(self.doc.descendants_iter(next_sibling));
+//                     return self.next();
+//                 } else {
+//                     let parent = self.doc.parent(current);
+//                     if let Some(parent) = parent {
+//                         current = parent;
+//                     } else {
+//                         self.node = None;
+//                         return None;
+//                     }
+//                 }
+//             }
+//         } else {
+//             // if there is no more parent, we're done
+//             None
+//         }
+//     }
+// }
 
 pub(crate) struct TaggedTreeOps<'a> {
     doc: &'a Document,

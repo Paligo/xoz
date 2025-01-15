@@ -3,7 +3,7 @@ use vers_vecs::trees::Tree;
 use crate::{
     iter::{
         AncestorIter, DescendantsIter, FollowingIter, NextSiblingIter, NodeTreeOps,
-        PreviousSiblingIter, TaggedTreeOps, WithSelfIter, WithTaggedSelfIter,
+        PreviousSiblingIter, TaggedTreeOps, TreeOps, WithSelfIter, WithTaggedSelfIter,
     },
     structure::Structure,
     tag::{TagInfo, TagType},
@@ -276,10 +276,8 @@ impl Document {
         &self,
         node: Node,
     ) -> WithSelfIter<DescendantsIter<NodeTreeOps>> {
-        WithSelfIter::new(
-            node,
-            DescendantsIter::new(node, self.first_child(node), NodeTreeOps::new(self)),
-        )
+        let ops = NodeTreeOps::new(self);
+        WithSelfIter::new(node, DescendantsIter::new(node, ops))
     }
 
     pub fn tagged_descendants(
@@ -287,20 +285,13 @@ impl Document {
         node: Node,
         tag_id: TagId,
     ) -> impl Iterator<Item = Node> + use<'_> {
-        WithTaggedSelfIter::new(
-            self,
-            node,
-            DescendantsIter::new(
-                node,
-                self.tagged_descendant(node, tag_id),
-                TaggedTreeOps::new(self, tag_id),
-            ),
-            tag_id,
-        )
+        let ops = TaggedTreeOps::new(self, tag_id);
+        WithTaggedSelfIter::new(self, node, DescendantsIter::new(node, ops), tag_id)
     }
 
     pub fn following(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
-        FollowingIter::new(self, node)
+        let ops = NodeTreeOps::new(self);
+        FollowingIter::new(node, ops)
     }
 
     pub fn text_str(&self, node: Node) -> Option<&str> {
