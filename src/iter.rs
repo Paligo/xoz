@@ -175,19 +175,21 @@ impl TreeOps for Descendants<'_> {
     }
 }
 
-pub(crate) struct DescendantsIter<T: TreeOps>(T);
+pub(crate) struct DescendantsIter<T: TreeOps> {
+    ops: T,
+}
 
 impl<T> DescendantsIter<T>
 where
     T: TreeOps,
 {
     pub(crate) fn new(tree_ops: T) -> Self {
-        Self(tree_ops)
+        Self { ops: tree_ops }
     }
 
     fn sibling_up(&self, node: Node) -> Option<Node> {
         let mut current = node;
-        let s = &self.0;
+        let s = &self.ops;
         loop {
             if current == s.root() {
                 // we're done
@@ -208,10 +210,10 @@ impl<T: TreeOps> Iterator for DescendantsIter<T> {
     type Item = Node;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let node = self.0.node()?;
+        let node = self.ops.node()?;
 
-        let descendant = self.0.descendant(node);
-        self.0.set_node(if let Some(descendant) = descendant {
+        let descendant = self.ops.descendant(node);
+        self.ops.set_node(if let Some(descendant) = descendant {
             // if there is a first child, take it
             Some(descendant)
         } else {
