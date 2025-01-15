@@ -127,8 +127,7 @@ impl<'a> Descendants<'a> {
     }
 }
 
-// a descender defines how we descend in the tree
-pub(crate) trait Descender {
+pub(crate) trait TreeOps {
     type Item;
 
     // the root node
@@ -148,7 +147,7 @@ pub(crate) trait Descender {
     fn sibling(&self, node: Node) -> Option<Node>;
 }
 
-impl Descender for Descendants<'_> {
+impl TreeOps for Descendants<'_> {
     type Item = Node;
 
     fn root(&self) -> Self::Item {
@@ -176,14 +175,14 @@ impl Descender for Descendants<'_> {
     }
 }
 
-pub(crate) struct DescenderWrapper<T: Descender>(T);
+pub(crate) struct DescenderWrapper<T: TreeOps>(T);
 
 impl<T> DescenderWrapper<T>
 where
-    T: Descender,
+    T: TreeOps,
 {
-    pub(crate) fn new(descender: T) -> Self {
-        Self(descender)
+    pub(crate) fn new(tree_ops: T) -> Self {
+        Self(tree_ops)
     }
 
     fn sibling_up(&self, node: Node) -> Option<Node> {
@@ -205,7 +204,7 @@ where
     }
 }
 
-impl<T: Descender> Iterator for DescenderWrapper<T> {
+impl<T: TreeOps> Iterator for DescenderWrapper<T> {
     type Item = Node;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -222,9 +221,9 @@ impl<T: Descender> Iterator for DescenderWrapper<T> {
     }
 }
 
-pub(crate) struct FollowingWrapper<T: Descender>(T);
+pub(crate) struct FollowingWrapper<T: TreeOps>(T);
 
-impl<T: Descender> Iterator for FollowingWrapper<T> {
+impl<T: TreeOps> Iterator for FollowingWrapper<T> {
     type Item = Node;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -234,10 +233,10 @@ impl<T: Descender> Iterator for FollowingWrapper<T> {
 
 impl<T> FollowingWrapper<T>
 where
-    T: Descender,
+    T: TreeOps,
 {
-    pub(crate) fn new(descender: T) -> Self {
-        Self(descender)
+    pub(crate) fn new(tree_ops: T) -> Self {
+        Self(tree_ops)
     }
 }
 
@@ -316,7 +315,7 @@ impl<'a> TaggedDescendants<'a> {
     }
 }
 
-impl Descender for TaggedDescendants<'_> {
+impl TreeOps for TaggedDescendants<'_> {
     type Item = Node;
 
     fn root(&self) -> Self::Item {
