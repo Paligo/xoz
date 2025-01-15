@@ -257,11 +257,11 @@ impl Document {
     }
 
     pub fn following_siblings(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
-        NextSiblingIter::new(self, Some(node))
+        NextSiblingIter::new(self, self.next_sibling(node))
     }
 
     pub fn preceding_siblings(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
-        PreviousSiblingIter::new(self, Some(node))
+        PreviousSiblingIter::new(self, self.previous_sibling(node))
     }
 
     pub fn ancestors_or_self(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {

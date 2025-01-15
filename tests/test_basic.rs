@@ -167,9 +167,9 @@ fn test_following_siblings() {
     let a_siblings: Vec<_> = doc.following_siblings(a).collect();
     let b_siblings: Vec<_> = doc.following_siblings(b).collect();
     let c_siblings: Vec<_> = doc.following_siblings(c).collect();
-    assert_eq!(a_siblings, vec![a, b, c]);
-    assert_eq!(b_siblings, vec![b, c]);
-    assert_eq!(c_siblings, vec![c]);
+    assert_eq!(a_siblings, vec![b, c]);
+    assert_eq!(b_siblings, vec![c]);
+    assert_eq!(c_siblings, vec![]);
 }
 
 #[test]
@@ -182,9 +182,9 @@ fn test_preceding_siblings() {
     let a_siblings: Vec<_> = doc.preceding_siblings(a).collect();
     let b_siblings: Vec<_> = doc.preceding_siblings(b).collect();
     let c_siblings: Vec<_> = doc.preceding_siblings(c).collect();
-    assert_eq!(a_siblings, vec![a]);
-    assert_eq!(b_siblings, vec![b, a]);
-    assert_eq!(c_siblings, vec![c, b, a]);
+    assert_eq!(a_siblings, vec![]);
+    assert_eq!(b_siblings, vec![a]);
+    assert_eq!(c_siblings, vec![b, a]);
 }
 
 #[test]
