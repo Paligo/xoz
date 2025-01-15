@@ -116,8 +116,6 @@ where
 }
 
 pub(crate) trait TreeOps {
-    type Item;
-
     // the parent of a node
     fn parent(&self, node: Node) -> Option<Node>;
 
@@ -138,8 +136,6 @@ impl<'a> NodeTreeOps<'a> {
 }
 
 impl TreeOps for NodeTreeOps<'_> {
-    type Item = Node;
-
     fn parent(&self, node: Node) -> Option<Node> {
         self.doc.parent(node)
     }
@@ -193,7 +189,7 @@ where
 impl<T: TreeOps> Iterator for DescendantsIter<T> {
     type Item = Node;
 
-    fn next(&mut self) -> Option<Self::Item> {
+    fn next(&mut self) -> Option<Node> {
         let node = self.node?;
 
         let descendant = self.ops.descendant(node);
@@ -295,8 +291,6 @@ impl<'a> TaggedTreeOps<'a> {
 }
 
 impl TreeOps for TaggedTreeOps<'_> {
-    type Item = Node;
-
     fn parent(&self, node: Node) -> Option<Node> {
         self.doc.parent(node)
     }
