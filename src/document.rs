@@ -2,7 +2,7 @@ use vers_vecs::trees::Tree;
 
 use crate::{
     iter::{
-        AncestorIter, DescendantsIter, FollowingIter, NextSiblingIter, NodeTreeOps,
+        AncestorIter, AttributesIter, DescendantsIter, FollowingIter, NextSiblingIter, NodeTreeOps,
         PreviousSiblingIter, TaggedTreeOps, TreeOps, WithSelfIter, WithTaggedSelfIter,
     },
     structure::Structure,
@@ -278,6 +278,10 @@ impl Document {
 
     pub fn descendants_or_self(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
         WithSelfIter::new(node, self.descendants(node))
+    }
+
+    pub fn attributes(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
+        AttributesIter::new(self, node)
     }
 
     pub fn tagged_descendants(

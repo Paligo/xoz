@@ -613,3 +613,21 @@ fn test_tagged_following() {
     let following: Vec<_> = doc.tagged_following(c, tag_id).collect();
     assert_eq!(following, vec![f]);
 }
+
+#[test]
+fn test_attributes_axis() {
+    let doc = parse_document(r#"<doc a="A" b="B" c="C" />"#).unwrap();
+    let doc_el = doc.document_element();
+    let a = doc
+        .attribute_node(doc_el, &Name::name_without_namespace("a"))
+        .unwrap();
+    let b = doc
+        .attribute_node(doc_el, &Name::name_without_namespace("b"))
+        .unwrap();
+    let c = doc
+        .attribute_node(doc_el, &Name::name_without_namespace("c"))
+        .unwrap();
+
+    let attributes: Vec<_> = doc.attributes(doc_el).collect();
+    assert_eq!(attributes, vec![a, b, c]);
+}
