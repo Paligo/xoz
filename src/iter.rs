@@ -126,7 +126,7 @@ impl<'a> Descendants<'a> {
         Self {
             doc,
             root,
-            node: Some(root),
+            node: doc.first_child(root),
         }
     }
 }
@@ -190,19 +190,15 @@ where
         Self(descender)
     }
 
-    fn sibling_up(&mut self, node: Node) -> Option<Node> {
-        // try to look for next sibling. if
-        // it doesn't exist for current, go up the ancestor chain
+    fn sibling_up(&self, node: Node) -> Option<Node> {
         let mut current = node;
-        let s = &mut self.0;
+        let s = &self.0;
         loop {
             if current == s.root() {
                 // we're done
-                s.set_node(None);
                 return None;
             }
             if let Some(sibling) = s.sibling(current) {
-                s.set_node(Some(sibling));
                 return Some(sibling);
             } else {
                 current = s
@@ -217,18 +213,16 @@ impl<T: Descender> Iterator for DescenderWrapper<T> {
     type Item = Node;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let s = &mut self.0;
-        // get the current node
-        let node = s.node()?;
+        let node = self.0.node()?;
 
-        let first_child = s.descendant(node);
-        if let Some(first_child) = first_child {
+        let descendant = self.0.descendant(node);
+        self.0.set_node(if let Some(descendant) = descendant {
             // if there is a first child, take it
-            self.0.set_node(Some(first_child));
-            Some(first_child)
+            Some(descendant)
         } else {
             self.sibling_up(node)
-        }
+        });
+        Some(node)
     }
 }
 
@@ -316,11 +310,11 @@ pub(crate) struct TaggedDescendants<'a> {
 }
 
 impl<'a> TaggedDescendants<'a> {
-    pub(crate) fn new(doc: &'a Document, node: Node, tag_id: TagId) -> Self {
+    pub(crate) fn new(doc: &'a Document, root: Node, tag_id: TagId) -> Self {
         Self {
             doc,
-            root: node,
-            node: Some(node),
+            root,
+            node: doc.tagged_descendant(root, tag_id),
             tag_id,
         }
     }
