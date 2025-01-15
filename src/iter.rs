@@ -244,63 +244,6 @@ impl<T: TreeOps> Iterator for FollowingIter<T> {
     }
 }
 
-// pub(crate) struct FollowingIter<'a> {
-//     doc: &'a Document,
-//     node: Option<Node>,
-//     descendant_iter: Option<WithSelfIter<DescendantsIter<NodeTreeOps<'a>>>>,
-// }
-
-// impl<'a> FollowingIter<'a> {
-//     pub(crate) fn new(doc: &'a Document, node: Node) -> Self {
-//         Self {
-//             doc,
-//             node: Some(node),
-//             descendant_iter: None,
-//         }
-//     }
-// }
-
-// impl Iterator for FollowingIter<'_> {
-//     type Item = Node;
-
-//     fn next(&mut self) -> Option<Self::Item> {
-//         if let Some(descendant_iter) = &mut self.descendant_iter {
-//             // we if we have a descendant iter, keep getting nodes from it until
-//             // it's empty
-//             let next = descendant_iter.next();
-//             if let Some(next) = next {
-//                 Some(next)
-//             } else {
-//                 // if it's empty, get the next item using the normal strategy
-//                 self.descendant_iter = None;
-//                 self.next()
-//             }
-//         } else if let Some(node) = self.node {
-//             // if there is no descendant iter, try to look for next sibling. if
-//             // it doesn't exist for current, go up the ancestor chain
-//             let mut current = node;
-//             loop {
-//                 if let Some(next_sibling) = self.doc.next_sibling(current) {
-//                     self.node = Some(next_sibling);
-//                     self.descendant_iter = Some(self.doc.descendants_iter(next_sibling));
-//                     return self.next();
-//                 } else {
-//                     let parent = self.doc.parent(current);
-//                     if let Some(parent) = parent {
-//                         current = parent;
-//                     } else {
-//                         self.node = None;
-//                         return None;
-//                     }
-//                 }
-//             }
-//         } else {
-//             // if there is no more parent, we're done
-//             None
-//         }
-//     }
-// }
-
 pub(crate) struct TaggedTreeOps<'a> {
     doc: &'a Document,
     tag_id: TagId,
