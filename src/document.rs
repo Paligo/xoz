@@ -383,6 +383,10 @@ impl Document {
         self.structure.tagged_descendant(node.0, tag_id).map(Node)
     }
 
+    pub fn tagged_foll(&self, node: Node, tag_id: TagId) -> Option<Node> {
+        self.structure.tagged_following(node.0, tag_id).map(Node)
+    }
+
     pub(crate) fn primitive_parent(&self, node: Node) -> Option<Node> {
         self.structure.tree().parent(node.0).map(Node)
     }
