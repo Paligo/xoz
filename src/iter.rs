@@ -129,12 +129,9 @@ pub(crate) trait TreeOps {
     fn matching_descendant_or_self(&self, node: Node) -> Option<Node>;
 
     fn matching_sibling_up(&self, node: Node) -> Option<Node> {
-        if let Some(sibling) = self.sibling_up(node) {
-            // if we have one, go for this node if it matches, or a matching descendant
-            self.matching_descendant_or_self(sibling)
-        } else {
-            None
-        }
+        let sibling = self.sibling_up(node)?;
+        // if we have one, go for this node if it matches, or a matching descendant
+        self.matching_descendant_or_self(sibling)
     }
 
     fn sibling_up(&self, node: Node) -> Option<Node> {
@@ -151,12 +148,9 @@ pub(crate) trait TreeOps {
     }
 
     fn matching_rooted_sibling_up(&self, node: Node, root: Node) -> Option<Node> {
-        if let Some(sibling) = self.rooted_sibling_up(node, root) {
-            // if we have one, go for this node if it matches, or a matching descendant
-            self.matching_descendant_or_self(sibling)
-        } else {
-            None
-        }
+        let sibling = self.rooted_sibling_up(node, root)?;
+        // if we have one, go for this node if it matches, or a matching descendant
+        self.matching_descendant_or_self(sibling)
     }
 
     fn rooted_sibling_up(&self, node: Node, root: Node) -> Option<Node> {
