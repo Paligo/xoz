@@ -45,40 +45,26 @@ impl Iterator for PreviousSiblingIter<'_> {
     }
 }
 
-pub(crate) struct AncestorIter<'a> {
-    doc: &'a Document,
+pub(crate) struct AncestorIter<T: TreeOps> {
     node: Option<Node>,
+    ops: T,
 }
 
-impl<'a> AncestorIter<'a> {
-    pub(crate) fn new(doc: &'a Document, node: Node) -> Self {
+impl<T: TreeOps> AncestorIter<T> {
+    pub(crate) fn new(node: Node, ops: T) -> Self {
         Self {
-            doc,
-            node: Some(node),
+            node: ops.parent(node),
+            ops,
         }
     }
 }
 
-impl Iterator for AncestorIter<'_> {
+impl<T: TreeOps> Iterator for AncestorIter<T> {
     type Item = Node;
 
     fn next(&mut self) -> Option<Self::Item> {
         let node = self.node?;
-        let new_node = self.doc.parent(node);
-        if let Some(new_node) = new_node {
-            match self.doc.value(new_node) {
-                TagType::Attributes | TagType::Namespaces => {
-                    // skip the attributes and namespaces nodes
-                    self.node = self.doc.parent(new_node);
-                }
-                _ => {
-                    // if it's not a special node, then it's a parent
-                    self.node = Some(new_node);
-                }
-            }
-        } else {
-            self.node = None;
-        }
+        self.node = self.ops.parent(node);
         Some(node)
     }
 }

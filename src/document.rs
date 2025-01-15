@@ -264,8 +264,14 @@ impl Document {
         PreviousSiblingIter::new(self, Some(node))
     }
 
+    pub fn ancestors_or_self(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
+        let ops = NodeTreeOps::new(self);
+        WithSelfIter::new(node, AncestorIter::new(node, ops))
+    }
+
     pub fn ancestors(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
-        AncestorIter::new(self, node)
+        let ops = NodeTreeOps::new(self);
+        AncestorIter::new(node, ops)
     }
 
     pub fn descendants(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {

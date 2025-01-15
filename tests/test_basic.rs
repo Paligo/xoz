@@ -333,6 +333,18 @@ fn test_ancestors() {
     let b = doc.first_child(a).unwrap();
     let c = doc.first_child(b).unwrap();
     let ancestors: Vec<_> = doc.ancestors(c).collect();
+    assert_eq!(ancestors, vec![b, a, doc_el, root]);
+}
+
+#[test]
+fn test_ancestors_or_self() {
+    let doc = parse_document(r#"<doc><a><b><c/></b></a></doc>"#).unwrap();
+    let root = doc.root();
+    let doc_el = doc.document_element();
+    let a = doc.first_child(doc_el).unwrap();
+    let b = doc.first_child(a).unwrap();
+    let c = doc.first_child(b).unwrap();
+    let ancestors: Vec<_> = doc.ancestors_or_self(c).collect();
     assert_eq!(ancestors, vec![c, b, a, doc_el, root]);
 }
 
@@ -345,6 +357,18 @@ fn test_ancestors_of_attribute() {
         .attribute_node(doc_el, &Name::name_without_namespace("a"))
         .unwrap();
     let ancestors: Vec<_> = doc.ancestors(a).collect();
+    assert_eq!(ancestors, vec![doc_el, root]);
+}
+
+#[test]
+fn test_ancestors_or_self_of_attribute() {
+    let doc = parse_document(r#"<doc a="A" b="B" />"#).unwrap();
+    let root = doc.root();
+    let doc_el = doc.document_element();
+    let a = doc
+        .attribute_node(doc_el, &Name::name_without_namespace("a"))
+        .unwrap();
+    let ancestors: Vec<_> = doc.ancestors_or_self(a).collect();
     assert_eq!(ancestors, vec![a, doc_el, root]);
 }
 
