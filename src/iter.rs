@@ -125,11 +125,8 @@ pub(crate) trait TreeOps {
     // the first matching descendant (in document order)
     fn matching_descendant(&self, node: Node) -> Option<Node>;
 
-    // self or the first matching descendant (in document order)
+    // matching self or the first matching descendant (in document order)
     fn matching_descendant_or_self(&self, node: Node) -> Option<Node>;
-
-    // the next matching sibling (in document order)
-    fn matching_sibling(&self, node: Node) -> Option<Node>;
 
     fn matching_sibling_up(&self, node: Node) -> Option<Node> {
         if let Some(sibling) = self.sibling_up(node) {
@@ -205,10 +202,6 @@ impl TreeOps for NodeTreeOps<'_> {
 
     fn matching_descendant_or_self(&self, node: Node) -> Option<Node> {
         Some(node)
-    }
-
-    fn matching_sibling(&self, node: Node) -> Option<Node> {
-        self.doc.next_sibling(node)
     }
 }
 
@@ -307,16 +300,6 @@ impl TreeOps for TaggedTreeOps<'_> {
         } else {
             self.matching_descendant(node)
         }
-    }
-
-    fn matching_sibling(&self, node: Node) -> Option<Node> {
-        // TODO: does a tagged_sibling exist?
-        while let Some(next_sibling) = self.doc.next_sibling(node) {
-            if self.doc.tag_id(next_sibling) == self.tag_id {
-                return Some(next_sibling);
-            }
-        }
-        None
     }
 }
 
