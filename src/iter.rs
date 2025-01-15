@@ -189,6 +189,28 @@ where
     pub(crate) fn new(descender: T) -> Self {
         Self(descender)
     }
+
+    fn sibling_up(&mut self, node: Node) -> Option<Node> {
+        // try to look for next sibling. if
+        // it doesn't exist for current, go up the ancestor chain
+        let mut current = node;
+        let s = &mut self.0;
+        loop {
+            if current == s.root() {
+                // we're done
+                s.set_node(None);
+                return None;
+            }
+            if let Some(sibling) = s.sibling(current) {
+                s.set_node(Some(sibling));
+                return Some(sibling);
+            } else {
+                current = s
+                    .parent(current)
+                    .expect("We should have a parent for a descendant");
+            }
+        }
+    }
 }
 
 impl<T: Descender> Iterator for DescenderWrapper<T> {
@@ -205,25 +227,27 @@ impl<T: Descender> Iterator for DescenderWrapper<T> {
             self.0.set_node(Some(first_child));
             Some(first_child)
         } else {
-            // if there is no first child, try to look for next sibling. if
-            // it doesn't exist for current, go up the ancestor chain
-            let mut current = node;
-            loop {
-                if current == s.root() {
-                    // we're done
-                    s.set_node(None);
-                    return None;
-                }
-                if let Some(next_sibling) = s.sibling(current) {
-                    s.set_node(Some(next_sibling));
-                    return Some(next_sibling);
-                } else {
-                    current = s
-                        .parent(current)
-                        .expect("We should have a parent for a descendant");
-                }
-            }
+            self.sibling_up(node)
         }
+    }
+}
+
+pub(crate) struct FollowingWrapper<T: Descender>(T);
+
+impl<T: Descender> Iterator for FollowingWrapper<T> {
+    type Item = Node;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        todo!()
+    }
+}
+
+impl<T> FollowingWrapper<T>
+where
+    T: Descender,
+{
+    pub(crate) fn new(descender: T) -> Self {
+        Self(descender)
     }
 }
 
