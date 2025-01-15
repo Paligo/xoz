@@ -132,7 +132,7 @@ impl<'a> Descendants<'a> {
 }
 
 // a descender defines how we descend in the tree
-trait Descender {
+pub(crate) trait Descender {
     type Item;
 
     // the root node
@@ -326,6 +326,7 @@ impl Descender for TaggedDescendants<'_> {
     }
 
     fn sibling(&self, node: Node) -> Option<Node> {
+        // TODO: does a tagged_sibling exist?
         while let Some(next_sibling) = self.doc.next_sibling(node) {
             if self.doc.tag_id(next_sibling) == self.tag_id {
                 return Some(next_sibling);
