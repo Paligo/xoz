@@ -285,8 +285,15 @@ impl Document {
         node: Node,
         tag_id: TagId,
     ) -> impl Iterator<Item = Node> + use<'_> {
-        let ops = TaggedTreeOps::new(self, tag_id);
-        WithTaggedSelfIter::new(self, node, DescendantsIter::new(node, ops), tag_id)
+        DescendantsIter::new(node, TaggedTreeOps::new(self, tag_id))
+    }
+
+    pub fn tagged_descendants_or_self(
+        &self,
+        node: Node,
+        tag_id: TagId,
+    ) -> impl Iterator<Item = Node> + use<'_> {
+        WithTaggedSelfIter::new(self, node, self.tagged_descendants(node, tag_id), tag_id)
     }
 
     pub fn following(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
