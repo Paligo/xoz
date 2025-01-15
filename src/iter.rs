@@ -175,9 +175,9 @@ impl TreeOps for Descendants<'_> {
     }
 }
 
-pub(crate) struct DescenderWrapper<T: TreeOps>(T);
+pub(crate) struct DescendantsIter<T: TreeOps>(T);
 
-impl<T> DescenderWrapper<T>
+impl<T> DescendantsIter<T>
 where
     T: TreeOps,
 {
@@ -204,7 +204,7 @@ where
     }
 }
 
-impl<T: TreeOps> Iterator for DescenderWrapper<T> {
+impl<T: TreeOps> Iterator for DescendantsIter<T> {
     type Item = Node;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -221,29 +221,29 @@ impl<T: TreeOps> Iterator for DescenderWrapper<T> {
     }
 }
 
-pub(crate) struct FollowingWrapper<T: TreeOps>(T);
+// pub(crate) struct FollowingIter<T: TreeOps>(T);
 
-impl<T: TreeOps> Iterator for FollowingWrapper<T> {
-    type Item = Node;
+// impl<T: TreeOps> Iterator for FollowingIter<T> {
+//     type Item = Node;
 
-    fn next(&mut self) -> Option<Self::Item> {
-        todo!()
-    }
-}
+//     fn next(&mut self) -> Option<Self::Item> {
+//         todo!()
+//     }
+// }
 
-impl<T> FollowingWrapper<T>
-where
-    T: TreeOps,
-{
-    pub(crate) fn new(tree_ops: T) -> Self {
-        Self(tree_ops)
-    }
-}
+// impl<T> FollowingIter<T>
+// where
+//     T: TreeOps,
+// {
+//     pub(crate) fn new(tree_ops: T) -> Self {
+//         Self(tree_ops)
+//     }
+// }
 
 pub(crate) struct FollowingIter<'a> {
     doc: &'a Document,
     node: Option<Node>,
-    descendant_iter: Option<WithSelfIter<DescenderWrapper<Descendants<'a>>>>,
+    descendant_iter: Option<WithSelfIter<DescendantsIter<Descendants<'a>>>>,
 }
 
 impl<'a> FollowingIter<'a> {
