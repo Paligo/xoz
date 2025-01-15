@@ -3,7 +3,7 @@ use vers_vecs::trees::Tree;
 use crate::{
     iter::{
         AncestorIter, AttributesIter, DescendantsIter, FollowingIter, NextSiblingIter, NodeTreeOps,
-        PreviousSiblingIter, TaggedTreeOps, TreeOps, WithSelfIter, WithTaggedSelfIter,
+        PreviousSiblingIter, TaggedTreeOps, WithSelfIter, WithTaggedSelfIter,
     },
     structure::Structure,
     tag::{TagInfo, TagType},
@@ -242,6 +242,11 @@ impl Document {
         matches!(self.value(node), TagType::Namespace { .. })
     }
 
+    pub fn is_ancestor(&self, node: Node, descendant: Node) -> bool {
+        // TODO: replace with bp tree is_ancestor once that exists
+        self.ancestors(descendant).any(|n| n == node)
+    }
+
     pub fn child_index(&self, node: Node) -> Option<usize> {
         let parent = self.parent(node)?;
         for (i, child) in self.children(parent).enumerate() {
@@ -310,6 +315,12 @@ impl Document {
 
     pub fn following(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
         FollowingIter::new(node, NodeTreeOps::new(self))
+    }
+
+    pub fn preceding(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
+        self.descendants(self.root())
+            .take_while(move |n| *n != node)
+            .filter(move |n| !self.is_ancestor(*n, node))
     }
 
     pub fn tagged_following(
