@@ -284,6 +284,14 @@ impl Document {
         AttributesIter::new(self, node)
     }
 
+    pub fn parent_axis(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
+        self.parent(node).into_iter()
+    }
+
+    pub fn self_axis(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
+        std::iter::once(node)
+    }
+
     pub fn tagged_descendants(
         &self,
         node: Node,

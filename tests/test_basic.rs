@@ -631,3 +631,37 @@ fn test_attributes_axis() {
     let attributes: Vec<_> = doc.attributes(doc_el).collect();
     assert_eq!(attributes, vec![a, b, c]);
 }
+
+#[test]
+fn test_parent_axis() {
+    let doc = parse_document(r#"<doc><a><b/></a></doc>"#).unwrap();
+    let root = doc.root();
+    let doc_el = doc.document_element();
+    let a = doc.first_child(doc_el).unwrap();
+    let b = doc.first_child(a).unwrap();
+
+    let parents: Vec<_> = doc.parent_axis(b).collect();
+    assert_eq!(parents, vec![a]);
+
+    let parents: Vec<_> = doc.parent_axis(a).collect();
+    assert_eq!(parents, vec![doc_el]);
+
+    let parents: Vec<_> = doc.parent_axis(doc_el).collect();
+    assert_eq!(parents, vec![root]);
+
+    let parents: Vec<_> = doc.parent_axis(root).collect();
+    assert_eq!(parents, vec![]);
+}
+
+#[test]
+fn test_self_axis() {
+    let doc = parse_document(r#"<doc><a><b/></a></doc>"#).unwrap();
+    let doc_el = doc.document_element();
+    let a = doc.first_child(doc_el).unwrap();
+    let b = doc.first_child(a).unwrap();
+
+    let nodes: Vec<_> = doc.self_axis(b).collect();
+    assert_eq!(nodes, vec![b]);
+    let nodes: Vec<_> = doc.self_axis(a).collect();
+    assert_eq!(nodes, vec![a]);
+}
