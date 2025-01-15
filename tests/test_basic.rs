@@ -398,12 +398,33 @@ fn test_descendants() {
     let f = doc.next_sibling(e).unwrap();
 
     let descendants: Vec<_> = doc.descendants(doc_el).collect();
-    assert_eq!(descendants, vec![doc_el, a, b, c, d, e, f]);
-
-    let descendants: Vec<_> = doc.descendants(a).collect();
     assert_eq!(descendants, vec![a, b, c, d, e, f]);
 
+    let descendants: Vec<_> = doc.descendants(a).collect();
+    assert_eq!(descendants, vec![b, c, d, e, f]);
+
     let descendants: Vec<_> = doc.descendants(b).collect();
+    assert_eq!(descendants, vec![c]);
+}
+
+#[test]
+fn test_descendants_or_self() {
+    let doc = parse_document(r#"<doc><a><b><c/></b><d><e/><f/></d></a></doc>"#).unwrap();
+    let doc_el = doc.document_element();
+    let a = doc.first_child(doc_el).unwrap();
+    let b = doc.first_child(a).unwrap();
+    let c = doc.first_child(b).unwrap();
+    let d = doc.next_sibling(b).unwrap();
+    let e = doc.first_child(d).unwrap();
+    let f = doc.next_sibling(e).unwrap();
+
+    let descendants: Vec<_> = doc.descendants_or_self(doc_el).collect();
+    assert_eq!(descendants, vec![doc_el, a, b, c, d, e, f]);
+
+    let descendants: Vec<_> = doc.descendants_or_self(a).collect();
+    assert_eq!(descendants, vec![a, b, c, d, e, f]);
+
+    let descendants: Vec<_> = doc.descendants_or_self(b).collect();
     assert_eq!(descendants, vec![b, c]);
 }
 
@@ -412,6 +433,15 @@ fn test_descendants_one_node() {
     let doc = parse_document(r#"<doc/>"#).unwrap();
     let doc_el = doc.document_element();
     let descendants: Vec<_> = doc.descendants(doc_el).collect();
+
+    assert_eq!(descendants, vec![]);
+}
+
+#[test]
+fn test_descendants_or_self_one_node() {
+    let doc = parse_document(r#"<doc/>"#).unwrap();
+    let doc_el = doc.document_element();
+    let descendants: Vec<_> = doc.descendants_or_self(doc_el).collect();
 
     assert_eq!(descendants, vec![doc_el]);
 }

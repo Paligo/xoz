@@ -265,25 +265,19 @@ impl Document {
     }
 
     pub fn ancestors_or_self(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
-        let ops = NodeTreeOps::new(self);
-        WithSelfIter::new(node, AncestorIter::new(node, ops))
+        WithSelfIter::new(node, self.ancestors(node))
     }
 
     pub fn ancestors(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
-        let ops = NodeTreeOps::new(self);
-        AncestorIter::new(node, ops)
+        AncestorIter::new(node, NodeTreeOps::new(self))
     }
 
     pub fn descendants(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
-        self.descendants_iter(node)
+        DescendantsIter::new(node, NodeTreeOps::new(self))
     }
 
-    pub(crate) fn descendants_iter(
-        &self,
-        node: Node,
-    ) -> WithSelfIter<DescendantsIter<NodeTreeOps>> {
-        let ops = NodeTreeOps::new(self);
-        WithSelfIter::new(node, DescendantsIter::new(node, ops))
+    pub fn descendants_or_self(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
+        WithSelfIter::new(node, self.descendants(node))
     }
 
     pub fn tagged_descendants(
