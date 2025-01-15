@@ -466,3 +466,24 @@ fn test_tagged_descendants_including_self2() {
     let tagged_descendants: Vec<_> = doc.tagged_descendants(outer_b, tag_id).collect();
     assert_eq!(tagged_descendants.len(), 1);
 }
+
+#[test]
+fn test_tagged_following() {
+    let doc = parse_document(r#"<doc><a><b><c/></b><d><e/><f/></d></a></doc>"#).unwrap();
+    let doc_el = doc.document_element();
+    let a = doc.first_child(doc_el).unwrap();
+    let b = doc.first_child(a).unwrap();
+    let c = doc.first_child(b).unwrap();
+    let d = doc.next_sibling(b).unwrap();
+    let e = doc.first_child(d).unwrap();
+    let f = doc.next_sibling(e).unwrap();
+
+    let tag_id = doc
+        .tag(&TagInfo::open(TagType::Element {
+            namespace: "".to_string(),
+            local_name: "f".to_string(),
+        }))
+        .unwrap();
+    let following: Vec<_> = doc.tagged_following(c, tag_id).collect();
+    assert_eq!(following, vec![f]);
+}

@@ -119,10 +119,26 @@ pub(crate) trait TreeOps {
     // the parent of a node
     fn parent(&self, node: Node) -> Option<Node>;
 
-    // the first matching descendant (in document order)
-    fn descendant(&self, node: Node) -> Option<Node>;
-    // the next matching sibling (in document order)
+    // the first sibling, matching or not
     fn sibling(&self, node: Node) -> Option<Node>;
+
+    // the first matching descendant (in document order)
+    fn matching_descendant(&self, node: Node) -> Option<Node>;
+
+    // self or the first matching descendant (in document order)
+    fn matching_descendant_or_self(&self, node: Node) -> Option<Node>;
+
+    // the next matching sibling (in document order)
+    fn matching_sibling(&self, node: Node) -> Option<Node>;
+
+    fn matching_sibling_up(&self, node: Node) -> Option<Node> {
+        if let Some(sibling) = self.sibling_up(node) {
+            // if we have one, go for this node if it matches, or a matching descendant
+            self.matching_descendant_or_self(sibling)
+        } else {
+            None
+        }
+    }
 
     fn sibling_up(&self, node: Node) -> Option<Node> {
         let mut current = node;
@@ -170,11 +186,19 @@ impl TreeOps for NodeTreeOps<'_> {
         self.doc.parent(node)
     }
 
-    fn descendant(&self, node: Node) -> Option<Node> {
+    fn sibling(&self, node: Node) -> Option<Node> {
+        self.doc.next_sibling(node)
+    }
+
+    fn matching_descendant(&self, node: Node) -> Option<Node> {
         self.doc.first_child(node)
     }
 
-    fn sibling(&self, node: Node) -> Option<Node> {
+    fn matching_descendant_or_self(&self, node: Node) -> Option<Node> {
+        Some(node)
+    }
+
+    fn matching_sibling(&self, node: Node) -> Option<Node> {
         self.doc.next_sibling(node)
     }
 }
@@ -192,7 +216,7 @@ where
     pub(crate) fn new(root: Node, tree_ops: T) -> Self {
         Self {
             root,
-            node: tree_ops.descendant(root),
+            node: tree_ops.matching_descendant(root),
             ops: tree_ops,
         }
     }
@@ -203,7 +227,7 @@ impl<T: TreeOps> Iterator for DescendantsIter<T> {
 
     fn next(&mut self) -> Option<Node> {
         let node = self.node?;
-        self.node = if let Some(descendant) = self.ops.descendant(node) {
+        self.node = if let Some(descendant) = self.ops.matching_descendant(node) {
             Some(descendant)
         } else {
             self.ops.rooted_sibling_up(node, self.root)
@@ -223,7 +247,7 @@ where
 {
     pub(crate) fn new(node: Node, tree_ops: T) -> Self {
         Self {
-            node: tree_ops.sibling_up(node),
+            node: tree_ops.matching_sibling_up(node),
             ops: tree_ops,
         }
     }
@@ -235,10 +259,10 @@ impl<T: TreeOps> Iterator for FollowingIter<T> {
     fn next(&mut self) -> Option<Self::Item> {
         let node = self.node?;
 
-        self.node = if let Some(descendant) = self.ops.descendant(node) {
+        self.node = if let Some(descendant) = self.ops.matching_descendant(node) {
             Some(descendant)
         } else {
-            self.ops.sibling_up(node)
+            self.ops.matching_sibling_up(node)
         };
         Some(node)
     }
@@ -260,11 +284,23 @@ impl TreeOps for TaggedTreeOps<'_> {
         self.doc.parent(node)
     }
 
-    fn descendant(&self, node: Node) -> Option<Node> {
+    fn sibling(&self, node: Node) -> Option<Node> {
+        self.doc.next_sibling(node)
+    }
+
+    fn matching_descendant(&self, node: Node) -> Option<Node> {
         self.doc.tagged_descendant(node, self.tag_id)
     }
 
-    fn sibling(&self, node: Node) -> Option<Node> {
+    fn matching_descendant_or_self(&self, node: Node) -> Option<Node> {
+        if self.doc.tag_id(node) == self.tag_id {
+            Some(node)
+        } else {
+            self.matching_descendant(node)
+        }
+    }
+
+    fn matching_sibling(&self, node: Node) -> Option<Node> {
         // TODO: does a tagged_sibling exist?
         while let Some(next_sibling) = self.doc.next_sibling(node) {
             if self.doc.tag_id(next_sibling) == self.tag_id {

@@ -294,6 +294,15 @@ impl Document {
         FollowingIter::new(node, ops)
     }
 
+    pub fn tagged_following(
+        &self,
+        node: Node,
+        tag_id: TagId,
+    ) -> impl Iterator<Item = Node> + use<'_> {
+        let ops = TaggedTreeOps::new(self, tag_id);
+        FollowingIter::new(node, ops)
+    }
+
     pub fn text_str(&self, node: Node) -> Option<&str> {
         if matches!(self.value(node), TagType::Text) {
             let text_id = self.structure.text_id(node.0);
