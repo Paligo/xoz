@@ -278,7 +278,7 @@ impl Document {
     ) -> WithSelfIter<DescendantsIter<Descendants>> {
         WithSelfIter::new(
             node,
-            DescendantsIter::new(Descendants::new(self, node, self.first_child(node))),
+            DescendantsIter::new(node, self.first_child(node), Descendants::new(self)),
         )
     }
 
@@ -290,12 +290,11 @@ impl Document {
         WithTaggedSelfIter::new(
             self,
             node,
-            DescendantsIter::new(TaggedDescendants::new(
-                self,
+            DescendantsIter::new(
                 node,
                 self.tagged_descendant(node, tag_id),
-                tag_id,
-            )),
+                TaggedDescendants::new(self, tag_id),
+            ),
             tag_id,
         )
     }

@@ -117,26 +117,24 @@ where
 
 pub(crate) struct Descendants<'a> {
     doc: &'a Document,
-    root: Node,
-    node: Option<Node>,
 }
 
 impl<'a> Descendants<'a> {
-    pub(crate) fn new(doc: &'a Document, root: Node, node: Option<Node>) -> Self {
-        Self { doc, root, node }
+    pub(crate) fn new(doc: &'a Document) -> Self {
+        Self { doc }
     }
 }
 
 pub(crate) trait TreeOps {
     type Item;
 
-    // the root node
-    fn root(&self) -> Node;
+    // // the root node
+    // fn root(&self) -> Node;
 
-    // the current node
-    fn node(&self) -> Option<Node>;
-    // update the current node
-    fn set_node(&mut self, node: Option<Node>);
+    // // the current node
+    // fn node(&self) -> Option<Node>;
+    // // update the current node
+    // fn set_node(&mut self, node: Option<Node>);
 
     // the parent of a node
     fn parent(&self, node: Node) -> Option<Node>;
@@ -149,18 +147,6 @@ pub(crate) trait TreeOps {
 
 impl TreeOps for Descendants<'_> {
     type Item = Node;
-
-    fn root(&self) -> Self::Item {
-        self.root
-    }
-
-    fn node(&self) -> Option<Node> {
-        self.node
-    }
-
-    fn set_node(&mut self, node: Option<Node>) {
-        self.node = node;
-    }
 
     fn parent(&self, node: Node) -> Option<Node> {
         self.doc.parent(node)
@@ -176,6 +162,8 @@ impl TreeOps for Descendants<'_> {
 }
 
 pub(crate) struct DescendantsIter<T: TreeOps> {
+    root: Node,
+    node: Option<Node>,
     ops: T,
 }
 
@@ -183,22 +171,26 @@ impl<T> DescendantsIter<T>
 where
     T: TreeOps,
 {
-    pub(crate) fn new(tree_ops: T) -> Self {
-        Self { ops: tree_ops }
+    pub(crate) fn new(root: Node, node: Option<Node>, tree_ops: T) -> Self {
+        Self {
+            root,
+            node,
+            ops: tree_ops,
+        }
     }
 
     fn sibling_up(&self, node: Node) -> Option<Node> {
         let mut current = node;
-        let s = &self.ops;
         loop {
-            if current == s.root() {
+            if current == self.root {
                 // we're done
                 return None;
             }
-            if let Some(sibling) = s.sibling(current) {
+            if let Some(sibling) = self.ops.sibling(current) {
                 return Some(sibling);
             } else {
-                current = s
+                current = self
+                    .ops
                     .parent(current)
                     .expect("We should have a parent for a descendant");
             }
@@ -210,15 +202,15 @@ impl<T: TreeOps> Iterator for DescendantsIter<T> {
     type Item = Node;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let node = self.ops.node()?;
+        let node = self.node?;
 
         let descendant = self.ops.descendant(node);
-        self.ops.set_node(if let Some(descendant) = descendant {
+        self.node = if let Some(descendant) = descendant {
             // if there is a first child, take it
             Some(descendant)
         } else {
             self.sibling_up(node)
-        });
+        };
         Some(node)
     }
 }
@@ -301,36 +293,18 @@ impl Iterator for FollowingIter<'_> {
 
 pub(crate) struct TaggedDescendants<'a> {
     doc: &'a Document,
-    root: Node,
-    node: Option<Node>,
+
     tag_id: TagId,
 }
 
 impl<'a> TaggedDescendants<'a> {
-    pub(crate) fn new(doc: &'a Document, root: Node, node: Option<Node>, tag_id: TagId) -> Self {
-        Self {
-            doc,
-            root,
-            node,
-            tag_id,
-        }
+    pub(crate) fn new(doc: &'a Document, tag_id: TagId) -> Self {
+        Self { doc, tag_id }
     }
 }
 
 impl TreeOps for TaggedDescendants<'_> {
     type Item = Node;
-
-    fn root(&self) -> Self::Item {
-        self.root
-    }
-
-    fn node(&self) -> Option<Node> {
-        self.node
-    }
-
-    fn set_node(&mut self, node: Option<Node>) {
-        self.node = node;
-    }
 
     fn parent(&self, node: Node) -> Option<Node> {
         self.doc.parent(node)
