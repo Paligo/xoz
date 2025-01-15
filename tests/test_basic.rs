@@ -438,6 +438,20 @@ fn test_tagged_descendants() {
 }
 
 #[test]
+fn test_tagged_descendants_next_sibling() {
+    let doc = parse_document(r#"<doc><a><b/></a><c><b/></c></doc>"#).unwrap();
+    let doc_el = doc.document_element();
+    let tag_id = doc
+        .tag(&TagInfo::open(TagType::Element {
+            namespace: "".to_string(),
+            local_name: "b".to_string(),
+        }))
+        .unwrap();
+    let tagged_descendants: Vec<_> = doc.tagged_descendants(doc_el, tag_id).collect();
+    assert_eq!(tagged_descendants.len(), 2);
+}
+
+#[test]
 fn test_tagged_descendants_including_self() {
     let doc = parse_document(r#"<doc><b><b/><b/></b></doc>"#).unwrap();
     let doc_el = doc.document_element();

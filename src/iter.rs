@@ -153,6 +153,15 @@ pub(crate) trait TreeOps {
         }
     }
 
+    fn matching_rooted_sibling_up(&self, node: Node, root: Node) -> Option<Node> {
+        if let Some(sibling) = self.rooted_sibling_up(node, root) {
+            // if we have one, go for this node if it matches, or a matching descendant
+            self.matching_descendant_or_self(sibling)
+        } else {
+            None
+        }
+    }
+
     fn rooted_sibling_up(&self, node: Node, root: Node) -> Option<Node> {
         let mut current = node;
         loop {
@@ -230,7 +239,7 @@ impl<T: TreeOps> Iterator for DescendantsIter<T> {
         self.node = if let Some(descendant) = self.ops.matching_descendant(node) {
             Some(descendant)
         } else {
-            self.ops.rooted_sibling_up(node, self.root)
+            self.ops.matching_rooted_sibling_up(node, self.root)
         };
         Some(node)
     }
