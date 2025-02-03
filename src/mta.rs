@@ -127,4 +127,39 @@ mod tests {
 
         assert_eq!(lookup.matching(&bar_tag), Vec::<&str>::new());
     }
+
+    #[test]
+    fn test_tag_lookup_excludes() {
+        let mut lookup = TagLookup::new();
+
+        let foo_tag = TagType::Element {
+            namespace: "".to_string(),
+            local_name: "foo".to_string(),
+        };
+        
+        let bar_tag = TagType::Element {
+            namespace: "".to_string(),
+            local_name: "bar".to_string(),
+        };
+
+        // Test excludes
+        let exclude_guard = Guard::Excludes(
+            [foo_tag.clone(), bar_tag.clone()]
+                .into_iter()
+                .collect(),
+        );
+        lookup.add(exclude_guard, "excluded");
+
+        assert_eq!(lookup.matching(&foo_tag), vec!["excluded"]);
+        assert_eq!(lookup.matching(&bar_tag), vec!["excluded"]);
+
+        // Test combination of includes and excludes
+        let include_guard = Guard::Includes(
+            [foo_tag.clone()].into_iter().collect()
+        );
+        lookup.add(include_guard, "included");
+
+        assert_eq!(lookup.matching(&foo_tag), vec!["excluded", "included"]);
+        assert_eq!(lookup.matching(&bar_tag), vec!["excluded"]);
+    }
 }
