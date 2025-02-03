@@ -103,6 +103,27 @@ impl Formula {
             },
         }
     }
+
+    // TODO: should cache the outcome upon construction
+    fn has_down1(&self) -> bool {
+        match self {
+            Formula::Down1(_) => true,
+            Formula::And(and) => and.left.has_down1() || and.right.has_down1(),
+            Formula::Or(or) => or.left.has_down1() || or.right.has_down1(),
+            Formula::Not(not) => not.inner.has_down1(),
+            _ => false,
+        }
+    }
+
+    fn has_down2(&self) -> bool {
+        match self {
+            Formula::Down2(_) => true,
+            Formula::And(and) => and.left.has_down2() || and.right.has_down2(),
+            Formula::Or(or) => or.left.has_down2() || or.right.has_down2(),
+            Formula::Not(not) => not.inner.has_down2(),
+            _ => false,
+        }
+    }
 }
 
 struct And {
