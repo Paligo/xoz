@@ -20,19 +20,19 @@ type Mapping = HashMap<State, HashSet<Node>>;
 //     }
 // }
 
-struct StateLookup<'a, T: ?Sized> {}
+// struct StateLookup<'a, T: ?Sized> {}
 
-impl<'a, T: ?Sized> StateLookup<'a, T> {
-    fn new() -> Self {
-        Self {}
-    }
+// impl<'a, T: ?Sized> StateLookup<'a, T> {
+//     fn new() -> Self {
+//         Self {}
+//     }
 
-    fn add(&mut self, state: State, tag_lookup: TagLookup<'a, T>) {}
+//     fn add(&mut self, state: State, tag_lookup: TagLookup<'a, T>) {}
 
-    fn matching(&self, state: State, tag: &TagType) -> Vec<&'a T> {
-        todo!()
-    }
-}
+//     fn matching(&self, state: State, tag: &TagType) -> Vec<&'a T> {
+//         todo!()
+//     }
+// }
 
 struct TagLookup<'a, T: ?Sized> {
     // Direct mapping for includes
@@ -136,18 +136,15 @@ mod tests {
             namespace: "".to_string(),
             local_name: "foo".to_string(),
         };
-        
+
         let bar_tag = TagType::Element {
             namespace: "".to_string(),
             local_name: "bar".to_string(),
         };
 
         // Test excludes
-        let exclude_guard = Guard::Excludes(
-            [foo_tag.clone(), bar_tag.clone()]
-                .into_iter()
-                .collect(),
-        );
+        let exclude_guard =
+            Guard::Excludes([foo_tag.clone(), bar_tag.clone()].into_iter().collect());
         lookup.add(exclude_guard, "excluded");
 
         // Excluded tags should not match
@@ -162,9 +159,7 @@ mod tests {
         assert_eq!(lookup.matching(&baz_tag), vec!["excluded"]);
 
         // Test combination of includes and excludes
-        let include_guard = Guard::Includes(
-            [foo_tag.clone()].into_iter().collect()
-        );
+        let include_guard = Guard::Includes([foo_tag.clone()].into_iter().collect());
         lookup.add(include_guard, "included");
 
         // foo is excluded but also included
