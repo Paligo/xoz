@@ -20,19 +20,53 @@ type Mapping = HashMap<State, HashSet<Node>>;
 //     }
 // }
 
-struct TagLookup<T> {}
+struct TagLookup<T> {
+    // Direct mapping for includes
+    includes: HashMap<TagType, Vec<T>>,
+    // For excludes, we store (excluded_tags, payload) pairs
+    excludes: Vec<(HashSet<TagType>, T)>,
+}
 
 impl<T: Clone> TagLookup<T> {
     fn new() -> Self {
-        Self {}
+        Self {
+            includes: HashMap::new(),
+            excludes: Vec::new(),
+        }
     }
 
     fn add(&mut self, guard: Guard, payload: T) {
-        todo!()
+        match guard {
+            Guard::Includes(tags) => {
+                // For includes, add the payload to each tag's vector
+                for tag in tags {
+                    self.includes.entry(tag).or_default().push(payload.clone());
+                }
+            }
+            Guard::Excludes(tags) => {
+                // For excludes, store the whole set with its payload
+                self.excludes.push((tags, payload));
+            }
+        }
     }
 
     fn matching(&self, tag: TagType) -> Vec<T> {
-        todo!()
+        let mut results = Vec::new();
+        
+        // Add all direct matches from includes
+        if let Some(payloads) = self.includes.get(&tag) {
+            results.extend(payloads.iter().cloned());
+        }
+
+        // Add matches from excludes where tag is in the excluded set
+        results.extend(
+            self.excludes
+                .iter()
+                .filter(|(tags, _)| tags.contains(&tag))
+                .map(|(_, payload)| payload.clone())
+        );
+
+        results
     }
 }
 
@@ -49,6 +83,8 @@ mod tests {
     #[test]
     fn test_tag_lookup() {
         let mut lookup = TagLookup::new();
+        
+        // Test includes
         let guard = Guard::Includes(
             [TagType::Element {
                 namespace: "".to_string(),
@@ -57,20 +93,44 @@ mod tests {
             .into_iter()
             .collect(),
         );
-        lookup.add(guard, "value");
+        lookup.add(guard, "value1");
+        
+        // Add another payload for the same tag
+        lookup.add(guard, "value2");
+        
+        let foo_tag = TagType::Element {
+            namespace: "".to_string(),
+            local_name: "foo".to_string(),
+        };
+        
+        let bar_tag = TagType::Element {
+            namespace: "".to_string(),
+            local_name: "bar".to_string(),
+        };
+        
         assert_eq!(
-            lookup.matching(TagType::Element {
-                namespace: "".to_string(),
-                local_name: "foo".to_string(),
-            }),
-            vec![&"value"]
+            lookup.matching(foo_tag.clone()),
+            vec!["value1", "value2"]
         );
+        
+        assert_eq!(lookup.matching(bar_tag.clone()), vec![]);
+        
+        // Test excludes
+        let exclude_guard = Guard::Excludes(
+            [foo_tag.clone(), bar_tag.clone()]
+                .into_iter()
+                .collect(),
+        );
+        lookup.add(exclude_guard, "excluded");
+        
         assert_eq!(
-            lookup.matching(TagType::Element {
-                namespace: "".to_string(),
-                local_name: "bar".to_string(),
-            }),
-            vec![]
+            lookup.matching(foo_tag),
+            vec!["value1", "value2", "excluded"]
+        );
+        
+        assert_eq!(
+            lookup.matching(bar_tag),
+            vec!["excluded"]
         );
     }
 }
