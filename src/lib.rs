@@ -3,6 +3,7 @@ mod builder;
 mod document;
 mod error;
 mod iter;
+mod mta;
 mod serializer;
 mod structure;
 mod tag;

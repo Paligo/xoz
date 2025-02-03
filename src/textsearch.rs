@@ -1,4 +1,6 @@
-use fm_index::{converter::IdConverter, suffix_array::SuffixOrderSampledArray, FMIndex};
+use fm_index::{
+    converter::IdConverter, suffix_array::SuffixOrderSampledArray, FMIndex, SearchIndexBuilder,
+};
 
 pub(crate) struct TextSearch {
     text: String,
@@ -8,8 +10,6 @@ pub(crate) struct TextSearch {
 
 impl TextSearch {
     pub(crate) fn new(text: String) -> TextSearch {
-        let converter = IdConverter::new(256);
-
         let is_tiny = text.len() < 5;
         // for now level > 0 leads to bugs
         // a higher level allows for more compressed storage but less
@@ -25,9 +25,13 @@ impl TextSearch {
         let index = if is_tiny {
             // construct a dummy text index where we know construction will succeed
             // we don't use it
-            FMIndex::new("dummy text".as_bytes().to_vec(), converter, level)
+            SearchIndexBuilder::new()
+                .sampling_level(level)
+                .build("dummy text".as_bytes().to_vec())
         } else {
-            FMIndex::new(text.as_bytes().to_vec(), converter, level)
+            SearchIndexBuilder::new()
+                .sampling_level(level)
+                .build(text.as_bytes().to_vec())
         };
         Self {
             text,
