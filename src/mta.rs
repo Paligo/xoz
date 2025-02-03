@@ -8,7 +8,7 @@ struct Automaton {
 
 type States = HashSet<State>;
 
-#[derive(Debug, Eq, PartialEq, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 struct State(usize);
 
 type Mapping = HashMap<State, HashSet<Node>>;
@@ -19,6 +19,20 @@ type Mapping = HashMap<State, HashSet<Node>>;
 //         Mapping::new()
 //     }
 // }
+
+struct StateLookup<'a, T: ?Sized> {}
+
+impl<'a, T: ?Sized> StateLookup<'a, T> {
+    fn new() -> Self {
+        Self {}
+    }
+
+    fn add(&mut self, state: State, tag_lookup: TagLookup<'a, T>) {}
+
+    fn matching(&self, state: State, tag: &TagType) -> Vec<&'a T> {
+        todo!()
+    }
+}
 
 struct TagLookup<'a, T: ?Sized> {
     // Direct mapping for includes
@@ -82,7 +96,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_tag_lookup() {
+    fn test_tag_lookup_includes() {
         let mut lookup = TagLookup::new();
 
         // Test includes
