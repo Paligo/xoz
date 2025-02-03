@@ -1,4 +1,6 @@
-use ahash::{HashMap, HashMapExt, HashSet};
+use std::hash::Hash;
+
+use ahash::{HashMap, HashMapExt, HashSet, HashSetExt};
 
 use crate::{document::Node, TagType};
 
@@ -11,7 +13,8 @@ type States = HashSet<State>;
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 struct State(usize);
 
-type Mapping = HashMap<State, HashSet<Node>>;
+type Nodes = HashSet<Node>;
+type Mapping = HashMap<State, Nodes>;
 
 // fn top_down_run(automaton: Automaton, node: Option<Node>, states: States) -> Mapping {
 //     if let Some(node) = node {
@@ -19,6 +22,150 @@ type Mapping = HashMap<State, HashSet<Node>>;
 //         Mapping::new()
 //     }
 // }
+
+enum Formula {
+    True,
+    False,
+    Mark,
+    And(And),
+    Or(Or),
+    Not(Not),
+    Down1(State),
+    Down2(State),
+    Pred(Pred),
+}
+
+impl Formula {
+    fn evaluate(&self, node: Node, left: &Mapping, right: &Mapping) -> FormulaOutcome {
+        match self {
+            Formula::True => FormulaOutcome {
+                b: true,
+                r: Nodes::new(),
+            },
+            Formula::Mark => FormulaOutcome {
+                b: true,
+                r: {
+                    let mut nodes = Nodes::new();
+                    nodes.insert(node);
+                    nodes
+                },
+            },
+            Formula::And(and) => {
+                let left_outcome = and.left.evaluate(node, left, right);
+                let right_outcome = and.right.evaluate(node, left, right);
+                left_outcome.and(&right_outcome)
+            }
+            Formula::Or(or) => {
+                let left_outcome = or.left.evaluate(node, left, right);
+                let right_outcome = or.right.evaluate(node, left, right);
+                left_outcome.or(&right_outcome)
+            }
+            Formula::Not(not) => {
+                let inner = not.inner.evaluate(node, left, right);
+                inner.not()
+            }
+            Formula::Down1(state) => {
+                let nodes = left.get(state);
+                if let Some(nodes) = nodes {
+                    if nodes.contains(&node) {
+                        return FormulaOutcome {
+                            b: true,
+                            r: nodes.clone(),
+                        };
+                    }
+                }
+                FormulaOutcome {
+                    b: false,
+                    r: Nodes::new(),
+                }
+            }
+            Formula::Down2(state) => {
+                let nodes = right.get(state);
+                if let Some(nodes) = nodes {
+                    if nodes.contains(&node) {
+                        return FormulaOutcome {
+                            b: true,
+                            r: nodes.clone(),
+                        };
+                    }
+                }
+                FormulaOutcome {
+                    b: false,
+                    r: Nodes::new(),
+                }
+            }
+            Formula::Pred(pred) => {
+                todo!()
+            }
+            Formula::False => FormulaOutcome {
+                b: false,
+                r: Nodes::new(),
+            },
+        }
+    }
+}
+
+struct And {
+    left: Box<Formula>,
+    right: Box<Formula>,
+}
+
+struct Or {
+    left: Box<Formula>,
+    right: Box<Formula>,
+}
+
+struct Not {
+    inner: Box<Formula>,
+}
+
+struct Predicate;
+
+struct Pred {
+    pred: Predicate,
+}
+
+struct FormulaOutcome {
+    b: bool,
+    r: Nodes,
+}
+
+impl FormulaOutcome {
+    fn not(&self) -> FormulaOutcome {
+        FormulaOutcome {
+            b: !self.b,
+            r: Nodes::new(),
+        }
+    }
+
+    fn and(&self, other: &FormulaOutcome) -> FormulaOutcome {
+        if self.b && other.b {
+            FormulaOutcome {
+                b: true,
+                r: self.r.union(&other.r).cloned().collect(),
+            }
+        } else {
+            FormulaOutcome {
+                b: false,
+                r: Nodes::new(),
+            }
+        }
+    }
+
+    fn or(&self, other: &FormulaOutcome) -> FormulaOutcome {
+        if self.b || other.b {
+            FormulaOutcome {
+                b: true,
+                r: self.r.union(&other.r).cloned().collect(),
+            }
+        } else {
+            FormulaOutcome {
+                b: false,
+                r: Nodes::new(),
+            }
+        }
+    }
+}
 
 struct StateLookup<'a, T: ?Sized> {
     states: HashMap<State, TagLookup<'a, T>>,
