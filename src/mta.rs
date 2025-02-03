@@ -72,11 +72,11 @@ impl<'a, T: ?Sized> TagLookup<'a, T> {
             results.extend(payloads.iter().cloned());
         }
 
-        // Add matches from excludes where tag is in the excluded set
+        // Add matches from excludes where tag is NOT in the excluded set
         results.extend(
             self.excludes
                 .iter()
-                .filter(|(tags, _)| tags.contains(tag))
+                .filter(|(tags, _)| !tags.contains(tag))
                 .map(|(_, payload)| payload),
         );
 
@@ -150,8 +150,16 @@ mod tests {
         );
         lookup.add(exclude_guard, "excluded");
 
-        assert_eq!(lookup.matching(&foo_tag), vec!["excluded"]);
-        assert_eq!(lookup.matching(&bar_tag), vec!["excluded"]);
+        // Excluded tags should not match
+        assert_eq!(lookup.matching(&foo_tag), Vec::<&str>::new());
+        assert_eq!(lookup.matching(&bar_tag), Vec::<&str>::new());
+
+        // Non-excluded tag should match
+        let baz_tag = TagType::Element {
+            namespace: "".to_string(),
+            local_name: "baz".to_string(),
+        };
+        assert_eq!(lookup.matching(&baz_tag), vec!["excluded"]);
 
         // Test combination of includes and excludes
         let include_guard = Guard::Includes(
@@ -159,7 +167,11 @@ mod tests {
         );
         lookup.add(include_guard, "included");
 
-        assert_eq!(lookup.matching(&foo_tag), vec!["excluded", "included"]);
-        assert_eq!(lookup.matching(&bar_tag), vec!["excluded"]);
+        // foo is excluded but also included
+        assert_eq!(lookup.matching(&foo_tag), vec!["included"]);
+        // bar is just excluded
+        assert_eq!(lookup.matching(&bar_tag), Vec::<&str>::new());
+        // baz matches the exclude guard
+        assert_eq!(lookup.matching(&baz_tag), vec!["excluded"]);
     }
 }
