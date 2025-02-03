@@ -20,19 +20,29 @@ type Mapping = HashMap<State, HashSet<Node>>;
 //     }
 // }
 
-// struct StateLookup<'a, T: ?Sized> {}
+struct StateLookup<'a, T: ?Sized> {
+    states: HashMap<State, TagLookup<'a, T>>,
+}
 
-// impl<'a, T: ?Sized> StateLookup<'a, T> {
-//     fn new() -> Self {
-//         Self {}
-//     }
+impl<'a, T: ?Sized> StateLookup<'a, T> {
+    fn new() -> Self {
+        Self {
+            states: HashMap::new(),
+        }
+    }
 
-//     fn add(&mut self, state: State, tag_lookup: TagLookup<'a, T>) {}
+    fn add(&mut self, state: State, tag_lookup: TagLookup<'a, T>) {
+        self.states.insert(state, tag_lookup);
+    }
 
-//     fn matching(&self, state: State, tag: &TagType) -> Vec<&'a T> {
-//         todo!()
-//     }
-// }
+    fn matching(&self, states: &States, tag: &TagType) -> Vec<&'a T> {
+        states
+            .iter()
+            .flat_map(|state| self.states.get(state).map(|lookup| lookup.matching(tag)))
+            .flatten()
+            .collect()
+    }
+}
 
 struct TagLookup<'a, T: ?Sized> {
     // Direct mapping for includes
@@ -168,5 +178,42 @@ mod tests {
         assert_eq!(lookup.matching(&bar_tag), Vec::<&str>::new());
         // baz matches the exclude guard
         assert_eq!(lookup.matching(&baz_tag), vec!["excluded"]);
+    }
+
+    #[test]
+    fn test_state_lookup() {
+        let mut lookup = StateLookup::new();
+        let state1 = State(1);
+        let state2 = State(2);
+        let mut tag_lookup1 = TagLookup::new();
+        let mut tag_lookup2 = TagLookup::new();
+        let foo_tag = TagType::Element {
+            namespace: "".to_string(),
+            local_name: "foo".to_string(),
+        };
+        let bar_tag = TagType::Element {
+            namespace: "".to_string(),
+            local_name: "bar".to_string(),
+        };
+        tag_lookup1.add(
+            Guard::Includes([foo_tag.clone()].into_iter().collect()),
+            "value1",
+        );
+        tag_lookup2.add(
+            Guard::Includes([bar_tag.clone()].into_iter().collect()),
+            "value2",
+        );
+        lookup.add(state1, tag_lookup1);
+        lookup.add(state2, tag_lookup2);
+
+        let states = [state1, state2].iter().cloned().collect();
+        assert_eq!(lookup.matching(&states, &foo_tag), vec!["value1"]);
+        assert_eq!(lookup.matching(&states, &bar_tag), vec!["value2"]);
+        let states = [state1].iter().cloned().collect();
+        assert_eq!(lookup.matching(&states, &foo_tag), vec!["value1"]);
+        assert_eq!(lookup.matching(&states, &bar_tag), Vec::<&str>::new());
+        let states = [state2].iter().cloned().collect();
+        assert_eq!(lookup.matching(&states, &foo_tag), Vec::<&str>::new());
+        assert_eq!(lookup.matching(&states, &bar_tag), vec!["value2"]);
     }
 }
