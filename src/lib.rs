@@ -4,6 +4,7 @@ mod document;
 mod error;
 mod iter;
 mod mta;
+mod mta_compiler;
 mod serializer;
 mod structure;
 mod tag;

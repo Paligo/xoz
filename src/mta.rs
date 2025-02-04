@@ -7,22 +7,33 @@ use crate::{
     TagType,
 };
 
-type States = HashSet<State>;
+pub(crate) type States = HashSet<State>;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-struct State(usize);
+pub(crate) struct State(usize);
 
-type Nodes = HashSet<Node>;
-type Mapping = HashMap<State, Nodes>;
+pub(crate) type Nodes = HashSet<Node>;
+pub(crate) type Mapping = HashMap<State, Nodes>;
 
-struct Automaton<'a> {
-    tree_labels: usize,
+pub(crate) struct Automaton<'a> {
     state_lookup: StateLookup<'a, Formula>,
     bottom_states: States,
 }
 
 impl Automaton<'_> {
-    fn top_down_run(&self, document: &Document, node: Option<Node>, states: States) -> Mapping {
+    pub(crate) fn new(state_lookup: StateLookup<Formula>, bottom_states: States) -> Automaton {
+        Automaton {
+            state_lookup,
+            bottom_states,
+        }
+    }
+
+    pub(crate) fn top_down_run(
+        &self,
+        document: &Document,
+        node: Option<Node>,
+        states: States,
+    ) -> Mapping {
         if let Some(node) = node {
             let trans = self.state_lookup.matching(&states, document.value(node));
             let mut left_states = States::new();
@@ -54,7 +65,7 @@ impl Automaton<'_> {
     }
 }
 
-enum Formula {
+pub(crate) enum Formula {
     True,
     False,
     Mark,
@@ -185,27 +196,27 @@ impl Formula {
     }
 }
 
-struct And {
-    left: Box<Formula>,
-    right: Box<Formula>,
+pub(crate) struct And {
+    pub(crate) left: Box<Formula>,
+    pub(crate) right: Box<Formula>,
 }
 
-struct Or {
-    left: Box<Formula>,
-    right: Box<Formula>,
+pub(crate) struct Or {
+    pub(crate) left: Box<Formula>,
+    pub(crate) right: Box<Formula>,
 }
 
-struct Not {
-    inner: Box<Formula>,
+pub(crate) struct Not {
+    pub(crate) inner: Box<Formula>,
 }
 
-struct Predicate;
+pub(crate) struct Predicate;
 
-struct Pred {
+pub(crate) struct Pred {
     pred: Predicate,
 }
 
-struct FormulaOutcome {
+pub(crate) struct FormulaOutcome {
     b: bool,
     r: Nodes,
 }
