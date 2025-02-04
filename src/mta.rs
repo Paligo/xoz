@@ -12,19 +12,45 @@ pub(crate) type States = HashSet<State>;
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub(crate) struct State(usize);
 
+// a unique atomic static counter for state
+static STATE_COUNTER: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+
+// create a state using a unique atomic static counter
+impl State {
+    pub(crate) fn new() -> Self {
+        State(STATE_COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed))
+    }
+}
+
 pub(crate) type Nodes = HashSet<Node>;
 pub(crate) type Mapping = HashMap<State, Nodes>;
 
 pub(crate) struct Automaton<'a> {
+    formulas: Vec<Formula>,
     state_lookup: StateLookup<'a, Formula>,
     bottom_states: States,
 }
 
-impl Automaton<'_> {
-    pub(crate) fn new(state_lookup: StateLookup<Formula>, bottom_states: States) -> Automaton {
+impl<'a> Automaton<'a> {
+    pub(crate) fn new(bottom_states: States) -> Automaton<'a> {
         Automaton {
-            state_lookup,
+            formulas: Vec::new(),
+            state_lookup: StateLookupFormula::new(),
             bottom_states,
+        }
+    }
+
+    pub(crate) fn add(&'a mut self, state: State, guard: Guard, formula: Formula) {
+        self.formulas.push(formula);
+        let formula = &self.formulas[self.formulas.len() - 1];
+
+        let tag_lookup = self.state_lookup.tag_lookup(state);
+        if let Some(tag_lookup) = tag_lookup {
+            tag_lookup.add(guard, formula);
+        } else {
+            let mut tag_lookup = TagLookupFormula::new();
+            tag_lookup.add(guard, formula);
+            self.state_lookup.add(state, tag_lookup);
         }
     }
 
@@ -258,19 +284,25 @@ impl FormulaOutcome {
     }
 }
 
-struct StateLookup<'a, T: ?Sized> {
+pub(crate) type StateLookupFormula<'a> = StateLookup<'a, Formula>;
+
+pub(crate) struct StateLookup<'a, T: ?Sized> {
     states: HashMap<State, TagLookup<'a, T>>,
 }
 
 impl<'a, T: ?Sized> StateLookup<'a, T> {
-    fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self {
             states: HashMap::new(),
         }
     }
 
-    fn add(&mut self, state: State, tag_lookup: TagLookup<'a, T>) {
+    pub(crate) fn add(&mut self, state: State, tag_lookup: TagLookup<'a, T>) {
         self.states.insert(state, tag_lookup);
+    }
+
+    fn tag_lookup(&mut self, state: State) -> Option<&mut TagLookup<'a, T>> {
+        self.states.get_mut(&state)
     }
 
     fn matching(&self, states: &States, tag: &TagType) -> Vec<(State, &'a T)> {
@@ -290,7 +322,9 @@ impl<'a, T: ?Sized> StateLookup<'a, T> {
     }
 }
 
-struct TagLookup<'a, T: ?Sized> {
+pub(crate) type TagLookupFormula<'a> = TagLookup<'a, Formula>;
+
+pub(crate) struct TagLookup<'a, T: ?Sized> {
     // Direct mapping for includes
     includes: HashMap<TagType, Vec<&'a T>>,
     // For excludes, we store (excluded_tags, payload) pairs
@@ -298,14 +332,14 @@ struct TagLookup<'a, T: ?Sized> {
 }
 
 impl<'a, T: ?Sized> TagLookup<'a, T> {
-    fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self {
             includes: HashMap::new(),
             excludes: Vec::new(),
         }
     }
 
-    fn add(&mut self, guard: Guard, payload: &'a T) {
+    pub(crate) fn add(&mut self, guard: Guard, payload: &'a T) {
         match guard {
             Guard::Includes(tags) => {
                 // For includes, add the payload to each tag's vector
@@ -341,7 +375,7 @@ impl<'a, T: ?Sized> TagLookup<'a, T> {
 }
 
 #[derive(Debug, Eq, PartialEq, Clone)]
-enum Guard {
+pub(crate) enum Guard {
     Includes(HashSet<TagType>),
     Excludes(HashSet<TagType>),
 }
