@@ -2,10 +2,15 @@ use std::hash::Hash;
 
 use ahash::{HashMap, HashMapExt, HashSet, HashSetExt};
 
-use crate::{document::Node, TagType};
+use crate::{
+    document::{Document, Node},
+    TagType,
+};
 
-struct Automaton {
+struct Automaton<'a> {
     tree_labels: usize,
+    state_lookup: StateLookup<'a, Formula>,
+    bottom_states: States,
 }
 
 type States = HashSet<State>;
@@ -16,12 +21,37 @@ struct State(usize);
 type Nodes = HashSet<Node>;
 type Mapping = HashMap<State, Nodes>;
 
-// fn top_down_run(automaton: Automaton, node: Option<Node>, states: States) -> Mapping {
-//     if let Some(node) = node {
-//     } else {
-//         Mapping::new()
-//     }
-// }
+impl Automaton<'_> {
+    fn top_down_run(&self, document: &Document, node: Option<Node>, states: States) -> Mapping {
+        if let Some(node) = node {
+            let trans = self.state_lookup.matching(&states, document.value(node));
+            let mut states1 = States::new();
+            let mut states2 = States::new();
+            for (_q, formula) in &trans {
+                states1.extend(formula.down1());
+                states2.extend(formula.down2());
+            }
+            let left_mapping = self.top_down_run(document, document.first_child(node), states1);
+            let right_mapping = self.top_down_run(document, document.next_sibling(node), states2);
+            let mut mapping = Mapping::new();
+            for (q, formula) in trans {
+                let outcome = formula.evaluate(node, &left_mapping, &right_mapping);
+                if outcome.b {
+                    mapping.insert(q, outcome.r);
+                }
+            }
+            mapping
+        } else {
+            let mut mapping = Mapping::new();
+            for state in states {
+                if self.bottom_states.contains(&state) {
+                    mapping.insert(state, Nodes::new());
+                }
+            }
+            mapping
+        }
+    }
+}
 
 enum Formula {
     True,
@@ -104,24 +134,42 @@ impl Formula {
         }
     }
 
-    // TODO: should cache the outcome upon construction
-    fn has_down1(&self) -> bool {
+    // get all states that are in a down1 ast node
+    fn down1(&self) -> States {
         match self {
-            Formula::Down1(_) => true,
-            Formula::And(and) => and.left.has_down1() || and.right.has_down1(),
-            Formula::Or(or) => or.left.has_down1() || or.right.has_down1(),
-            Formula::Not(not) => not.inner.has_down1(),
-            _ => false,
+            Formula::Down1(state) => {
+                let mut states = States::new();
+                states.insert(*state);
+                states
+            }
+            Formula::And(and) => and
+                .left
+                .down1()
+                .union(&and.right.down1())
+                .cloned()
+                .collect(),
+            Formula::Or(or) => or.left.down1().union(&or.right.down1()).cloned().collect(),
+            Formula::Not(not) => not.inner.down1(),
+            _ => States::new(),
         }
     }
 
-    fn has_down2(&self) -> bool {
+    fn down2(&self) -> States {
         match self {
-            Formula::Down2(_) => true,
-            Formula::And(and) => and.left.has_down2() || and.right.has_down2(),
-            Formula::Or(or) => or.left.has_down2() || or.right.has_down2(),
-            Formula::Not(not) => not.inner.has_down2(),
-            _ => false,
+            Formula::Down2(state) => {
+                let mut states = States::new();
+                states.insert(*state);
+                states
+            }
+            Formula::And(and) => and
+                .left
+                .down2()
+                .union(&and.right.down2())
+                .cloned()
+                .collect(),
+            Formula::Or(or) => or.left.down2().union(&or.right.down2()).cloned().collect(),
+            Formula::Not(not) => not.inner.down2(),
+            _ => States::new(),
         }
     }
 }
@@ -203,12 +251,20 @@ impl<'a, T: ?Sized> StateLookup<'a, T> {
         self.states.insert(state, tag_lookup);
     }
 
-    fn matching(&self, states: &States, tag: &TagType) -> Vec<&'a T> {
-        states
-            .iter()
-            .flat_map(|state| self.states.get(state).map(|lookup| lookup.matching(tag)))
-            .flatten()
-            .collect()
+    fn matching(&self, states: &States, tag: &TagType) -> Vec<(State, &'a T)> {
+        let mut results = Vec::new();
+
+        for state in states {
+            if let Some(tag_lookup) = self.states.get(state) {
+                results.extend(
+                    tag_lookup
+                        .matching(tag)
+                        .iter()
+                        .map(|payload| (*state, *payload)),
+                );
+            }
+        }
+        results
     }
 }
 
@@ -375,13 +431,19 @@ mod tests {
         lookup.add(state2, tag_lookup2);
 
         let states = [state1, state2].iter().cloned().collect();
-        assert_eq!(lookup.matching(&states, &foo_tag), vec!["value1"]);
-        assert_eq!(lookup.matching(&states, &bar_tag), vec!["value2"]);
+        assert_eq!(lookup.matching(&states, &foo_tag), vec![(state1, "value1")]);
+        assert_eq!(lookup.matching(&states, &bar_tag), vec![(state2, "value2")]);
         let states = [state1].iter().cloned().collect();
-        assert_eq!(lookup.matching(&states, &foo_tag), vec!["value1"]);
-        assert_eq!(lookup.matching(&states, &bar_tag), Vec::<&str>::new());
+        assert_eq!(lookup.matching(&states, &foo_tag), vec![(state1, "value1")]);
+        assert_eq!(
+            lookup.matching(&states, &bar_tag),
+            Vec::<(State, &str)>::new()
+        );
         let states = [state2].iter().cloned().collect();
-        assert_eq!(lookup.matching(&states, &foo_tag), Vec::<&str>::new());
-        assert_eq!(lookup.matching(&states, &bar_tag), vec!["value2"]);
+        assert_eq!(
+            lookup.matching(&states, &foo_tag),
+            Vec::<(State, &str)>::new()
+        );
+        assert_eq!(lookup.matching(&states, &bar_tag), vec![(state2, "value2")]);
     }
 }
