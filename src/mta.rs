@@ -7,12 +7,6 @@ use crate::{
     TagType,
 };
 
-struct Automaton<'a> {
-    tree_labels: usize,
-    state_lookup: StateLookup<'a, Formula>,
-    bottom_states: States,
-}
-
 type States = HashSet<State>;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
@@ -21,18 +15,25 @@ struct State(usize);
 type Nodes = HashSet<Node>;
 type Mapping = HashMap<State, Nodes>;
 
+struct Automaton<'a> {
+    tree_labels: usize,
+    state_lookup: StateLookup<'a, Formula>,
+    bottom_states: States,
+}
+
 impl Automaton<'_> {
     fn top_down_run(&self, document: &Document, node: Option<Node>, states: States) -> Mapping {
         if let Some(node) = node {
             let trans = self.state_lookup.matching(&states, document.value(node));
-            let mut states1 = States::new();
-            let mut states2 = States::new();
+            let mut left_states = States::new();
+            let mut right_states = States::new();
             for (_q, formula) in &trans {
-                states1.extend(formula.down1());
-                states2.extend(formula.down2());
+                left_states.extend(formula.down_left());
+                right_states.extend(formula.down_right());
             }
-            let left_mapping = self.top_down_run(document, document.first_child(node), states1);
-            let right_mapping = self.top_down_run(document, document.next_sibling(node), states2);
+            let left_mapping = self.top_down_run(document, document.first_child(node), left_states);
+            let right_mapping =
+                self.top_down_run(document, document.next_sibling(node), right_states);
             let mut mapping = Mapping::new();
             for (q, formula) in trans {
                 let outcome = formula.evaluate(node, &left_mapping, &right_mapping);
@@ -60,8 +61,8 @@ enum Formula {
     And(And),
     Or(Or),
     Not(Not),
-    Down1(State),
-    Down2(State),
+    DownLeft(State),
+    DownRight(State),
     Pred(Pred),
 }
 
@@ -94,7 +95,7 @@ impl Formula {
                 let inner = not.inner.evaluate(node, left, right);
                 inner.not()
             }
-            Formula::Down1(state) => {
+            Formula::DownLeft(state) => {
                 let nodes = left.get(state);
                 if let Some(nodes) = nodes {
                     if nodes.contains(&node) {
@@ -109,7 +110,7 @@ impl Formula {
                     r: Nodes::new(),
                 }
             }
-            Formula::Down2(state) => {
+            Formula::DownRight(state) => {
                 let nodes = right.get(state);
                 if let Some(nodes) = nodes {
                     if nodes.contains(&node) {
@@ -135,40 +136,50 @@ impl Formula {
     }
 
     // get all states that are in a down1 ast node
-    fn down1(&self) -> States {
+    fn down_left(&self) -> States {
         match self {
-            Formula::Down1(state) => {
+            Formula::DownLeft(state) => {
                 let mut states = States::new();
                 states.insert(*state);
                 states
             }
             Formula::And(and) => and
                 .left
-                .down1()
-                .union(&and.right.down1())
+                .down_left()
+                .union(&and.right.down_left())
                 .cloned()
                 .collect(),
-            Formula::Or(or) => or.left.down1().union(&or.right.down1()).cloned().collect(),
-            Formula::Not(not) => not.inner.down1(),
+            Formula::Or(or) => or
+                .left
+                .down_left()
+                .union(&or.right.down_left())
+                .cloned()
+                .collect(),
+            Formula::Not(not) => not.inner.down_left(),
             _ => States::new(),
         }
     }
 
-    fn down2(&self) -> States {
+    fn down_right(&self) -> States {
         match self {
-            Formula::Down2(state) => {
+            Formula::DownRight(state) => {
                 let mut states = States::new();
                 states.insert(*state);
                 states
             }
             Formula::And(and) => and
                 .left
-                .down2()
-                .union(&and.right.down2())
+                .down_right()
+                .union(&and.right.down_right())
                 .cloned()
                 .collect(),
-            Formula::Or(or) => or.left.down2().union(&or.right.down2()).cloned().collect(),
-            Formula::Not(not) => not.inner.down2(),
+            Formula::Or(or) => or
+                .left
+                .down_right()
+                .union(&or.right.down_right())
+                .cloned()
+                .collect(),
+            Formula::Not(not) => not.inner.down_right(),
             _ => States::new(),
         }
     }
