@@ -1,4 +1,7 @@
-use crate::mta::Automaton;
+use crate::{
+    mta::{Automaton, Guard},
+    TagType,
+};
 
 enum Axis {
     Descendant,
@@ -44,249 +47,178 @@ enum Core {
 }
 
 impl Core {
-    fn translate(&self) -> Automaton {
-        let mut automaton = Automaton::new();
-        
+    fn translate(&self, automaton: &mut Automaton) {
         match self {
-            Core::Relative(path) | Core::Absolute(path) => {
-                if path.steps.is_empty() {
-                    let state = State::new();
-                    automaton.add(state, Guard::Excludes(HashSet::new()), Formula::Mark);
-                    automaton.add_bottom_state(state);
-                    return automaton;
-                }
-
-                let mut current_state = State::new();
-                
-                // Process all steps except the last one
-                for step in path.steps.iter().take(path.steps.len() - 1) {
-                    let next_state = State::new();
-                    
-                    match &step.axis {
-                        Axis::Child => {
-                            let guard = match &step.node_test {
-                                NodeTest::TagName { namespace, local_name } => {
-                                    let mut tags = HashSet::new();
-                                    tags.insert(TagType::Element {
-                                        namespace: namespace.clone().unwrap_or_default(),
-                                        local_name: local_name.clone().unwrap_or_default(),
-                                    });
-                                    Guard::Includes(tags)
-                                }
-                                NodeTest::Text => {
-                                    let mut tags = HashSet::new();
-                                    tags.insert(TagType::Text);
-                                    Guard::Includes(tags)
-                                }
-                                NodeTest::Node => Guard::Excludes(HashSet::new()),
-                            };
-                            automaton.add(current_state, guard, Formula::DownLeft(next_state));
-                        }
-                        Axis::Descendant => {
-                            let guard = match &step.node_test {
-                                NodeTest::TagName { namespace, local_name } => {
-                                    let mut tags = HashSet::new();
-                                    tags.insert(TagType::Element {
-                                        namespace: namespace.clone().unwrap_or_default(),
-                                        local_name: local_name.clone().unwrap_or_default(),
-                                    });
-                                    Guard::Includes(tags)
-                                }
-                                NodeTest::Text => {
-                                    let mut tags = HashSet::new();
-                                    tags.insert(TagType::Text);
-                                    Guard::Includes(tags)
-                                }
-                                NodeTest::Node => Guard::Excludes(HashSet::new()),
-                            };
-                            // Recursive case - continue looking for descendants
-                            automaton.add(current_state, Guard::Excludes(HashSet::new()), 
-                                Formula::DownLeft(current_state));
-                            // Base case - move to next state
-                            automaton.add(current_state, guard, Formula::DownLeft(next_state));
-                        }
-                        Axis::Self_ => {
-                            let guard = match &step.node_test {
-                                NodeTest::TagName { namespace, local_name } => {
-                                    let mut tags = HashSet::new();
-                                    tags.insert(TagType::Element {
-                                        namespace: namespace.clone().unwrap_or_default(),
-                                        local_name: local_name.clone().unwrap_or_default(),
-                                    });
-                                    Guard::Includes(tags)
-                                }
-                                NodeTest::Text => {
-                                    let mut tags = HashSet::new();
-                                    tags.insert(TagType::Text);
-                                    Guard::Includes(tags)
-                                }
-                                NodeTest::Node => Guard::Excludes(HashSet::new()),
-                            };
-                            automaton.add(current_state, guard, Formula::DownLeft(next_state));
-                        }
-                        Axis::Attribute => {
-                            if let NodeTest::TagName { namespace, local_name } = &step.node_test {
-                                let mut tags = HashSet::new();
-                                tags.insert(TagType::Attribute {
-                                    namespace: namespace.clone().unwrap_or_default(),
-                                    local_name: local_name.clone().unwrap_or_default(),
-                                });
-                                automaton.add(current_state, Guard::Includes(tags), 
-                                    Formula::DownLeft(next_state));
-                            }
-                        }
-                        Axis::FollowingSibling => {
-                            let guard = match &step.node_test {
-                                NodeTest::TagName { namespace, local_name } => {
-                                    let mut tags = HashSet::new();
-                                    tags.insert(TagType::Element {
-                                        namespace: namespace.clone().unwrap_or_default(),
-                                        local_name: local_name.clone().unwrap_or_default(),
-                                    });
-                                    Guard::Includes(tags)
-                                }
-                                NodeTest::Text => {
-                                    let mut tags = HashSet::new();
-                                    tags.insert(TagType::Text);
-                                    Guard::Includes(tags)
-                                }
-                                NodeTest::Node => Guard::Excludes(HashSet::new()),
-                            };
-                            automaton.add(current_state, guard, Formula::DownRight(next_state));
-                        }
-                    }
-                    
-                    if let Some(pred) = &step.predicate {
-                        // TODO: Handle predicates
-                    }
-                    
-                    current_state = next_state;
-                }
-                
-                // Handle the last step - similar to above but with Mark
-                if let Some(last_step) = path.steps.last() {
-                    let final_state = State::new();
-                    
-                    match &last_step.axis {
-                        Axis::Child => {
-                            let guard = match &last_step.node_test {
-                                NodeTest::TagName { namespace, local_name } => {
-                                    let mut tags = HashSet::new();
-                                    tags.insert(TagType::Element {
-                                        namespace: namespace.clone().unwrap_or_default(),
-                                        local_name: local_name.clone().unwrap_or_default(),
-                                    });
-                                    Guard::Includes(tags)
-                                }
-                                NodeTest::Text => {
-                                    let mut tags = HashSet::new();
-                                    tags.insert(TagType::Text);
-                                    Guard::Includes(tags)
-                                }
-                                NodeTest::Node => Guard::Excludes(HashSet::new()),
-                            };
-                            automaton.add(current_state, guard, 
-                                Formula::And(And {
-                                    left: Box::new(Formula::DownLeft(final_state)),
-                                    right: Box::new(Formula::Mark),
-                                }));
-                        }
-                        Axis::Descendant => {
-                            let guard = match &last_step.node_test {
-                                NodeTest::TagName { namespace, local_name } => {
-                                    let mut tags = HashSet::new();
-                                    tags.insert(TagType::Element {
-                                        namespace: namespace.clone().unwrap_or_default(),
-                                        local_name: local_name.clone().unwrap_or_default(),
-                                    });
-                                    Guard::Includes(tags)
-                                }
-                                NodeTest::Text => {
-                                    let mut tags = HashSet::new();
-                                    tags.insert(TagType::Text);
-                                    Guard::Includes(tags)
-                                }
-                                NodeTest::Node => Guard::Excludes(HashSet::new()),
-                            };
-                            automaton.add(current_state, Guard::Excludes(HashSet::new()), 
-                                Formula::DownLeft(current_state));
-                            automaton.add(current_state, guard,
-                                Formula::And(And {
-                                    left: Box::new(Formula::DownLeft(final_state)),
-                                    right: Box::new(Formula::Mark),
-                                }));
-                        }
-                        Axis::Self_ => {
-                            let guard = match &last_step.node_test {
-                                NodeTest::TagName { namespace, local_name } => {
-                                    let mut tags = HashSet::new();
-                                    tags.insert(TagType::Element {
-                                        namespace: namespace.clone().unwrap_or_default(),
-                                        local_name: local_name.clone().unwrap_or_default(),
-                                    });
-                                    Guard::Includes(tags)
-                                }
-                                NodeTest::Text => {
-                                    let mut tags = HashSet::new();
-                                    tags.insert(TagType::Text);
-                                    Guard::Includes(tags)
-                                }
-                                NodeTest::Node => Guard::Excludes(HashSet::new()),
-                            };
-                            automaton.add(current_state, guard,
-                                Formula::And(And {
-                                    left: Box::new(Formula::DownLeft(final_state)),
-                                    right: Box::new(Formula::Mark),
-                                }));
-                        }
-                        Axis::Attribute => {
-                            if let NodeTest::TagName { namespace, local_name } = &last_step.node_test {
-                                let mut tags = HashSet::new();
-                                tags.insert(TagType::Attribute {
-                                    namespace: namespace.clone().unwrap_or_default(),
-                                    local_name: local_name.clone().unwrap_or_default(),
-                                });
-                                automaton.add(current_state, Guard::Includes(tags),
-                                    Formula::And(And {
-                                        left: Box::new(Formula::DownLeft(final_state)),
-                                        right: Box::new(Formula::Mark),
-                                    }));
-                            }
-                        }
-                        Axis::FollowingSibling => {
-                            let guard = match &last_step.node_test {
-                                NodeTest::TagName { namespace, local_name } => {
-                                    let mut tags = HashSet::new();
-                                    tags.insert(TagType::Element {
-                                        namespace: namespace.clone().unwrap_or_default(),
-                                        local_name: local_name.clone().unwrap_or_default(),
-                                    });
-                                    Guard::Includes(tags)
-                                }
-                                NodeTest::Text => {
-                                    let mut tags = HashSet::new();
-                                    tags.insert(TagType::Text);
-                                    Guard::Includes(tags)
-                                }
-                                NodeTest::Node => Guard::Excludes(HashSet::new()),
-                            };
-                            automaton.add(current_state, guard,
-                                Formula::And(And {
-                                    left: Box::new(Formula::DownRight(final_state)),
-                                    right: Box::new(Formula::Mark),
-                                }));
-                        }
-                    }
-                    
-                    if let Some(pred) = &last_step.predicate {
-                        // TODO: Handle predicates
-                    }
-                    
-                    automaton.add_bottom_state(final_state);
-                }
+            Core::Absolute(location_path) => {
+                location_path.translate(automaton);
             }
+            _ => unimplemented!(),
         }
-        
-        automaton
     }
+}
+
+impl LocationPath {
+    fn translate(&self, automaton: &mut Automaton) {
+        for step in &self.steps {
+            step.translate(automaton);
+        }
+    }
+}
+
+impl LocationStep {
+    fn translate(&self, automaton: &mut Automaton) {
+        match &self.node_test {
+            NodeTest::TagName {
+                namespace,
+                local_name,
+            } => {
+                // TODO: namespace and wildcard handling
+                // we construct the matching tag type
+                let tag_type = TagType::Element {
+                    namespace: "".to_string(),
+                    local_name: local_name
+                        .as_ref()
+                        .expect("local name is not wildcard")
+                        .to_string(),
+                };
+                let guard = Guard::Includes([tag_type].into_iter().collect());
+                todo!()
+            }
+            _ => unimplemented!(),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use ahash::HashSetExt;
+
+    use crate::{
+        mta::{self, Formula, Nodes, State, States},
+        parse_document,
+    };
+
+    use super::*;
+
+    #[test]
+    fn test_manual_translation() {
+        let d =
+            parse_document(r#"<doc><listitem><p><keyword><emph/></keyword></p></listitem></doc>"#)
+                .unwrap();
+        let root = d.root();
+        let doc = d.document_element();
+        let listitem = d.first_child(doc).unwrap();
+        let p = d.first_child(listitem).unwrap();
+        let keyword = d.first_child(p).unwrap();
+        let emph = d.first_child(keyword).unwrap();
+
+        println!("Expected as marked: {:?}", keyword);
+
+        let mut automaton = Automaton::new();
+        let q0 = State::new();
+        let q1 = State::new();
+        let q2 = State::new();
+        let q3 = State::new();
+
+        automaton.add(q0, Guard::include(TagType::Document), Formula::DownLeft(q1));
+        // down left q1 and down left q2 and down right q1
+        let formula = Formula::And(mta::And {
+            left: Box::new(Formula::And(mta::And {
+                left: Box::new(Formula::DownLeft(q1)),
+                right: Box::new(Formula::DownLeft(q2)),
+            })),
+            right: Box::new(Formula::DownRight(q1)),
+        });
+        automaton.add(
+            q1,
+            Guard::include(TagType::Element {
+                namespace: "".to_string(),
+                local_name: "listitem".to_string(),
+            }),
+            formula,
+        );
+        automaton.add(
+            q1,
+            Guard::all(),
+            Formula::And(mta::And {
+                left: Box::new(Formula::DownRight(q1)),
+                right: Box::new(Formula::DownLeft(q1)),
+            }),
+        );
+        // mark and down left q2, and down left q3 and down right q2
+        let formula = Formula::And(mta::And {
+            left: Box::new(Formula::And(mta::And {
+                left: Box::new(Formula::Mark),
+                right: Box::new(Formula::DownLeft(q2)),
+            })),
+            right: Box::new(Formula::And(mta::And {
+                left: Box::new(Formula::DownLeft(q3)),
+                right: Box::new(Formula::DownRight(q2)),
+            })),
+        });
+        automaton.add(
+            q2,
+            Guard::include(TagType::Element {
+                namespace: "".to_string(),
+                local_name: "keyword".to_string(),
+            }),
+            formula,
+        );
+        automaton.add(
+            q2,
+            Guard::all(),
+            Formula::And(mta::And {
+                left: Box::new(Formula::DownRight(q2)),
+                right: Box::new(Formula::DownLeft(q2)),
+            }),
+        );
+        automaton.add(
+            q3,
+            Guard::include(TagType::Element {
+                namespace: "".to_string(),
+                local_name: "emph".to_string(),
+            }),
+            Formula::True,
+        );
+        automaton.add(q3, Guard::all(), Formula::DownRight(q3));
+
+        automaton.add_bottom_state(q1);
+        automaton.add_bottom_state(q2);
+
+        let mut states = States::new();
+        states.insert(q0);
+        let mut marked = Nodes::new();
+        let mapping = automaton.top_down_run(&d, Some(root), states, &mut marked);
+
+        assert_eq!(marked, vec![keyword].into_iter().collect::<Nodes>());
+    }
+    // #[test]
+    // fn test_single_step_path() {
+    //     let doc = parse_document(r#"<doc><a/></b></doc>"#).unwrap();
+    //     let root = doc.root();
+    //     let doc_el = doc.document_element();
+    //     let a = doc.first_child(doc_el).unwrap();
+    //     let b = doc.next_sibling(a).unwrap();
+
+    //     let path = Core::Absolute(LocationPath {
+    //         steps: vec![LocationStep {
+    //             axis: Axis::Child,
+    //             node_test: NodeTest::TagName {
+    //                 namespace: None,
+    //                 local_name: Some("doc".to_string()),
+    //             },
+    //             predicate: None,
+    //         }],
+    //     });
+
+    //     let mut automaton = Automaton::new();
+
+    //     path.translate(&mut automaton);
+
+    //     let mut states = States::new();
+    //     states.insert(automaton.start_state());
+    //     let mapping = automaton.top_down_run(&doc, Some(root), states);
+    //     dbg!(mapping);
+    //     assert!(false);
+    // }
 }

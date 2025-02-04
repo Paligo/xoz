@@ -22,36 +22,45 @@ impl State {
     }
 }
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+struct FormulaId(usize);
+
 pub(crate) type Nodes = HashSet<Node>;
 pub(crate) type Mapping = HashMap<State, Nodes>;
 
-pub(crate) struct Automaton<'a> {
+pub(crate) struct Automaton {
     formulas: Vec<Formula>,
-    state_lookup: StateLookup<'a, Formula>,
+    state_lookup: StateLookupFormula,
+    start_state: State,
     bottom_states: States,
 }
 
-impl<'a> Automaton<'a> {
-    pub(crate) fn new(bottom_states: States) -> Automaton<'a> {
+impl Automaton {
+    pub(crate) fn new() -> Automaton {
         Automaton {
             formulas: Vec::new(),
             state_lookup: StateLookupFormula::new(),
-            bottom_states,
+            start_state: State::new(),
+            bottom_states: States::new(),
         }
     }
 
-    pub(crate) fn add(&'a mut self, state: State, guard: Guard, formula: Formula) {
+    pub(crate) fn add(&mut self, state: State, guard: Guard, formula: Formula) {
+        let formula_id = FormulaId(self.formulas.len());
         self.formulas.push(formula);
-        let formula = &self.formulas[self.formulas.len() - 1];
 
         let tag_lookup = self.state_lookup.tag_lookup(state);
         if let Some(tag_lookup) = tag_lookup {
-            tag_lookup.add(guard, formula);
+            tag_lookup.add(guard, formula_id);
         } else {
             let mut tag_lookup = TagLookupFormula::new();
-            tag_lookup.add(guard, formula);
+            tag_lookup.add(guard, formula_id);
             self.state_lookup.add(state, tag_lookup);
         }
+    }
+
+    pub(crate) fn add_bottom_state(&mut self, state: State) {
+        self.bottom_states.insert(state);
     }
 
     pub(crate) fn top_down_run(
@@ -59,21 +68,25 @@ impl<'a> Automaton<'a> {
         document: &Document,
         node: Option<Node>,
         states: States,
+        marked: &mut Nodes,
     ) -> Mapping {
         if let Some(node) = node {
             let trans = self.state_lookup.matching(&states, document.value(node));
             let mut left_states = States::new();
             let mut right_states = States::new();
-            for (_q, formula) in &trans {
+            for (_q, formula_id) in &trans {
+                let formula = &self.formulas[formula_id.0];
                 left_states.extend(formula.down_left());
                 right_states.extend(formula.down_right());
             }
-            let left_mapping = self.top_down_run(document, document.first_child(node), left_states);
+            let left_mapping =
+                self.top_down_run(document, document.first_child(node), left_states, marked);
             let right_mapping =
-                self.top_down_run(document, document.next_sibling(node), right_states);
+                self.top_down_run(document, document.next_sibling(node), right_states, marked);
             let mut mapping = Mapping::new();
-            for (q, formula) in trans {
-                let outcome = formula.evaluate(node, &left_mapping, &right_mapping);
+            for (q, formula_id) in trans {
+                let formula = &self.formulas[formula_id.0];
+                let outcome = formula.evaluate(node, &left_mapping, &right_mapping, marked);
                 if outcome.b {
                     mapping.insert(q, outcome.r);
                 }
@@ -88,6 +101,10 @@ impl<'a> Automaton<'a> {
             }
             mapping
         }
+    }
+
+    pub(crate) fn start_state(&self) -> State {
+        self.start_state
     }
 }
 
@@ -104,7 +121,13 @@ pub(crate) enum Formula {
 }
 
 impl Formula {
-    fn evaluate(&self, node: Node, left: &Mapping, right: &Mapping) -> FormulaOutcome {
+    fn evaluate(
+        &self,
+        node: Node,
+        left: &Mapping,
+        right: &Mapping,
+        marked: &mut Nodes,
+    ) -> FormulaOutcome {
         match self {
             Formula::True => FormulaOutcome {
                 b: true,
@@ -114,22 +137,24 @@ impl Formula {
                 b: true,
                 r: {
                     let mut nodes = Nodes::new();
+                    println!("marking {:?}", node);
+                    marked.insert(node);
                     nodes.insert(node);
                     nodes
                 },
             },
             Formula::And(and) => {
-                let left_outcome = and.left.evaluate(node, left, right);
-                let right_outcome = and.right.evaluate(node, left, right);
+                let left_outcome = and.left.evaluate(node, left, right, marked);
+                let right_outcome = and.right.evaluate(node, left, right, marked);
                 left_outcome.and(&right_outcome)
             }
             Formula::Or(or) => {
-                let left_outcome = or.left.evaluate(node, left, right);
-                let right_outcome = or.right.evaluate(node, left, right);
+                let left_outcome = or.left.evaluate(node, left, right, marked);
+                let right_outcome = or.right.evaluate(node, left, right, marked);
                 left_outcome.or(&right_outcome)
             }
             Formula::Not(not) => {
-                let inner = not.inner.evaluate(node, left, right);
+                let inner = not.inner.evaluate(node, left, right, marked);
                 inner.not()
             }
             Formula::DownLeft(state) => {
@@ -284,28 +309,28 @@ impl FormulaOutcome {
     }
 }
 
-pub(crate) type StateLookupFormula<'a> = StateLookup<'a, Formula>;
+pub(crate) type StateLookupFormula = StateLookup<FormulaId>;
 
-pub(crate) struct StateLookup<'a, T: ?Sized> {
-    states: HashMap<State, TagLookup<'a, T>>,
+pub(crate) struct StateLookup<T: Copy> {
+    states: HashMap<State, TagLookup<T>>,
 }
 
-impl<'a, T: ?Sized> StateLookup<'a, T> {
+impl<T: Copy> StateLookup<T> {
     pub(crate) fn new() -> Self {
         Self {
             states: HashMap::new(),
         }
     }
 
-    pub(crate) fn add(&mut self, state: State, tag_lookup: TagLookup<'a, T>) {
+    pub(crate) fn add(&mut self, state: State, tag_lookup: TagLookup<T>) {
         self.states.insert(state, tag_lookup);
     }
 
-    fn tag_lookup(&mut self, state: State) -> Option<&mut TagLookup<'a, T>> {
+    fn tag_lookup(&mut self, state: State) -> Option<&mut TagLookup<T>> {
         self.states.get_mut(&state)
     }
 
-    fn matching(&self, states: &States, tag: &TagType) -> Vec<(State, &'a T)> {
+    fn matching(&self, states: &States, tag: &TagType) -> Vec<(State, T)> {
         let mut results = Vec::new();
 
         for state in states {
@@ -322,16 +347,16 @@ impl<'a, T: ?Sized> StateLookup<'a, T> {
     }
 }
 
-pub(crate) type TagLookupFormula<'a> = TagLookup<'a, Formula>;
+pub(crate) type TagLookupFormula = TagLookup<FormulaId>;
 
-pub(crate) struct TagLookup<'a, T: ?Sized> {
+pub(crate) struct TagLookup<T: Copy> {
     // Direct mapping for includes
-    includes: HashMap<TagType, Vec<&'a T>>,
+    includes: HashMap<TagType, Vec<T>>,
     // For excludes, we store (excluded_tags, payload) pairs
-    excludes: Vec<(HashSet<TagType>, &'a T)>,
+    excludes: Vec<(HashSet<TagType>, T)>,
 }
 
-impl<'a, T: ?Sized> TagLookup<'a, T> {
+impl<T: Copy> TagLookup<T> {
     pub(crate) fn new() -> Self {
         Self {
             includes: HashMap::new(),
@@ -339,7 +364,7 @@ impl<'a, T: ?Sized> TagLookup<'a, T> {
         }
     }
 
-    pub(crate) fn add(&mut self, guard: Guard, payload: &'a T) {
+    pub(crate) fn add(&mut self, guard: Guard, payload: T) {
         match guard {
             Guard::Includes(tags) => {
                 // For includes, add the payload to each tag's vector
@@ -354,7 +379,7 @@ impl<'a, T: ?Sized> TagLookup<'a, T> {
         }
     }
 
-    fn matching(&self, tag: &TagType) -> Vec<&'a T> {
+    fn matching(&self, tag: &TagType) -> Vec<T> {
         let mut results = Vec::new();
 
         // Add all direct matches from includes
@@ -380,6 +405,27 @@ pub(crate) enum Guard {
     Excludes(HashSet<TagType>),
 }
 
+impl Guard {
+    pub(crate) fn includes(tags: Vec<TagType>) -> Self {
+        Guard::Includes(tags.into_iter().collect())
+    }
+    pub(crate) fn excludes(tags: Vec<TagType>) -> Self {
+        Guard::Excludes(tags.into_iter().collect())
+    }
+
+    pub(crate) fn include(tag: TagType) -> Self {
+        Guard::Includes([tag].into_iter().collect())
+    }
+
+    pub(crate) fn exclude(tag: TagType) -> Self {
+        Guard::Excludes([tag].into_iter().collect())
+    }
+
+    pub(crate) fn all() -> Self {
+        // excluding nothing is including anything
+        Guard::Excludes(HashSet::new())
+    }
+}
 #[cfg(test)]
 mod tests {
 
