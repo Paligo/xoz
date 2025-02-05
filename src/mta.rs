@@ -148,6 +148,13 @@ impl Formula {
         })
     }
 
+    pub(crate) fn marking(self: Formula) -> Formula {
+        Formula::And(And {
+            right: Box::new(Formula::Mark),
+            left: Box::new(self),
+        })
+    }
+
     fn evaluate(&self, node: Node, left: &Mapping, right: &Mapping) -> FormulaOutcome {
         match self {
             Formula::True => FormulaOutcome {

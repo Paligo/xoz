@@ -87,10 +87,13 @@ impl LocationStep {
     fn translate(&self, automaton: &mut Automaton, state: State, mark: bool) -> State {
         match self.axis {
             Axis::Child => {
-                unimplemented!();
-                // let downleft_state = State::new();
-                // automaton.add(state, guard, Formula::DownLeft(downleft_state));
-                // automaton.add(state, )
+                let next_state = State::new();
+                let formula =
+                    Formula::and(Formula::DownLeft(next_state), Formula::DownRight(state));
+                let formula = if mark { formula.marking() } else { formula };
+                automaton.add(state, self.guard(), formula);
+                automaton.add(state, Guard::all(), Formula::DownRight(state));
+                next_state
             }
             Axis::Descendant => {
                 let next_state = State::new();
@@ -98,11 +101,7 @@ impl LocationStep {
                     Formula::DownLeft(state),
                     Formula::and(Formula::DownLeft(next_state), Formula::DownRight(state)),
                 );
-                let formula = if mark {
-                    Formula::and(Formula::Mark, formula)
-                } else {
-                    formula
-                };
+                let formula = if mark { formula.marking() } else { formula };
                 automaton.add(state, self.guard(), formula);
                 automaton.add(
                     state,
@@ -338,5 +337,44 @@ mod tests {
         let marked = automaton.run(&d, root);
 
         assert_eq!(marked, vec![keyword].into_iter().collect::<Nodes>());
+    }
+
+    #[test]
+    fn test_child_nodes() {
+        let d = parse_document(r#"<doc><a/>b/><a/></doc>"#).unwrap();
+        let root = d.root();
+        let doc = d.document_element();
+        let a1 = d.first_child(doc).unwrap();
+        let b = d.next_sibling(a1).unwrap();
+        let a2 = d.next_sibling(b).unwrap();
+
+        let path = Core::Absolute(LocationPath {
+            steps: vec![
+                LocationStep {
+                    axis: Axis::Child,
+                    node_test: NodeTest::TagName {
+                        namespace: Some("".to_string()),
+                        local_name: Some("doc".to_string()),
+                    },
+                    predicate: None,
+                },
+                LocationStep {
+                    axis: Axis::Child,
+                    node_test: NodeTest::TagName {
+                        namespace: Some("".to_string()),
+                        local_name: Some("a".to_string()),
+                    },
+                    predicate: None,
+                },
+            ],
+        });
+
+        let mut automaton = Automaton::new();
+        let start_state = automaton.start_state();
+        path.translate(&mut automaton, start_state, true);
+
+        let marked = automaton.run(&d, root);
+
+        assert_eq!(marked, vec![a1, a2].into_iter().collect::<Nodes>());
     }
 }
