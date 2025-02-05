@@ -67,9 +67,8 @@ impl Automaton {
     pub(crate) fn run(&self, document: &Document, node: Node) -> Nodes {
         let mut states = States::new();
         states.insert(self.start_state);
-        let mut marked = Nodes::new();
-        self.top_down_run(document, Some(node), states, &mut marked);
-        marked
+        let mut mapping = self.top_down_run(document, Some(node), states);
+        mapping.remove(&self.start_state).unwrap_or_default()
     }
 
     pub(crate) fn top_down_run(
@@ -77,7 +76,6 @@ impl Automaton {
         document: &Document,
         node: Option<Node>,
         states: States,
-        marked: &mut Nodes,
     ) -> Mapping {
         if let Some(node) = node {
             let trans = self.state_lookup.matching(&states, document.value(node));
@@ -88,16 +86,15 @@ impl Automaton {
                 left_states.extend(formula.down_left());
                 right_states.extend(formula.down_right());
             }
-            let left_mapping =
-                self.top_down_run(document, document.first_child(node), left_states, marked);
+            let left_mapping = self.top_down_run(document, document.first_child(node), left_states);
             let right_mapping =
-                self.top_down_run(document, document.next_sibling(node), right_states, marked);
+                self.top_down_run(document, document.next_sibling(node), right_states);
             let mut mapping = Mapping::new();
             for (q, formula_id) in trans {
                 let formula = &self.formulas[formula_id.0];
-                let outcome = formula.evaluate(node, &left_mapping, &right_mapping, marked);
+                let outcome = formula.evaluate(node, &left_mapping, &right_mapping);
                 if outcome.b {
-                    mapping.insert(q, outcome.r);
+                    mapping.entry(q).or_default().extend(outcome.r);
                 }
             }
             mapping
@@ -151,13 +148,7 @@ impl Formula {
         })
     }
 
-    fn evaluate(
-        &self,
-        node: Node,
-        left: &Mapping,
-        right: &Mapping,
-        marked: &mut Nodes,
-    ) -> FormulaOutcome {
+    fn evaluate(&self, node: Node, left: &Mapping, right: &Mapping) -> FormulaOutcome {
         match self {
             Formula::True => FormulaOutcome {
                 b: true,
@@ -167,54 +158,57 @@ impl Formula {
                 b: true,
                 r: {
                     let mut nodes = Nodes::new();
-                    marked.insert(node);
                     nodes.insert(node);
                     nodes
                 },
             },
             Formula::And(and) => {
-                let left_outcome = and.left.evaluate(node, left, right, marked);
-                let right_outcome = and.right.evaluate(node, left, right, marked);
+                let left_outcome = and.left.evaluate(node, left, right);
+                let right_outcome = and.right.evaluate(node, left, right);
                 left_outcome.and(&right_outcome)
             }
             Formula::Or(or) => {
-                let left_outcome = or.left.evaluate(node, left, right, marked);
-                let right_outcome = or.right.evaluate(node, left, right, marked);
+                let left_outcome = or.left.evaluate(node, left, right);
+                let right_outcome = or.right.evaluate(node, left, right);
                 left_outcome.or(&right_outcome)
             }
             Formula::Not(not) => {
-                let inner = not.inner.evaluate(node, left, right, marked);
+                let inner = not.inner.evaluate(node, left, right);
                 inner.not()
             }
             Formula::DownLeft(state) => {
-                let nodes = left.get(state);
-                if let Some(nodes) = nodes {
-                    if nodes.contains(&node) {
-                        return FormulaOutcome {
-                            b: true,
-                            r: nodes.clone(),
-                        };
-                    }
-                }
-                FormulaOutcome {
-                    b: false,
-                    r: Nodes::new(),
-                }
+                let nodes = left.get(state).cloned().unwrap_or_default();
+                FormulaOutcome { b: true, r: nodes }
+                // if let Some(nodes) = nodes {
+                //     if nodes.contains(&node) {
+                //         return FormulaOutcome {
+                //             b: true,
+                //             r: nodes.clone(),
+                //         };
+                //     }
+                // }
+                // FormulaOutcome {
+                //     b: false,
+                //     r: Nodes::new(),
+                // }
             }
             Formula::DownRight(state) => {
-                let nodes = right.get(state);
-                if let Some(nodes) = nodes {
-                    if nodes.contains(&node) {
-                        return FormulaOutcome {
-                            b: true,
-                            r: nodes.clone(),
-                        };
-                    }
-                }
-                FormulaOutcome {
-                    b: false,
-                    r: Nodes::new(),
-                }
+                let nodes = right.get(state).cloned().unwrap_or_default();
+                FormulaOutcome { b: true, r: nodes }
+
+                // let nodes = right.get(state);
+                // if let Some(nodes) = nodes {
+                //     if nodes.contains(&node) {
+                //         return FormulaOutcome {
+                //             b: true,
+                //             r: nodes.clone(),
+                //         };
+                //     }
+                // }
+                // FormulaOutcome {
+                //     b: false,
+                //     r: Nodes::new(),
+                // }
             }
             Formula::Pred(pred) => {
                 todo!()
@@ -301,6 +295,7 @@ pub(crate) struct Pred {
     pred: Predicate,
 }
 
+#[derive(Debug)]
 pub(crate) struct FormulaOutcome {
     b: bool,
     r: Nodes,
@@ -329,16 +324,23 @@ impl FormulaOutcome {
     }
 
     fn or(&self, other: &FormulaOutcome) -> FormulaOutcome {
-        if self.b || other.b {
-            FormulaOutcome {
+        match (self.b, other.b) {
+            (true, true) => FormulaOutcome {
                 b: true,
                 r: self.r.union(&other.r).cloned().collect(),
-            }
-        } else {
-            FormulaOutcome {
+            },
+            (true, false) => FormulaOutcome {
+                b: true,
+                r: self.r.clone(),
+            },
+            (false, true) => FormulaOutcome {
+                b: true,
+                r: other.r.clone(),
+            },
+            (false, false) => FormulaOutcome {
                 b: false,
                 r: Nodes::new(),
-            }
+            },
         }
     }
 }
