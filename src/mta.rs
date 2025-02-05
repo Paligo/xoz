@@ -23,7 +23,7 @@ impl State {
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-struct FormulaId(usize);
+pub(crate) struct FormulaId(usize);
 
 pub(crate) type Nodes = HashSet<Node>;
 pub(crate) type Mapping = HashMap<State, Nodes>;
@@ -45,7 +45,7 @@ impl Automaton {
         }
     }
 
-    pub(crate) fn add(&mut self, state: State, guard: Guard, formula: Formula) {
+    pub(crate) fn add(&mut self, state: State, guard: Guard, formula: Formula) -> FormulaId {
         let formula_id = FormulaId(self.formulas.len());
         self.formulas.push(formula);
 
@@ -57,6 +57,7 @@ impl Automaton {
             tag_lookup.add(guard, formula_id);
             self.state_lookup.add(state, tag_lookup);
         }
+        formula_id
     }
 
     pub(crate) fn add_bottom_state(&mut self, state: State) {
@@ -108,6 +109,7 @@ impl Automaton {
     }
 }
 
+#[derive(Debug)]
 pub(crate) enum Formula {
     True,
     False,
@@ -267,22 +269,27 @@ impl Formula {
     }
 }
 
+#[derive(Debug)]
 pub(crate) struct And {
     pub(crate) left: Box<Formula>,
     pub(crate) right: Box<Formula>,
 }
 
+#[derive(Debug)]
 pub(crate) struct Or {
     pub(crate) left: Box<Formula>,
     pub(crate) right: Box<Formula>,
 }
 
+#[derive(Debug)]
 pub(crate) struct Not {
     pub(crate) inner: Box<Formula>,
 }
 
+#[derive(Debug)]
 pub(crate) struct Predicate;
 
+#[derive(Debug)]
 pub(crate) struct Pred {
     pred: Predicate,
 }
