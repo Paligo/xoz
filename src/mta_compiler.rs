@@ -1,5 +1,5 @@
 use crate::{
-    mta::{Automaton, Guard},
+    mta::{Automaton, Formula, Guard},
     TagType,
 };
 
@@ -50,6 +50,12 @@ impl Core {
     fn translate(&self, automaton: &mut Automaton) {
         match self {
             Core::Absolute(location_path) => {
+                automaton.add(
+                    automaton.start_state(),
+                    Guard::include(TagType::Document),
+                    Formula::Mark,
+                );
+
                 location_path.translate(automaton);
             }
             _ => unimplemented!(),
@@ -173,10 +179,27 @@ mod tests {
         let mut states = States::new();
         states.insert(q0);
         let mut marked = Nodes::new();
-        let mapping = automaton.top_down_run(&d, Some(root), states, &mut marked);
+        let _ = automaton.top_down_run(&d, Some(root), states, &mut marked);
 
         assert_eq!(marked, vec![keyword].into_iter().collect::<Nodes>());
     }
+
+    #[test]
+    fn test_root() {
+        let doc = parse_document(r#"<doc><a/><b/></doc>"#).unwrap();
+        let root = doc.root();
+        let path = Core::Absolute(LocationPath { steps: vec![] });
+        let mut automaton = Automaton::new();
+        path.translate(&mut automaton);
+
+        let mut states = States::new();
+        states.insert(automaton.start_state());
+        let mut marked = Nodes::new();
+        let _ = automaton.top_down_run(&doc, Some(root), states, &mut marked);
+
+        assert_eq!(marked, vec![root].into_iter().collect::<Nodes>());
+    }
+
     // #[test]
     // fn test_single_step_path() {
     //     let doc = parse_document(r#"<doc><a/></b></doc>"#).unwrap();
