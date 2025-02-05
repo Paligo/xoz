@@ -122,13 +122,10 @@ mod tests {
 
         automaton.add(q0, Guard::include(TagType::Document), Formula::DownLeft(q1));
         // down left q1 and down left q2 and down right q1
-        let formula = Formula::And(mta::And {
-            left: Box::new(Formula::And(mta::And {
-                left: Box::new(Formula::DownLeft(q1)),
-                right: Box::new(Formula::DownLeft(q2)),
-            })),
-            right: Box::new(Formula::DownRight(q1)),
-        });
+        let formula = Formula::and(
+            Formula::and(Formula::DownLeft(q1), Formula::DownLeft(q2)),
+            Formula::DownRight(q1),
+        );
         automaton.add(
             q1,
             Guard::include(TagType::Element {
@@ -140,22 +137,13 @@ mod tests {
         automaton.add(
             q1,
             Guard::all(),
-            Formula::And(mta::And {
-                left: Box::new(Formula::DownRight(q1)),
-                right: Box::new(Formula::DownLeft(q1)),
-            }),
+            Formula::and(Formula::DownRight(q1), Formula::DownLeft(q1)),
         );
         // mark and down left q2, and down left q3 and down right q2
-        let formula = Formula::And(mta::And {
-            left: Box::new(Formula::And(mta::And {
-                left: Box::new(Formula::Mark),
-                right: Box::new(Formula::DownLeft(q2)),
-            })),
-            right: Box::new(Formula::And(mta::And {
-                left: Box::new(Formula::DownLeft(q3)),
-                right: Box::new(Formula::DownRight(q2)),
-            })),
-        });
+        let formula = Formula::and(
+            Formula::and(Formula::Mark, Formula::DownLeft(q2)),
+            Formula::and(Formula::DownLeft(q3), Formula::DownRight(q2)),
+        );
         automaton.add(
             q2,
             Guard::include(TagType::Element {
@@ -167,10 +155,7 @@ mod tests {
         automaton.add(
             q2,
             Guard::all(),
-            Formula::And(mta::And {
-                left: Box::new(Formula::DownRight(q2)),
-                right: Box::new(Formula::DownLeft(q2)),
-            }),
+            Formula::and(Formula::DownRight(q2), Formula::DownLeft(q2)),
         );
         automaton.add(
             q3,

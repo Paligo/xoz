@@ -121,6 +121,26 @@ pub(crate) enum Formula {
 }
 
 impl Formula {
+    pub(crate) fn and(left: Formula, right: Formula) -> Formula {
+        Formula::And(And {
+            left: Box::new(left),
+            right: Box::new(right),
+        })
+    }
+
+    pub(crate) fn or(left: Formula, right: Formula) -> Formula {
+        Formula::Or(Or {
+            left: Box::new(left),
+            right: Box::new(right),
+        })
+    }
+
+    pub(crate) fn not(inner: Formula) -> Formula {
+        Formula::Not(Not {
+            inner: Box::new(inner),
+        })
+    }
+
     fn evaluate(
         &self,
         node: Node,
