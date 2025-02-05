@@ -161,7 +161,7 @@ mod tests {
         let emph = d.first_child(keyword).unwrap();
 
         let mut automaton = Automaton::new();
-        let q0 = State::new();
+        let q0 = automaton.start_state();
         let q1 = State::new();
         let q2 = State::new();
         let q3 = State::new();
@@ -216,10 +216,7 @@ mod tests {
         automaton.add_bottom_state(q1);
         automaton.add_bottom_state(q2);
 
-        let mut states = States::new();
-        states.insert(q0);
-        let mut marked = Nodes::new();
-        let _ = automaton.top_down_run(&d, Some(root), states, &mut marked);
+        let marked = automaton.run(&d, root);
 
         assert_eq!(marked, vec![keyword].into_iter().collect::<Nodes>());
     }
@@ -238,7 +235,7 @@ mod tests {
         let keyword2 = d.first_child(p2).unwrap();
 
         let mut automaton = Automaton::new();
-        let q0 = State::new();
+        let q0 = automaton.start_state();
         let q1 = State::new();
         let q2 = State::new();
 
@@ -282,10 +279,7 @@ mod tests {
         automaton.add_bottom_state(q1);
         automaton.add_bottom_state(q2);
 
-        let mut states = States::new();
-        states.insert(q0);
-        let mut marked = Nodes::new();
-        let _ = automaton.top_down_run(&d, Some(root), states, &mut marked);
+        let marked = automaton.run(&d, root);
 
         assert_eq!(
             marked,
@@ -302,10 +296,7 @@ mod tests {
         let start_state = automaton.start_state();
         path.translate(&mut automaton, start_state, true);
 
-        let mut states = States::new();
-        states.insert(start_state);
-        let mut marked = Nodes::new();
-        let _ = automaton.top_down_run(&doc, Some(root), states, &mut marked);
+        let marked = automaton.run(&doc, root);
 
         assert_eq!(marked, vec![root].into_iter().collect::<Nodes>());
     }
@@ -344,12 +335,7 @@ mod tests {
         let start_state = automaton.start_state();
         path.translate(&mut automaton, start_state, true);
 
-        let mut states = States::new();
-        states.insert(start_state);
-
-        let mut marked = Nodes::new();
-
-        let _ = automaton.top_down_run(&d, Some(root), states, &mut marked);
+        let marked = automaton.run(&d, root);
 
         assert_eq!(marked, vec![keyword].into_iter().collect::<Nodes>());
     }

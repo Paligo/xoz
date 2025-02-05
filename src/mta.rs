@@ -64,6 +64,14 @@ impl Automaton {
         self.bottom_states.insert(state);
     }
 
+    pub(crate) fn run(&self, document: &Document, node: Node) -> Nodes {
+        let mut states = States::new();
+        states.insert(self.start_state);
+        let mut marked = Nodes::new();
+        self.top_down_run(document, Some(node), states, &mut marked);
+        marked
+    }
+
     pub(crate) fn top_down_run(
         &self,
         document: &Document,
@@ -159,7 +167,6 @@ impl Formula {
                 b: true,
                 r: {
                     let mut nodes = Nodes::new();
-                    println!("marking {:?}", node);
                     marked.insert(node);
                     nodes.insert(node);
                     nodes
