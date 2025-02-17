@@ -6,6 +6,7 @@ use crate::{
     tags_builder::TagsBuilder,
     tagvec::SArrayMatrix,
     text::TextBuilder,
+    Namespace,
 };
 
 pub fn parse_document(xml: &str) -> Result<Document, xot::ParseError> {
@@ -39,10 +40,10 @@ fn from_xot_node(xot: &xot::Xot, node: xot::Node) -> Result<Document, Error> {
                             for (prefix_id, namespace_id) in namespaces.iter() {
                                 let prefix = xot.prefix_str(prefix_id);
                                 let uri = xot.namespace_str(*namespace_id);
-                                let t = TagType::Namespace {
+                                let t = TagType::Namespace(Namespace {
                                     prefix: prefix.to_string(),
                                     uri: uri.to_string(),
-                                };
+                                });
                                 tags_builder.open(t.clone());
                                 tags_builder.close(t);
                             }

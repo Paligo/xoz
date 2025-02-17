@@ -11,7 +11,7 @@ use crate::tag::TagName;
 use crate::tags_builder::TagsBuilder;
 use crate::tagvec::SArrayMatrix;
 use crate::text::TextBuilder;
-use crate::TagType;
+use crate::{Namespace, TagType};
 
 #[derive(Debug, thiserror::Error)]
 pub enum ParseError {
@@ -116,14 +116,14 @@ fn build_element_attributes(
         let value = attribute.decode_and_unescape_value(reader.decoder())?;
         if let Some(prefix_declaration) = qname.as_namespace_binding() {
             let tag_type = match prefix_declaration {
-                PrefixDeclaration::Default => TagType::Namespace {
+                PrefixDeclaration::Default => TagType::Namespace(Namespace {
                     prefix: "".to_string(),
                     uri: value.to_string(),
-                },
-                PrefixDeclaration::Named(prefix) => TagType::Namespace {
+                }),
+                PrefixDeclaration::Named(prefix) => TagType::Namespace(Namespace {
                     prefix: to_string(prefix),
                     uri: value.to_string(),
-                },
+                }),
             };
             namespaces.push(tag_type);
         } else {

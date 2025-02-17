@@ -7,7 +7,7 @@ pub enum TagType {
     // holds attribute nodes
     Attributes,
     // under namespaces
-    Namespace { prefix: String, uri: String },
+    Namespace(Namespace),
     // under attributes. has associated text
     Attribute(TagName),
     // under document or element
@@ -19,6 +19,12 @@ pub enum TagType {
     Comment,
     // TODO: this might have name information too
     ProcessingInstruction,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct Namespace {
+    pub prefix: String,
+    pub uri: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
