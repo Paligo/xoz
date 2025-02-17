@@ -6,7 +6,7 @@ use crate::{
         PreviousSiblingIter, TaggedTreeOps, WithSelfIter, WithTaggedSelfIter,
     },
     structure::Structure,
-    tag::{TagInfo, TagType},
+    tag::{TagInfo, TagName, TagType},
     tagvec::{SArrayMatrix, TagId},
     text::TextUsage,
 };
@@ -161,10 +161,10 @@ impl Document {
     pub fn attribute_node(&self, node: Node, name: &Name) -> Option<Node> {
         let attributes = self.attributes_child(node)?;
         for child in self.primitive_children(attributes) {
-            if let TagType::Attribute {
+            if let TagType::Attribute(TagName {
                 namespace,
                 local_name,
-            } = self.value(child)
+            }) = self.value(child)
             {
                 if namespace == name.namespace && local_name == name.local_name {
                     return Some(child);
@@ -182,19 +182,19 @@ impl Document {
 
     pub fn node_name(&self, node: Node) -> Option<Name> {
         match self.value(node) {
-            TagType::Element {
+            TagType::Element(TagName {
                 namespace,
                 local_name,
-            } => Some(Name {
+            }) => Some(Name {
                 local_name,
                 namespace,
                 // TODO: proper prefix lookup
                 prefix: "",
             }),
-            TagType::Attribute {
+            TagType::Attribute(TagName {
                 namespace,
                 local_name,
-            } => Some(Name {
+            }) => Some(Name {
                 local_name,
                 namespace,
                 // TODO: proper prefix lookup

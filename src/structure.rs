@@ -133,7 +133,10 @@ impl<T: TagVec> Structure<T> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{tag::TagType, tagvec::SArrayMatrix};
+    use crate::{
+        tag::{TagName, TagType},
+        tagvec::SArrayMatrix,
+    };
 
     use super::*;
 
@@ -141,30 +144,30 @@ mod tests {
     fn test_structure() {
         let mut builder = TagsBuilder::new();
         // <doc><a/><b/></doc>
-        builder.open(TagType::Element {
+        builder.open(TagType::Element(TagName {
             namespace: "".to_string(),
             local_name: "doc".to_string(),
-        });
-        builder.open(TagType::Element {
+        }));
+        builder.open(TagType::Element(TagName {
             namespace: "".to_string(),
             local_name: "a".to_string(),
-        });
-        builder.close(TagType::Element {
+        }));
+        builder.close(TagType::Element(TagName {
             namespace: "".to_string(),
             local_name: "a".to_string(),
-        });
-        builder.open(TagType::Element {
+        }));
+        builder.open(TagType::Element(TagName {
             namespace: "".to_string(),
             local_name: "b".to_string(),
-        });
-        builder.close(TagType::Element {
+        }));
+        builder.close(TagType::Element(TagName {
             namespace: "".to_string(),
             local_name: "b".to_string(),
-        });
-        builder.close(TagType::Element {
+        }));
+        builder.close(TagType::Element(TagName {
             namespace: "".to_string(),
             local_name: "doc".to_string(),
-        });
+        }));
 
         let structure = Structure::new(builder, |builder| {
             SArrayMatrix::new(builder.usage(), builder.tags_amount())
@@ -173,45 +176,45 @@ mod tests {
 
         assert_eq!(
             structure.get_tag(0),
-            &TagInfo::open(TagType::Element {
+            &TagInfo::open(TagType::Element(TagName {
                 namespace: "".to_string(),
                 local_name: "doc".to_string()
-            })
+            }))
         );
         assert_eq!(
             structure.get_tag(1),
-            &TagInfo::open(TagType::Element {
+            &TagInfo::open(TagType::Element(TagName {
                 namespace: "".to_string(),
                 local_name: "a".to_string()
-            })
+            }))
         );
         assert_eq!(
             structure.get_tag(2),
-            &TagInfo::close(TagType::Element {
+            &TagInfo::close(TagType::Element(TagName {
                 namespace: "".to_string(),
                 local_name: "a".to_string()
-            })
+            }))
         );
         assert_eq!(
             structure.get_tag(3),
-            &TagInfo::open(TagType::Element {
+            &TagInfo::open(TagType::Element(TagName {
                 namespace: "".to_string(),
                 local_name: "b".to_string()
-            })
+            }))
         );
         assert_eq!(
             structure.get_tag(4),
-            &TagInfo::close(TagType::Element {
+            &TagInfo::close(TagType::Element(TagName {
                 namespace: "".to_string(),
                 local_name: "b".to_string()
-            })
+            }))
         );
         assert_eq!(
             structure.get_tag(5),
-            &TagInfo::close(TagType::Element {
+            &TagInfo::close(TagType::Element(TagName {
                 namespace: "".to_string(),
                 local_name: "doc".to_string()
-            })
+            }))
         );
     }
 
@@ -219,30 +222,30 @@ mod tests {
     fn test_structure_multiple_a() {
         let mut builder = TagsBuilder::new();
         // <doc><a/><a/></doc>
-        builder.open(TagType::Element {
+        builder.open(TagType::Element(TagName {
             namespace: "".to_string(),
             local_name: "doc".to_string(),
-        });
-        builder.open(TagType::Element {
+        }));
+        builder.open(TagType::Element(TagName {
             namespace: "".to_string(),
             local_name: "a".to_string(),
-        });
-        builder.close(TagType::Element {
+        }));
+        builder.close(TagType::Element(TagName {
             namespace: "".to_string(),
             local_name: "a".to_string(),
-        });
-        builder.open(TagType::Element {
+        }));
+        builder.open(TagType::Element(TagName {
             namespace: "".to_string(),
             local_name: "a".to_string(),
-        });
-        builder.close(TagType::Element {
+        }));
+        builder.close(TagType::Element(TagName {
             namespace: "".to_string(),
             local_name: "a".to_string(),
-        });
-        builder.close(TagType::Element {
+        }));
+        builder.close(TagType::Element(TagName {
             namespace: "".to_string(),
             local_name: "doc".to_string(),
-        });
+        }));
 
         let structure = Structure::new(builder, |builder| {
             SArrayMatrix::new(builder.usage(), builder.tags_amount())
@@ -251,45 +254,45 @@ mod tests {
 
         assert_eq!(
             structure.get_tag(0),
-            &TagInfo::open(TagType::Element {
+            &TagInfo::open(TagType::Element(TagName {
                 namespace: "".to_string(),
                 local_name: "doc".to_string()
-            })
+            }))
         );
         assert_eq!(
             structure.get_tag(1),
-            &TagInfo::open(TagType::Element {
+            &TagInfo::open(TagType::Element(TagName {
                 namespace: "".to_string(),
                 local_name: "a".to_string()
-            })
+            }))
         );
         assert_eq!(
             structure.get_tag(2),
-            &TagInfo::close(TagType::Element {
+            &TagInfo::close(TagType::Element(TagName {
                 namespace: "".to_string(),
                 local_name: "a".to_string()
-            })
+            }))
         );
         assert_eq!(
             structure.get_tag(3),
-            &TagInfo::open(TagType::Element {
+            &TagInfo::open(TagType::Element(TagName {
                 namespace: "".to_string(),
                 local_name: "a".to_string()
-            })
+            }))
         );
         assert_eq!(
             structure.get_tag(4),
-            &TagInfo::close(TagType::Element {
+            &TagInfo::close(TagType::Element(TagName {
                 namespace: "".to_string(),
                 local_name: "a".to_string()
-            })
+            }))
         );
         assert_eq!(
             structure.get_tag(5),
-            &TagInfo::close(TagType::Element {
+            &TagInfo::close(TagType::Element(TagName {
                 namespace: "".to_string(),
                 local_name: "doc".to_string()
-            })
+            }))
         );
     }
 
@@ -298,43 +301,43 @@ mod tests {
         // <doc><a>A</a><b>B</b>/doc>
         let mut builder = TagsBuilder::new();
         // 0
-        builder.open(TagType::Element {
+        builder.open(TagType::Element(TagName {
             namespace: "".to_string(),
             local_name: "doc".to_string(),
-        });
+        }));
         // 1
-        builder.open(TagType::Element {
+        builder.open(TagType::Element(TagName {
             namespace: "".to_string(),
             local_name: "a".to_string(),
-        });
+        }));
         // 2
         builder.open(TagType::Text);
         // 3
         builder.close(TagType::Text);
         // 4
-        builder.close(TagType::Element {
+        builder.close(TagType::Element(TagName {
             namespace: "".to_string(),
             local_name: "a".to_string(),
-        });
+        }));
         // 5
-        builder.open(TagType::Element {
+        builder.open(TagType::Element(TagName {
             namespace: "".to_string(),
             local_name: "b".to_string(),
-        });
+        }));
         // 6
         builder.open(TagType::Text);
         // 7
         builder.close(TagType::Text);
         // 8
-        builder.close(TagType::Element {
+        builder.close(TagType::Element(TagName {
             namespace: "".to_string(),
             local_name: "b".to_string(),
-        });
+        }));
         // 9
-        builder.close(TagType::Element {
+        builder.close(TagType::Element(TagName {
             namespace: "".to_string(),
             local_name: "doc".to_string(),
-        });
+        }));
 
         let structure = Structure::new(builder, |builder| {
             SArrayMatrix::new(builder.usage(), builder.tags_amount())

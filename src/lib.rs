@@ -16,5 +16,5 @@ mod textsearch;
 
 pub use builder::parse_document;
 pub use document::Name;
-pub use tag::{TagInfo, TagType};
+pub use tag::{TagInfo, TagName, TagType};
 pub use tagvec::TagId;

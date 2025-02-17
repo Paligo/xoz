@@ -7,20 +7,11 @@ pub enum TagType {
     // holds attribute nodes
     Attributes,
     // under namespaces
-    Namespace {
-        prefix: String,
-        uri: String,
-    },
+    Namespace { prefix: String, uri: String },
     // under attributes. has associated text
-    Attribute {
-        namespace: String,
-        local_name: String,
-    },
+    Attribute(TagName),
     // under document or element
-    Element {
-        namespace: String,
-        local_name: String,
-    },
+    Element(TagName),
     // under document or element. has associated text
     Text,
     // since there are going to be a limited amount of prefix
@@ -28,6 +19,12 @@ pub enum TagType {
     Comment,
     // TODO: this might have name information too
     ProcessingInstruction,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct TagName {
+    pub namespace: String,
+    pub local_name: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]

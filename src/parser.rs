@@ -6,6 +6,7 @@ use quick_xml::reader::NsReader;
 use quick_xml::Reader;
 
 use crate::document::Document;
+use crate::tag::TagName;
 use crate::tags_builder::TagsBuilder;
 use crate::text::TextBuilder;
 use crate::TagType;
@@ -33,14 +34,14 @@ fn parse(xml: &str) -> Result<Document, ParseError> {
                     let qname = start.name();
                     let (resolved, local_name) = reader.resolve_element(qname);
                     let tag_type = match resolved {
-                        ResolveResult::Unbound => TagType::Element {
+                        ResolveResult::Unbound => TagType::Element(TagName {
                             namespace: "".to_string(),
                             local_name: to_string(local_name),
-                        },
-                        ResolveResult::Bound(namespace) => TagType::Element {
+                        }),
+                        ResolveResult::Bound(namespace) => TagType::Element(TagName {
                             namespace: to_string(namespace),
                             local_name: to_string(local_name),
-                        },
+                        }),
                         ResolveResult::Unknown(prefix) => {
                             let prefix = to_string(prefix);
                             return Err(ParseError::UnknownPrefix(prefix));
@@ -69,14 +70,14 @@ fn parse(xml: &str) -> Result<Document, ParseError> {
                         } else {
                             let (resolved, local_name) = reader.resolve_attribute(qname);
                             let tag_type = match resolved {
-                                ResolveResult::Unbound => TagType::Attribute {
+                                ResolveResult::Unbound => TagType::Attribute(TagName {
                                     namespace: "".to_string(),
                                     local_name: to_string(local_name),
-                                },
-                                ResolveResult::Bound(namespace) => TagType::Attribute {
+                                }),
+                                ResolveResult::Bound(namespace) => TagType::Attribute(TagName {
                                     namespace: to_string(namespace),
                                     local_name: to_string(local_name),
-                                },
+                                }),
                                 ResolveResult::Unknown(prefix) => {
                                     let prefix = to_string(prefix);
                                     return Err(ParseError::UnknownPrefix(prefix));
@@ -128,14 +129,14 @@ fn to_string(bytes: impl AsRef<[u8]>) -> String {
 fn element_tag_type(reader: &NsReader<&[u8]>, qname: QName) -> Result<TagType, ParseError> {
     let (resolved, local_name) = reader.resolve_element(qname);
     Ok(match resolved {
-        ResolveResult::Unbound => TagType::Element {
+        ResolveResult::Unbound => TagType::Element(TagName {
             namespace: "".to_string(),
             local_name: to_string(local_name),
-        },
-        ResolveResult::Bound(namespace) => TagType::Element {
+        }),
+        ResolveResult::Bound(namespace) => TagType::Element(TagName {
             namespace: to_string(namespace),
             local_name: to_string(local_name),
-        },
+        }),
         ResolveResult::Unknown(prefix) => {
             let prefix = to_string(prefix);
             return Err(ParseError::UnknownPrefix(prefix));

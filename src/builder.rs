@@ -1,6 +1,11 @@
 use crate::{
-    document::Document, error::Error, structure::Structure, tag::TagType,
-    tags_builder::TagsBuilder, tagvec::SArrayMatrix, text::TextBuilder,
+    document::Document,
+    error::Error,
+    structure::Structure,
+    tag::{TagName, TagType},
+    tags_builder::TagsBuilder,
+    tagvec::SArrayMatrix,
+    text::TextBuilder,
 };
 
 pub fn parse_document(xml: &str) -> Result<Document, xot::ParseError> {
@@ -48,10 +53,10 @@ fn from_xot_node(xot: &xot::Xot, node: xot::Node) -> Result<Document, Error> {
                             tags_builder.open(TagType::Attributes);
                             for (name_id, value) in attributes.iter() {
                                 let (local_name, namespace) = xot.name_ns_str(name_id);
-                                let t = TagType::Attribute {
+                                let t = TagType::Attribute(TagName {
                                     namespace: namespace.to_string(),
                                     local_name: local_name.to_string(),
-                                };
+                                });
                                 tags_builder.open(t.clone());
                                 text_builder.text_node(value);
                                 tags_builder.close(t);
@@ -102,8 +107,8 @@ fn from_xot_node(xot: &xot::Xot, node: xot::Node) -> Result<Document, Error> {
 
 fn element_tag_type(element: &xot::Element, xot: &xot::Xot) -> TagType {
     let (local_name, namespace) = xot.name_ns_str(element.name());
-    TagType::Element {
+    TagType::Element(TagName {
         namespace: namespace.to_string(),
         local_name: local_name.to_string(),
-    }
+    })
 }
