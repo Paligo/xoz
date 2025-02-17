@@ -1,6 +1,5 @@
 use std::ops::Range;
 
-use ahash::HashMap;
 use vers_vecs::{
     trees::{bp::BpTree, Tree},
     RsVec,
