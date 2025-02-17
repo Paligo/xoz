@@ -5,6 +5,7 @@ mod error;
 mod iter;
 mod mta;
 mod mta_compiler;
+mod parser;
 mod serializer;
 mod structure;
 mod tag;

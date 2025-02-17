@@ -9,3 +9,5 @@ sucds = "0.8.1"
 vers-vecs = { path = "../vers" }
 fm-index = { path = "../fm-index" }
 xot = "0.28.0"
+quick-xml = { version = "0.37.2", features = ["encoding"] }
+thiserror = "2.0.11"
