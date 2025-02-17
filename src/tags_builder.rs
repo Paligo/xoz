@@ -124,30 +124,12 @@ mod tests {
     fn test_tags_builder() {
         let mut builder = TagsBuilder::new();
         // <doc><a/><b/></doc>
-        builder.open(TagType::Element(TagName {
-            namespace: "".to_string(),
-            local_name: "doc".to_string(),
-        }));
-        builder.open(TagType::Element(TagName {
-            namespace: "".to_string(),
-            local_name: "a".to_string(),
-        }));
-        builder.close(TagType::Element(TagName {
-            namespace: "".to_string(),
-            local_name: "a".to_string(),
-        }));
-        builder.open(TagType::Element(TagName {
-            namespace: "".to_string(),
-            local_name: "b".to_string(),
-        }));
-        builder.close(TagType::Element(TagName {
-            namespace: "".to_string(),
-            local_name: "b".to_string(),
-        }));
-        builder.close(TagType::Element(TagName {
-            namespace: "".to_string(),
-            local_name: "doc".to_string(),
-        }));
+        builder.open(TagType::Element(TagName::new("", "doc")));
+        builder.open(TagType::Element(TagName::new("", "a")));
+        builder.close(TagType::Element(TagName::new("", "a")));
+        builder.open(TagType::Element(TagName::new("", "b")));
+        builder.close(TagType::Element(TagName::new("", "b")));
+        builder.close(TagType::Element(TagName::new("", "doc")));
 
         let usage = builder.usage();
         // starts at 2 because of the namespaces and attributes tags
@@ -158,30 +140,12 @@ mod tests {
     fn test_tags_builder_multiple_a() {
         let mut builder = TagsBuilder::new();
         // <doc><a/><a/></doc>
-        builder.open(TagType::Element(TagName {
-            namespace: "".to_string(),
-            local_name: "doc".to_string(),
-        }));
-        builder.open(TagType::Element(TagName {
-            namespace: "".to_string(),
-            local_name: "a".to_string(),
-        }));
-        builder.close(TagType::Element(TagName {
-            namespace: "".to_string(),
-            local_name: "a".to_string(),
-        }));
-        builder.open(TagType::Element(TagName {
-            namespace: "".to_string(),
-            local_name: "a".to_string(),
-        }));
-        builder.close(TagType::Element(TagName {
-            namespace: "".to_string(),
-            local_name: "a".to_string(),
-        }));
-        builder.close(TagType::Element(TagName {
-            namespace: "".to_string(),
-            local_name: "doc".to_string(),
-        }));
+        builder.open(TagType::Element(TagName::new("", "doc")));
+        builder.open(TagType::Element(TagName::new("", "a")));
+        builder.close(TagType::Element(TagName::new("", "a")));
+        builder.open(TagType::Element(TagName::new("", "a")));
+        builder.close(TagType::Element(TagName::new("", "a")));
+        builder.close(TagType::Element(TagName::new("", "doc")));
 
         let usage = builder.usage();
         assert_eq!(usage, &[2, 3, 4, 3, 4, 5]);

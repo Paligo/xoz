@@ -161,12 +161,10 @@ impl Document {
     pub fn attribute_node(&self, node: Node, name: &Name) -> Option<Node> {
         let attributes = self.attributes_child(node)?;
         for child in self.primitive_children(attributes) {
-            if let TagType::Attribute(TagName {
-                namespace,
-                local_name,
-            }) = self.value(child)
-            {
-                if namespace == name.namespace && local_name == name.local_name {
+            if let TagType::Attribute(tag_name) = self.value(child) {
+                if tag_name.namespace() == name.namespace
+                    && tag_name.local_name() == name.local_name
+                {
                     return Some(child);
                 }
             }
@@ -182,21 +180,15 @@ impl Document {
 
     pub fn node_name(&self, node: Node) -> Option<Name> {
         match self.value(node) {
-            TagType::Element(TagName {
-                namespace,
-                local_name,
-            }) => Some(Name {
-                local_name,
-                namespace,
+            TagType::Element(tag_name) => Some(Name {
+                local_name: tag_name.local_name(),
+                namespace: tag_name.namespace(),
                 // TODO: proper prefix lookup
                 prefix: "",
             }),
-            TagType::Attribute(TagName {
-                namespace,
-                local_name,
-            }) => Some(Name {
-                local_name,
-                namespace,
+            TagType::Attribute(tag_name) => Some(Name {
+                local_name: tag_name.local_name(),
+                namespace: tag_name.namespace(),
                 // TODO: proper prefix lookup
                 prefix: "",
             }),

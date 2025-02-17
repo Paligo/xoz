@@ -116,14 +116,10 @@ fn build_element_attributes(
         let value = attribute.decode_and_unescape_value(reader.decoder())?;
         if let Some(prefix_declaration) = qname.as_namespace_binding() {
             let tag_type = match prefix_declaration {
-                PrefixDeclaration::Default => TagType::Namespace(Namespace {
-                    prefix: "".to_string(),
-                    uri: value.to_string(),
-                }),
-                PrefixDeclaration::Named(prefix) => TagType::Namespace(Namespace {
-                    prefix: to_string(prefix),
-                    uri: value.to_string(),
-                }),
+                PrefixDeclaration::Default => TagType::Namespace(Namespace::new("", &*value)),
+                PrefixDeclaration::Named(prefix) => {
+                    TagType::Namespace(Namespace::new(prefix, &*value))
+                }
             };
             namespaces.push(tag_type);
         } else {
@@ -160,14 +156,8 @@ fn to_string(bytes: impl AsRef<[u8]>) -> String {
 fn tag_name(r: (ResolveResult, LocalName)) -> Result<TagName, ParseError> {
     let (resolved, local_name) = r;
     Ok(match resolved {
-        ResolveResult::Unbound => TagName {
-            namespace: "".to_string(),
-            local_name: to_string(local_name),
-        },
-        ResolveResult::Bound(namespace) => TagName {
-            namespace: to_string(namespace),
-            local_name: to_string(local_name),
-        },
+        ResolveResult::Unbound => TagName::new("", local_name),
+        ResolveResult::Bound(namespace) => TagName::new(namespace, local_name),
         ResolveResult::Unknown(prefix) => {
             let prefix = to_string(prefix);
             return Err(ParseError::UnknownPrefix(prefix));

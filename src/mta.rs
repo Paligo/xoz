@@ -482,27 +482,18 @@ mod tests {
 
         // Test includes
         let guard = Guard::Includes(
-            [TagType::Element(TagName {
-                namespace: "".to_string(),
-                local_name: "foo".to_string(),
-            })]
-            .into_iter()
-            .collect(),
+            [TagType::Element(TagName::new("", "foo"))]
+                .into_iter()
+                .collect(),
         );
         lookup.add(guard.clone(), "value1");
 
         // Add another payload for the same tag
         lookup.add(guard, "value2");
 
-        let foo_tag = TagType::Element(TagName {
-            namespace: "".to_string(),
-            local_name: "foo".to_string(),
-        });
+        let foo_tag = TagType::Element(TagName::new("", "foo"));
 
-        let bar_tag = TagType::Element(TagName {
-            namespace: "".to_string(),
-            local_name: "bar".to_string(),
-        });
+        let bar_tag = TagType::Element(TagName::new("", "bar"));
 
         assert_eq!(lookup.matching(&foo_tag), vec!["value1", "value2"]);
 
@@ -513,15 +504,9 @@ mod tests {
     fn test_tag_lookup_excludes() {
         let mut lookup = TagLookup::new();
 
-        let foo_tag = TagType::Element(TagName {
-            namespace: "".to_string(),
-            local_name: "foo".to_string(),
-        });
+        let foo_tag = TagType::Element(TagName::new("", "foo"));
 
-        let bar_tag = TagType::Element(TagName {
-            namespace: "".to_string(),
-            local_name: "bar".to_string(),
-        });
+        let bar_tag = TagType::Element(TagName::new("", "bar"));
 
         // Test excludes
         let exclude_guard =
@@ -533,10 +518,7 @@ mod tests {
         assert_eq!(lookup.matching(&bar_tag), Vec::<&str>::new());
 
         // Non-excluded tag should match
-        let baz_tag = TagType::Element(TagName {
-            namespace: "".to_string(),
-            local_name: "baz".to_string(),
-        });
+        let baz_tag = TagType::Element(TagName::new("", "baz"));
         assert_eq!(lookup.matching(&baz_tag), vec!["excluded"]);
 
         // Test combination of includes and excludes
@@ -558,14 +540,8 @@ mod tests {
         let state2 = State(2);
         let mut tag_lookup1 = TagLookup::new();
         let mut tag_lookup2 = TagLookup::new();
-        let foo_tag = TagType::Element(TagName {
-            namespace: "".to_string(),
-            local_name: "foo".to_string(),
-        });
-        let bar_tag = TagType::Element(TagName {
-            namespace: "".to_string(),
-            local_name: "bar".to_string(),
-        });
+        let foo_tag = TagType::Element(TagName::new("", "foo"));
+        let bar_tag = TagType::Element(TagName::new("", "bar"));
         tag_lookup1.add(
             Guard::Includes([foo_tag.clone()].into_iter().collect()),
             "value1",

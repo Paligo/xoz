@@ -123,13 +123,10 @@ impl LocationStep {
             } => {
                 // TODO: namespace and wildcard handling
                 // we construct the matching tag type
-                let tag_type = TagType::Element(TagName {
-                    namespace: "".to_string(),
-                    local_name: local_name
-                        .as_ref()
-                        .expect("local name is not wildcard")
-                        .to_string(),
-                });
+                let tag_type = TagType::Element(TagName::new(
+                    "",
+                    local_name.as_ref().expect("local name is not wildcard"),
+                ));
                 Guard::include(tag_type)
             }
             _ => unimplemented!(),
@@ -174,10 +171,7 @@ mod tests {
         );
         automaton.add(
             q1,
-            Guard::include(TagType::Element(TagName {
-                namespace: "".to_string(),
-                local_name: "listitem".to_string(),
-            })),
+            Guard::include(TagType::Element(TagName::new("", "listitem"))),
             formula,
         );
         automaton.add(
@@ -192,10 +186,7 @@ mod tests {
         );
         automaton.add(
             q2,
-            Guard::include(TagType::Element(TagName {
-                namespace: "".to_string(),
-                local_name: "keyword".to_string(),
-            })),
+            Guard::include(TagType::Element(TagName::new("", "keyword"))),
             formula,
         );
         automaton.add(
@@ -205,10 +196,7 @@ mod tests {
         );
         automaton.add(
             q3,
-            Guard::include(TagType::Element(TagName {
-                namespace: "".to_string(),
-                local_name: "emph".to_string(),
-            })),
+            Guard::include(TagType::Element(TagName::new("", "emph"))),
             Formula::True,
         );
         automaton.add(q3, Guard::all(), Formula::DownRight(q3));
@@ -247,10 +235,7 @@ mod tests {
         );
         automaton.add(
             q1,
-            Guard::include(TagType::Element(TagName {
-                namespace: "".to_string(),
-                local_name: "listitem".to_string(),
-            })),
+            Guard::include(TagType::Element(TagName::new("", "listitem"))),
             formula,
         );
         automaton.add(
@@ -264,10 +249,7 @@ mod tests {
         );
         automaton.add(
             q2,
-            Guard::include(TagType::Element(TagName {
-                namespace: "".to_string(),
-                local_name: "keyword".to_string(),
-            })),
+            Guard::include(TagType::Element(TagName::new("", "keyword"))),
             formula,
         );
         automaton.add(

@@ -23,14 +23,47 @@ pub enum TagType {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Namespace {
-    pub prefix: String,
-    pub uri: String,
+    prefix: String,
+    uri: String,
+}
+
+impl Namespace {
+    // generically construct from either u8 or string
+    pub fn new(prefix: impl AsRef<[u8]>, uri: impl AsRef<[u8]>) -> Self {
+        Self {
+            prefix: to_string(prefix),
+            uri: to_string(uri),
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct TagName {
-    pub namespace: String,
-    pub local_name: String,
+    namespace: String,
+    local_name: String,
+}
+
+impl TagName {
+    // generically construct from either u8 or string
+    pub fn new(namespace: impl AsRef<[u8]>, local_name: impl AsRef<[u8]>) -> Self {
+        Self {
+            namespace: to_string(namespace),
+            local_name: to_string(local_name),
+        }
+    }
+
+    pub fn namespace(&self) -> &str {
+        &self.namespace
+    }
+
+    pub fn local_name(&self) -> &str {
+        &self.local_name
+    }
+}
+
+// TODO: this is an ugly conversion, it'd be nicer if we just stored the u8 vecs
+fn to_string(bytes: impl AsRef<[u8]>) -> String {
+    std::str::from_utf8(bytes.as_ref()).unwrap().to_string()
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
