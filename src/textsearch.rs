@@ -1,10 +1,8 @@
-use fm_index::{
-    converter::IdConverter, suffix_array::SuffixOrderSampledArray, FMIndex, SearchIndexBuilder,
-};
+use fm_index::{converter::IdConverter, FMIndexWithLocate};
 
 pub(crate) struct TextSearch {
     text: String,
-    pub(crate) index: FMIndex<u8, IdConverter, SuffixOrderSampledArray>,
+    pub(crate) index: FMIndexWithLocate<u8, IdConverter>,
     is_tiny: bool,
 }
 
@@ -25,13 +23,13 @@ impl TextSearch {
         let index = if is_tiny {
             // construct a dummy text index where we know construction will succeed
             // we don't use it
-            SearchIndexBuilder::new()
-                .sampling_level(level)
-                .build("dummy text".as_bytes().to_vec())
+            FMIndexWithLocate::new(
+                "dummy text".as_bytes().to_vec(),
+                IdConverter::new::<u8>(),
+                level,
+            )
         } else {
-            SearchIndexBuilder::new()
-                .sampling_level(level)
-                .build(text.as_bytes().to_vec())
+            FMIndexWithLocate::new(text.as_bytes().to_vec(), IdConverter::new::<u8>(), level)
         };
         Self {
             text,
