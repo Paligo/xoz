@@ -19,7 +19,7 @@ impl TagsLookup {
         }
     }
 
-    fn register<'a>(&mut self, tag_info: TagInfo<'a>) -> TagId {
+    fn register(&mut self, tag_info: TagInfo) -> TagId {
         if let Some(&idx) = self.tag_lookup.get(&tag_info) {
             return idx;
         }

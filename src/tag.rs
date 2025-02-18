@@ -23,7 +23,7 @@ pub enum TagType<'a> {
     ProcessingInstruction,
 }
 
-impl<'a> TagType<'a> {
+impl TagType<'_> {
     pub(crate) fn into_owned(self) -> TagType<'static> {
         match self {
             TagType::Document => TagType::Document,
@@ -62,14 +62,6 @@ pub struct TagName<'a> {
 }
 
 impl<'a> TagName<'a> {
-    // // generically construct from either u8 or string
-    // pub fn new(namespace: impl Into<Cow<'a, [u8]>>, local_name: impl Into<Cow<'a, [u8]>>) -> Self {
-    //     Self {
-    //         namespace: namespace.into(),
-    //         local_name: local_name.into(),
-    //     }
-    // }
-
     pub fn new(namespace: &'a str, local_name: &'a str) -> Self {
         Self {
             namespace: Cow::Borrowed(namespace.as_bytes()),
@@ -98,11 +90,6 @@ impl<'a> TagName<'a> {
     pub fn local_name(&self) -> &[u8] {
         &self.local_name
     }
-}
-
-// TODO: this is an ugly conversion, it'd be nicer if we just stored the u8 vecs
-fn to_string(bytes: impl AsRef<[u8]>) -> String {
-    std::str::from_utf8(bytes.as_ref()).unwrap().to_string()
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]

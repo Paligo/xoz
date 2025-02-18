@@ -148,11 +148,6 @@ fn build_element_attributes(
     Ok(())
 }
 
-// TODO: this is an ugly conversion, it'd be nicer if we just stored the u8 vecs
-fn to_string(bytes: impl AsRef<[u8]>) -> String {
-    std::str::from_utf8(bytes.as_ref()).unwrap().to_string()
-}
-
 fn tag_name<'a>(r: (ResolveResult<'a>, LocalName<'a>)) -> Result<TagName<'a>, ParseError> {
     let (resolved, local_name) = r;
     Ok(match resolved {
@@ -165,4 +160,9 @@ fn tag_name<'a>(r: (ResolveResult<'a>, LocalName<'a>)) -> Result<TagName<'a>, Pa
             return Err(ParseError::UnknownPrefix(prefix));
         }
     })
+}
+
+// TODO: this is an ugly conversion, it'd be nicer if we just stored the u8 vecs
+fn to_string(bytes: impl AsRef<[u8]>) -> String {
+    std::str::from_utf8(bytes.as_ref()).unwrap().to_string()
 }
