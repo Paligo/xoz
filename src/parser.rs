@@ -1,8 +1,7 @@
-use quick_xml::encoding::EncodingError as QuickXMLEncodingError;
-use quick_xml::errors::Error as QuickXMLError;
-use quick_xml::events::attributes::{AttrError as QuickXMLAttrError, Attributes};
+pub use quick_xml::errors::Error as QuickXMLError;
+use quick_xml::events::attributes::Attributes;
 use quick_xml::events::Event;
-use quick_xml::name::{LocalName, PrefixDeclaration, ResolveResult};
+use quick_xml::name::{LocalName, NamespaceError, PrefixDeclaration, ResolveResult};
 use quick_xml::reader::NsReader;
 
 use crate::document::Document;
@@ -13,19 +12,7 @@ use crate::tagvec::SArrayMatrix;
 use crate::text::TextBuilder;
 use crate::{Namespace, TagType};
 
-#[derive(Debug, thiserror::Error)]
-pub enum ParseError {
-    #[error("prefix not found during parse: {0}")]
-    UnknownPrefix(String),
-    #[error("quick-xml attribute error: {0}")]
-    QuickXMLAttr(#[from] QuickXMLAttrError),
-    #[error("quick-xml encoding error: {0}")]
-    QuickXMLEncoding(#[from] QuickXMLEncodingError),
-    #[error("quick-xml error: {0}")]
-    QuickXML(#[from] QuickXMLError),
-}
-
-pub fn parse_document(xml: &str) -> Result<Document, ParseError> {
+pub fn parse_document(xml: &str) -> Result<Document, QuickXMLError> {
     let mut reader = NsReader::from_str(xml);
     reader.config_mut().enable_all_checks(true);
     let mut tags_builder = TagsBuilder::new();
@@ -33,7 +20,7 @@ pub fn parse_document(xml: &str) -> Result<Document, ParseError> {
     tags_builder.open(TagType::Document);
     loop {
         match reader.read_event() {
-            Err(e) => return Err(ParseError::QuickXML(e)),
+            Err(e) => return Err(e),
             Ok(event) => match event {
                 Event::Start(start) => {
                     let qname = start.name();
@@ -107,7 +94,7 @@ fn build_element_attributes(
     tags_builder: &mut TagsBuilder,
     text_builder: &mut TextBuilder,
     attributes_iter: Attributes<'_>,
-) -> Result<(), ParseError> {
+) -> Result<(), QuickXMLError> {
     let mut namespaces = Vec::new();
     let mut attributes = Vec::new();
     for attribute in attributes_iter {
@@ -148,7 +135,7 @@ fn build_element_attributes(
     Ok(())
 }
 
-fn tag_name<'a>(r: (ResolveResult<'a>, LocalName<'a>)) -> Result<TagName<'a>, ParseError> {
+fn tag_name<'a>(r: (ResolveResult<'a>, LocalName<'a>)) -> Result<TagName<'a>, QuickXMLError> {
     let (resolved, local_name) = r;
     Ok(match resolved {
         ResolveResult::Unbound => TagName::from_u8(b"", local_name.into_inner()),
@@ -156,8 +143,9 @@ fn tag_name<'a>(r: (ResolveResult<'a>, LocalName<'a>)) -> Result<TagName<'a>, Pa
             TagName::from_u8(namespace.into_inner(), local_name.into_inner())
         }
         ResolveResult::Unknown(prefix) => {
-            let prefix = to_string(prefix);
-            return Err(ParseError::UnknownPrefix(prefix));
+            return Err(QuickXMLError::Namespace(NamespaceError::UnknownPrefix(
+                prefix,
+            )));
         }
     })
 }
