@@ -49,15 +49,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "fm-index"
-version = "0.2.0"
-dependencies = [
- "num-traits",
- "serde",
- "vers-vecs 1.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
 name = "genawaiter"
 version = "0.99.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -231,26 +222,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f7c45b9784283f1b2e7fb61b42047c2fd678ef0960d4f6f1eba131594cc369d4"
 
 [[package]]
-name = "serde"
-version = "1.0.217"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "02fc4265df13d6fa1d00ecff087228cc0a2b5f3c0e87e258d8b94a156e984c70"
-dependencies = [
- "serde_derive",
-]
-
-[[package]]
-name = "serde_derive"
-version = "1.0.217"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5a9bf7cf98d04a2b28aead066b7496853d4779c9cc183c440dbac457641e19a0"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.95",
-]
-
-[[package]]
 name = "strum"
 version = "0.26.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -366,15 +337,6 @@ name = "vers-vecs"
 version = "1.5.1"
 
 [[package]]
-name = "vers-vecs"
-version = "1.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7528b85bce3e0a703a5eb47dea9a6b146cc63ae4e7990e565e336a140cfb3741"
-dependencies = [
- "serde",
-]
-
-[[package]]
 name = "version_check"
 version = "0.9.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -417,11 +379,10 @@ name = "xoz"
 version = "0.1.0"
 dependencies = [
  "ahash",
- "fm-index",
  "quick-xml",
  "sucds",
  "thiserror 2.0.11",
- "vers-vecs 1.5.1",
+ "vers-vecs",
  "xot",
 ]
 
