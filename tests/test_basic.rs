@@ -11,9 +11,9 @@ fn test_elements() {
     let a_name = doc.node_name(a).unwrap();
     let b_name = doc.node_name(b).unwrap();
 
-    assert_eq!(doc_el_name.local_name(), "doc");
-    assert_eq!(a_name.local_name(), "a");
-    assert_eq!(b_name.local_name(), "b");
+    assert_eq!(doc_el_name.local_name(), b"doc");
+    assert_eq!(a_name.local_name(), b"a");
+    assert_eq!(b_name.local_name(), b"b");
 }
 
 #[test]
@@ -27,9 +27,9 @@ fn test_elements_multiple_a() {
     let a1_name = doc.node_name(a1).unwrap();
     let a2_name = doc.node_name(a2).unwrap();
 
-    assert_eq!(doc_el_name.local_name(), "doc");
-    assert_eq!(a1_name.local_name(), "a");
-    assert_eq!(a2_name.local_name(), "a");
+    assert_eq!(doc_el_name.local_name(), b"doc");
+    assert_eq!(a1_name.local_name(), b"a");
+    assert_eq!(a2_name.local_name(), b"a");
 }
 
 #[test]
@@ -46,8 +46,8 @@ fn test_attribute_names() {
     let a_name = doc.node_name(a).unwrap();
     let b_name = doc.node_name(b).unwrap();
 
-    assert_eq!(a_name.local_name(), "a");
-    assert_eq!(b_name.local_name(), "b");
+    assert_eq!(a_name.local_name(), b"a");
+    assert_eq!(b_name.local_name(), b"b");
 }
 
 #[test]
@@ -60,8 +60,8 @@ fn test_attributes_and_children() {
     let a_name = doc.node_name(a).unwrap();
     let b_name = doc.node_name(b).unwrap();
 
-    assert_eq!(a_name.local_name(), "a");
-    assert_eq!(b_name.local_name(), "b");
+    assert_eq!(a_name.local_name(), b"a");
+    assert_eq!(b_name.local_name(), b"b");
 }
 
 #[test]
@@ -238,7 +238,7 @@ fn test_tagged_descendant() {
     let b = doc
         .tagged_descendant(doc.document_element(), tag_id)
         .unwrap();
-    assert_eq!(doc.node_name(b).unwrap().local_name(), "b");
+    assert_eq!(doc.node_name(b).unwrap().local_name(), b"b");
 }
 
 #[test]

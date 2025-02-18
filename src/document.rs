@@ -21,27 +21,27 @@ pub struct Node(usize);
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Name<'a> {
-    local_name: &'a str,
-    namespace: &'a str,
-    prefix: &'a str,
+    local_name: &'a [u8],
+    namespace: &'a [u8],
+    prefix: &'a [u8],
 }
 
 impl<'a> Name<'a> {
     pub fn name_without_namespace(name: &'a str) -> Self {
         Self {
-            local_name: name,
-            namespace: "",
-            prefix: "",
+            local_name: name.as_bytes(),
+            namespace: b"",
+            prefix: b"",
         }
     }
 
-    pub fn local_name(&self) -> &str {
+    pub fn local_name(&self) -> &[u8] {
         self.local_name
     }
-    pub fn namespace(&self) -> &str {
+    pub fn namespace(&self) -> &[u8] {
         self.namespace
     }
-    pub fn prefix(&self) -> &str {
+    pub fn prefix(&self) -> &[u8] {
         self.prefix
     }
 }
@@ -184,13 +184,13 @@ impl Document {
                 local_name: tag_name.local_name(),
                 namespace: tag_name.namespace(),
                 // TODO: proper prefix lookup
-                prefix: "",
+                prefix: b"",
             }),
             TagType::Attribute(tag_name) => Some(Name {
                 local_name: tag_name.local_name(),
                 namespace: tag_name.namespace(),
                 // TODO: proper prefix lookup
-                prefix: "",
+                prefix: b"",
             }),
             _ => None,
         }

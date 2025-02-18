@@ -39,24 +39,24 @@ impl Namespace {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct TagName {
-    namespace: String,
-    local_name: String,
+    namespace: Vec<u8>,
+    local_name: Vec<u8>,
 }
 
 impl TagName {
     // generically construct from either u8 or string
     pub fn new(namespace: impl AsRef<[u8]>, local_name: impl AsRef<[u8]>) -> Self {
         Self {
-            namespace: to_string(namespace),
-            local_name: to_string(local_name),
+            namespace: namespace.as_ref().to_vec(),
+            local_name: local_name.as_ref().to_vec(),
         }
     }
 
-    pub fn namespace(&self) -> &str {
+    pub fn namespace(&self) -> &[u8] {
         &self.namespace
     }
 
-    pub fn local_name(&self) -> &str {
+    pub fn local_name(&self) -> &[u8] {
         &self.local_name
     }
 }
