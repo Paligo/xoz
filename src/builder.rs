@@ -100,7 +100,7 @@ fn from_xot_node(xot: &xot::Xot, node: xot::Node) -> Result<Document, Error> {
     })
 }
 
-fn element_tag_type(element: &xot::Element, xot: &xot::Xot) -> TagType {
+fn element_tag_type<'a>(element: &'a xot::Element, xot: &'a xot::Xot) -> TagType<'a> {
     let (local_name, namespace) = xot.name_ns_str(element.name());
     TagType::Element(TagName::new(namespace, local_name))
 }

@@ -7,8 +7,8 @@ use crate::{
 };
 
 pub(crate) struct TagsLookup {
-    pub(crate) tags: Vec<TagInfo>,
-    pub(crate) tag_lookup: HashMap<TagInfo, TagId>,
+    pub(crate) tags: Vec<TagInfo<'static>>,
+    pub(crate) tag_lookup: HashMap<TagInfo<'static>, TagId>,
 }
 
 impl TagsLookup {
@@ -19,13 +19,14 @@ impl TagsLookup {
         }
     }
 
-    fn register(&mut self, tag_info: TagInfo) -> TagId {
+    fn register<'a>(&mut self, tag_info: TagInfo<'a>) -> TagId {
         if let Some(&idx) = self.tag_lookup.get(&tag_info) {
             return idx;
         }
         let idx = TagId::new(self.tags.len() as u64);
-        self.tags.push(tag_info.clone());
-        self.tag_lookup.insert(tag_info, idx);
+        let owned_tag_info = tag_info.into_owned();
+        self.tags.push(owned_tag_info.clone());
+        self.tag_lookup.insert(owned_tag_info, idx);
         idx
     }
 

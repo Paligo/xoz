@@ -394,9 +394,9 @@ pub(crate) type TagLookupFormula = TagLookup<FormulaId>;
 
 pub(crate) struct TagLookup<T: Copy> {
     // Direct mapping for includes
-    includes: HashMap<TagType, Vec<T>>,
+    includes: HashMap<TagType<'static>, Vec<T>>,
     // For excludes, we store (excluded_tags, payload) pairs
-    excludes: Vec<(HashSet<TagType>, T)>,
+    excludes: Vec<(HashSet<TagType<'static>>, T)>,
 }
 
 impl<T: Copy> TagLookup<T> {
@@ -444,24 +444,24 @@ impl<T: Copy> TagLookup<T> {
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub(crate) enum Guard {
-    Includes(HashSet<TagType>),
-    Excludes(HashSet<TagType>),
+    Includes(HashSet<TagType<'static>>),
+    Excludes(HashSet<TagType<'static>>),
 }
 
 impl Guard {
     pub(crate) fn includes(tags: Vec<TagType>) -> Self {
-        Guard::Includes(tags.into_iter().collect())
+        Guard::Includes(tags.into_iter().map(|t| t.into_owned()).collect())
     }
     pub(crate) fn excludes(tags: Vec<TagType>) -> Self {
-        Guard::Excludes(tags.into_iter().collect())
+        Guard::Excludes(tags.into_iter().map(|t| t.into_owned()).collect())
     }
 
     pub(crate) fn include(tag: TagType) -> Self {
-        Guard::Includes([tag].into_iter().collect())
+        Guard::Includes([tag].into_iter().map(|t| t.into_owned()).collect())
     }
 
     pub(crate) fn exclude(tag: TagType) -> Self {
-        Guard::Excludes([tag].into_iter().collect())
+        Guard::Excludes([tag].into_iter().map(|t| t.into_owned()).collect())
     }
 
     pub(crate) fn all() -> Self {

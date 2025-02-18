@@ -153,11 +153,13 @@ fn to_string(bytes: impl AsRef<[u8]>) -> String {
     std::str::from_utf8(bytes.as_ref()).unwrap().to_string()
 }
 
-fn tag_name(r: (ResolveResult, LocalName)) -> Result<TagName, ParseError> {
+fn tag_name<'a>(r: (ResolveResult<'a>, LocalName<'a>)) -> Result<TagName<'a>, ParseError> {
     let (resolved, local_name) = r;
     Ok(match resolved {
-        ResolveResult::Unbound => TagName::new("", local_name),
-        ResolveResult::Bound(namespace) => TagName::new(namespace, local_name),
+        ResolveResult::Unbound => TagName::from_u8(b"", local_name.into_inner()),
+        ResolveResult::Bound(namespace) => {
+            TagName::from_u8(namespace.into_inner(), local_name.into_inner())
+        }
         ResolveResult::Unknown(prefix) => {
             let prefix = to_string(prefix);
             return Err(ParseError::UnknownPrefix(prefix));
