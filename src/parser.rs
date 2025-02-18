@@ -9,7 +9,7 @@ use crate::structure::Structure;
 use crate::tag::TagName;
 use crate::tags_builder::TagsBuilder;
 use crate::tagvec::SArrayMatrix;
-use crate::text2::TextBuilder;
+use crate::text::TextBuilder;
 use crate::{Namespace, TagType};
 
 pub fn parse_document(xml: &str) -> Result<Document, QuickXMLError> {

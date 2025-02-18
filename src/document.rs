@@ -8,7 +8,7 @@ use crate::{
     structure::Structure,
     tag::{TagInfo, TagType},
     tagvec::{SArrayMatrix, TagId},
-    text2::TextUsage,
+    text::TextUsage,
 };
 
 pub struct Document {
