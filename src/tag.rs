@@ -23,16 +23,16 @@ pub enum TagType {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Namespace {
-    prefix: String,
-    uri: String,
+    prefix: Vec<u8>,
+    uri: Vec<u8>,
 }
 
 impl Namespace {
     // generically construct from either u8 or string
     pub fn new(prefix: impl AsRef<[u8]>, uri: impl AsRef<[u8]>) -> Self {
         Self {
-            prefix: to_string(prefix),
-            uri: to_string(uri),
+            prefix: prefix.as_ref().to_vec(),
+            uri: uri.as_ref().to_vec(),
         }
     }
 }
