@@ -12,6 +12,7 @@ mod tag;
 mod tags_builder;
 mod tagvec;
 mod text;
+mod text2;
 mod textsearch;
 
 pub use parser::{parse_document, QuickXMLError};
