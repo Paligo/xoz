@@ -5,7 +5,7 @@ use crate::{
     tag::{TagName, TagType},
     tags_builder::TagsBuilder,
     tagvec::SArrayMatrix,
-    text::TextBuilder,
+    text2::TextBuilder,
     Namespace,
 };
 

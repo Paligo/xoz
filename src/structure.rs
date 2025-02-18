@@ -10,7 +10,7 @@ use crate::{
     tag::TagInfo,
     tags_builder::{TagsBuilder, TagsLookup},
     tagvec::{TagId, TagVec},
-    text::TextId,
+    text2::TextId,
 };
 
 pub(crate) struct Structure<T: TagVec> {

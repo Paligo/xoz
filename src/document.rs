@@ -6,9 +6,9 @@ use crate::{
         PreviousSiblingIter, TaggedTreeOps, WithSelfIter, WithTaggedSelfIter,
     },
     structure::Structure,
-    tag::{TagInfo, TagName, TagType},
+    tag::{TagInfo, TagType},
     tagvec::{SArrayMatrix, TagId},
-    text::TextUsage,
+    text2::TextUsage,
 };
 
 pub struct Document {
