@@ -2,8 +2,9 @@ use vers_vecs::trees::Tree;
 
 use crate::{
     iter::{
-        AncestorIter, AttributesIter, DescendantsIter, FollowingIter, NextSiblingIter, NodeTreeOps,
-        PreviousSiblingIter, TaggedTreeOps, WithSelfIter, WithTaggedSelfIter,
+        AncestorIter, AttributesIter, ChildrenIter, DescendantsIter, FollowingIter,
+        NextSiblingIter, NodeTreeOps, PreviousSiblingIter, TaggedTreeOps, WithSelfIter,
+        WithTaggedSelfIter,
     },
     structure::Structure,
     tag::{TagInfo, TagType},
@@ -249,11 +250,11 @@ impl Document {
         None
     }
 
-    pub fn children(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
-        NextSiblingIter::new(self, self.first_child(node))
+    pub fn children(&self, node: Node) -> impl DoubleEndedIterator<Item = Node> + use<'_> {
+        ChildrenIter::new(self, node)
     }
 
-    pub fn axis_child(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
+    pub fn axis_child(&self, node: Node) -> impl DoubleEndedIterator<Item = Node> + use<'_> {
         self.children(node)
     }
 

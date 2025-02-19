@@ -26,20 +26,16 @@ impl Iterator for NextSiblingIter<'_> {
 
 pub(crate) struct ChildrenIter<'a> {
     doc: &'a Document,
-    parent: Node,
-    done: bool,
-    front_node: Option<Node>,
-    back_node: Option<Node>,
+    head: Option<Node>,
+    tail: Option<Node>,
 }
 
 impl<'a> ChildrenIter<'a> {
     pub(crate) fn new(doc: &'a Document, parent: Node) -> Self {
         Self {
             doc,
-            parent,
-            done: false,
-            front_node: None,
-            back_node: None,
+            head: doc.first_child(parent),
+            tail: doc.last_child(parent),
         }
     }
 }
@@ -48,58 +44,35 @@ impl Iterator for ChildrenIter<'_> {
     type Item = Node;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.done {
-            return None;
+        match (self.head, self.tail) {
+            (Some(head), Some(tail)) if head == tail => {
+                self.head = None;
+                self.tail = None;
+                Some(head)
+            }
+            (Some(head), _) => {
+                self.head = self.doc.next_sibling(head);
+                Some(head)
+            }
+            _ => None,
         }
-
-        // Initialize front_node if this is the first call
-        if self.front_node.is_none() {
-            self.front_node = self.doc.first_child(self.parent);
-        }
-
-        let current = self.front_node?;
-
-        // Check if we've reached the back node
-        if Some(current) == self.back_node {
-            self.done = true;
-            return None;
-        }
-
-        // Move front pointer forward
-        self.front_node = self.doc.next_sibling(current);
-
-        Some(current)
     }
-
-    // fn size_hint(&self) -> (usize, Option<usize>) {
-    //     let len = self.doc.children_count(self.parent);
-    //     (len, Some(len))
-    // }
 }
 
-impl<'a> DoubleEndedIterator for ChildrenIter<'a> {
+impl DoubleEndedIterator for ChildrenIter<'_> {
     fn next_back(&mut self) -> Option<Self::Item> {
-        if self.done {
-            return None;
+        match (self.head, self.tail) {
+            (Some(head), Some(tail)) if head == tail => {
+                self.head = None;
+                self.tail = None;
+                Some(head)
+            }
+            (_, Some(tail)) => {
+                self.tail = self.doc.previous_sibling(tail);
+                Some(tail)
+            }
+            _ => None,
         }
-
-        // Initialize back_node if this is the first call from the back
-        if self.back_node.is_none() {
-            self.back_node = self.doc.last_child(self.parent);
-        }
-
-        let current = self.back_node?;
-
-        // Check if we've reached the front node
-        if Some(current) == self.front_node {
-            self.done = true;
-            return None;
-        }
-
-        // Move back pointer backward
-        self.back_node = self.doc.previous_sibling(current);
-        
-        Some(current)
     }
 }
 
@@ -438,14 +411,14 @@ mod tests {
     fn test_double_ended_children() {
         let doc = parse_document("<doc><a/><b/><c/><d/><e/></doc>").unwrap();
         let root = doc.root();
-        let doc_elem = doc.first_child(root).unwrap();
+        let doc_elem = doc.document_element();
         let a = doc.first_child(doc_elem).unwrap();
         let b = doc.next_sibling(a).unwrap();
         let c = doc.next_sibling(b).unwrap();
         let d = doc.next_sibling(c).unwrap();
         let e = doc.next_sibling(d).unwrap();
 
-        let iter = ChildrenIter::new(&doc, doc_elem);
+        let mut iter = ChildrenIter::new(&doc, doc_elem);
         assert_eq!(iter.next(), Some(a));
         assert_eq!(iter.next_back(), Some(e));
         assert_eq!(iter.next(), Some(b));
