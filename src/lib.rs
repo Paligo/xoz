@@ -18,7 +18,6 @@ mod traverse;
 
 pub use parser::{parse_document, QuickXMLError};
 // pub use builder::parse_document;
-pub use document::Name;
 pub use tag::{Namespace, TagInfo, TagName, TagType};
 pub use tagvec::TagId;
 pub use traverse::TagState;

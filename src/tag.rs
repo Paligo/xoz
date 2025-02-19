@@ -71,6 +71,13 @@ impl<'a> TagName<'a> {
         }
     }
 
+    pub fn unprefixed(local_name: &'a str) -> Self {
+        Self {
+            namespace: Cow::Borrowed(&[]),
+            local_name: Cow::Borrowed(local_name.as_bytes()),
+        }
+    }
+
     pub fn from_u8(namespace: &'a [u8], local_name: &'a [u8]) -> Self {
         Self {
             namespace: Cow::Borrowed(namespace),

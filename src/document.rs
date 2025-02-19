@@ -22,33 +22,6 @@ pub struct Document {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Node(usize);
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct Name<'a> {
-    local_name: &'a [u8],
-    namespace: &'a [u8],
-    prefix: &'a [u8],
-}
-
-impl<'a> Name<'a> {
-    pub fn name_without_namespace(name: &'a str) -> Self {
-        Self {
-            local_name: name.as_bytes(),
-            namespace: b"",
-            prefix: b"",
-        }
-    }
-
-    pub fn local_name(&self) -> &[u8] {
-        self.local_name
-    }
-    pub fn namespace(&self) -> &[u8] {
-        self.namespace
-    }
-    pub fn prefix(&self) -> &[u8] {
-        self.prefix
-    }
-}
-
 impl Document {
     pub fn tag(&self, tag_info: &TagInfo) -> Option<TagId> {
         self.structure.lookup_tag_id(tag_info)
@@ -161,13 +134,11 @@ impl Document {
         }
     }
 
-    pub fn attribute_node(&self, node: Node, name: &Name) -> Option<Node> {
+    pub fn attribute_node(&self, node: Node, name: &TagName) -> Option<Node> {
         let attributes = self.attributes_child(node)?;
         for child in self.primitive_children(attributes) {
             if let TagType::Attribute(tag_name) = self.value(child) {
-                if tag_name.namespace() == name.namespace
-                    && tag_name.local_name() == name.local_name
-                {
+                if tag_name == name {
                     return Some(child);
                 }
             }
@@ -175,26 +146,16 @@ impl Document {
         None
     }
 
-    pub fn attribute_value(&self, node: Node, name: &Name) -> Option<&str> {
+    pub fn attribute_value(&self, node: Node, name: &TagName) -> Option<&str> {
         let attribute_node = self.attribute_node(node, name)?;
         let text_id = self.structure.text_id(attribute_node.0);
         Some(self.text_usage.text_value(text_id))
     }
 
-    pub fn node_name(&self, node: Node) -> Option<Name> {
+    pub fn node_name(&self, node: Node) -> Option<&TagName> {
         match self.value(node) {
-            TagType::Element(tag_name) => Some(Name {
-                local_name: tag_name.local_name(),
-                namespace: tag_name.namespace(),
-                // TODO: proper prefix lookup
-                prefix: b"",
-            }),
-            TagType::Attribute(tag_name) => Some(Name {
-                local_name: tag_name.local_name(),
-                namespace: tag_name.namespace(),
-                // TODO: proper prefix lookup
-                prefix: b"",
-            }),
+            TagType::Element(tag_name) => Some(tag_name),
+            TagType::Attribute(tag_name) => Some(tag_name),
             _ => None,
         }
     }
