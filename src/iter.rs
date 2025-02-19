@@ -44,7 +44,7 @@ impl<'a> ChildrenIter<'a> {
     }
 }
 
-impl<'a> Iterator for ChildrenIter<'a> {
+impl Iterator for ChildrenIter<'_> {
     type Item = Node;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -67,7 +67,7 @@ impl<'a> Iterator for ChildrenIter<'a> {
 
         // Move front pointer forward
         self.front_node = self.doc.next_sibling(current);
-        
+
         Some(current)
     }
 
@@ -76,6 +76,8 @@ impl<'a> Iterator for ChildrenIter<'a> {
     //     (len, Some(len))
     // }
 }
+
+// Now implement the DoubleEndedIterator trait for ChildrenIter, AI!
 
 pub(crate) struct PreviousSiblingIter<'a> {
     doc: &'a Document,
