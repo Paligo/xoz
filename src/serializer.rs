@@ -43,8 +43,47 @@ pub(crate) fn serialize_document(doc: &Document, write: &mut impl io::Write) -> 
     Ok(())
 }
 
-// The NamespaceTracker allows one to push a collection of prefix, namespace
-// combinations onto it, and pop that collection as a whole too.
-// It's possible to look up the namespace for a given prefix quickly.
-// Please make it work AI!
-struct NamespaceTracker {}
+use std::collections::HashMap;
+
+#[derive(Default)]
+struct NamespaceTracker {
+    // Stack of namespace mappings, each level contains prefix->namespace mappings
+    stack: Vec<HashMap<Vec<u8>, Vec<u8>>>,
+}
+
+impl NamespaceTracker {
+    fn new() -> Self {
+        Self {
+            stack: vec![HashMap::new()], // Start with empty root scope
+        }
+    }
+
+    // Push a new namespace scope
+    fn push_scope(&mut self) {
+        self.stack.push(HashMap::new());
+    }
+
+    // Pop the current namespace scope
+    fn pop_scope(&mut self) {
+        if self.stack.len() > 1 {
+            self.stack.pop();
+        }
+    }
+
+    // Add a prefix->namespace mapping to current scope
+    fn add_namespace(&mut self, prefix: &[u8], namespace: &[u8]) {
+        if let Some(current) = self.stack.last_mut() {
+            current.insert(prefix.to_vec(), namespace.to_vec());
+        }
+    }
+
+    // Look up namespace for prefix, checking all scopes from current to root
+    fn get_namespace(&self, prefix: &[u8]) -> Option<&[u8]> {
+        for scope in self.stack.iter().rev() {
+            if let Some(ns) = scope.get(prefix) {
+                return Some(ns);
+            }
+        }
+        None
+    }
+}
