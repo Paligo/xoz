@@ -64,8 +64,6 @@ mod tests {
 
     use super::*;
 
-    // The tests are wrong in that the state comes as the first in the tuple,
-    // but it should be the second. Please fix this AI!
 
     #[test]
     fn test_single_element() {
@@ -74,7 +72,7 @@ mod tests {
         let mut traverse = Traverse::new(&doc, a);
         assert_eq!(
             traverse.next(),
-            Some((State::Empty, &TagType::Element(TagName::new("", "a")), a))
+            Some((&TagType::Element(TagName::new("", "a")), State::Empty, a))
         );
         assert_eq!(traverse.next(), None);
     }
@@ -87,15 +85,15 @@ mod tests {
         let mut traverse = Traverse::new(&doc, a);
         assert_eq!(
             traverse.next(),
-            Some((State::Open, &TagType::Element(TagName::new("", "a")), a))
+            Some((&TagType::Element(TagName::new("", "a")), State::Open, a))
         );
         assert_eq!(
             traverse.next(),
-            Some((State::Empty, &TagType::Element(TagName::new("", "b")), b))
+            Some((&TagType::Element(TagName::new("", "b")), State::Empty, b))
         );
         assert_eq!(
             traverse.next(),
-            Some((State::Close, &TagType::Element(TagName::new("", "a")), a))
+            Some((&TagType::Element(TagName::new("", "a")), State::Close, a))
         );
         assert_eq!(traverse.next(), None);
     }
@@ -111,23 +109,23 @@ mod tests {
         let mut traverse = Traverse::new(&doc, a);
         assert_eq!(
             traverse.next(),
-            Some((State::Open, &TagType::Element(TagName::new("", "a")), a))
+            Some((&TagType::Element(TagName::new("", "a")), State::Open, a))
         );
         assert_eq!(
             traverse.next(),
-            Some((State::Empty, &TagType::Element(TagName::new("", "b")), b))
+            Some((&TagType::Element(TagName::new("", "b")), State::Empty, b))
         );
         assert_eq!(
             traverse.next(),
-            Some((State::Empty, &TagType::Element(TagName::new("", "c")), c))
+            Some((&TagType::Element(TagName::new("", "c")), State::Empty, c))
         );
         assert_eq!(
             traverse.next(),
-            Some((State::Empty, &TagType::Element(TagName::new("", "d")), d))
+            Some((&TagType::Element(TagName::new("", "d")), State::Empty, d))
         );
         assert_eq!(
             traverse.next(),
-            Some((State::Close, &TagType::Element(TagName::new("", "a")), a))
+            Some((&TagType::Element(TagName::new("", "a")), State::Close, a))
         );
         assert_eq!(traverse.next(), None);
     }
@@ -144,11 +142,11 @@ mod tests {
         assert_eq!(
             traverse,
             vec![
-                (State::Open, &TagType::Element(TagName::new("", "a")), a),
-                (State::Empty, &TagType::Element(TagName::new("", "b")), b),
-                (State::Empty, &TagType::Element(TagName::new("", "c")), c),
-                (State::Empty, &TagType::Element(TagName::new("", "d")), d),
-                (State::Close, &TagType::Element(TagName::new("", "a")), a),
+                (&TagType::Element(TagName::new("", "a")), State::Open, a),
+                (&TagType::Element(TagName::new("", "b")), State::Empty, b),
+                (&TagType::Element(TagName::new("", "c")), State::Empty, c),
+                (&TagType::Element(TagName::new("", "d")), State::Empty, d),
+                (&TagType::Element(TagName::new("", "a")), State::Close, a),
             ]
         )
     }
@@ -164,11 +162,11 @@ mod tests {
         assert_eq!(
             traverse,
             vec![
-                (State::Open, &TagType::Element(TagName::new("", "a")), a),
-                (State::Open, &TagType::Element(TagName::new("", "b")), b),
-                (State::Empty, &TagType::Element(TagName::new("", "c")), c),
-                (State::Close, &TagType::Element(TagName::new("", "b")), b),
-                (State::Close, &TagType::Element(TagName::new("", "a")), a),
+                (&TagType::Element(TagName::new("", "a")), State::Open, a),
+                (&TagType::Element(TagName::new("", "b")), State::Open, b),
+                (&TagType::Element(TagName::new("", "c")), State::Empty, c),
+                (&TagType::Element(TagName::new("", "b")), State::Close, b),
+                (&TagType::Element(TagName::new("", "a")), State::Close, a),
             ]
         )
     }
@@ -186,13 +184,13 @@ mod tests {
         assert_eq!(
             traverse,
             vec![
-                (State::Open, &TagType::Element(TagName::new("", "a")), a),
-                (State::Open, &TagType::Element(TagName::new("", "b")), b),
-                (State::Empty, &TagType::Element(TagName::new("", "c")), c),
-                (State::Empty, &TagType::Element(TagName::new("", "d")), d),
-                (State::Close, &TagType::Element(TagName::new("", "b")), b),
-                (State::Empty, &TagType::Element(TagName::new("", "e")), e),
-                (State::Close, &TagType::Element(TagName::new("", "a")), a),
+                (&TagType::Element(TagName::new("", "a")), State::Open, a),
+                (&TagType::Element(TagName::new("", "b")), State::Open, b),
+                (&TagType::Element(TagName::new("", "c")), State::Empty, c),
+                (&TagType::Element(TagName::new("", "d")), State::Empty, d),
+                (&TagType::Element(TagName::new("", "b")), State::Close, b),
+                (&TagType::Element(TagName::new("", "e")), State::Empty, e),
+                (&TagType::Element(TagName::new("", "a")), State::Close, a),
             ]
         )
     }
@@ -207,9 +205,9 @@ mod tests {
         assert_eq!(
             traverse,
             vec![
-                (State::Open, &TagType::Element(TagName::new("", "a")), a),
-                (State::Empty, &TagType::Text, text),
-                (State::Close, &TagType::Element(TagName::new("", "a")), a),
+                (&TagType::Element(TagName::new("", "a")), State::Open, a),
+                (&TagType::Text, State::Empty, text),
+                (&TagType::Element(TagName::new("", "a")), State::Close, a),
             ]
         )
     }
@@ -222,7 +220,7 @@ mod tests {
         let traverse = Traverse::new(&doc, a).collect::<Vec<_>>();
         assert_eq!(
             traverse,
-            vec![(State::Empty, &TagType::Element(TagName::new("", "a")), a),]
+            vec![(&TagType::Element(TagName::new("", "a")), State::Empty, a),]
         )
     }
 }
