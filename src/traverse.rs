@@ -64,7 +64,6 @@ mod tests {
 
     use super::*;
 
-
     #[test]
     fn test_single_element() {
         let doc = parse_document("<a/>").unwrap();
