@@ -48,10 +48,27 @@ impl<'a> Iterator for ChildrenIter<'a> {
     type Item = Node;
 
     fn next(&mut self) -> Option<Self::Item> {
-        // this is the forward part of a double-ended iterator.
-        // We start at the first child. We update front_node.
-        // Where're done if we were to reach the back_node or if there is no
-        // more next sibling, AI!
+        if self.done {
+            return None;
+        }
+
+        // Initialize front_node if this is the first call
+        if self.front_node.is_none() {
+            self.front_node = self.doc.first_child(self.parent);
+        }
+
+        let current = self.front_node?;
+
+        // Check if we've reached the back node
+        if Some(current) == self.back_node {
+            self.done = true;
+            return None;
+        }
+
+        // Move front pointer forward
+        self.front_node = self.doc.next_sibling(current);
+        
+        Some(current)
     }
 
     // fn size_hint(&self) -> (usize, Option<usize>) {
