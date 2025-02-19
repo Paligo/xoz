@@ -5,35 +5,46 @@ use quick_xml::{
     Writer,
 };
 
-use crate::{document::Document, tag::TagType};
+use crate::{document::Document, tag::TagType, TagState};
 
 pub(crate) fn serialize_document(doc: &Document, write: &mut impl io::Write) -> io::Result<()> {
     let mut writer = Writer::new(write);
-    let mut stack = vec![doc.root()];
-
-    while let Some(node) = stack.pop() {
-        match doc.value(node) {
+    for (tag_type, tag_state, node) in doc.traverse(doc.root()) {
+        match tag_type {
             TagType::Document => {
-                // Push children in reverse order so they get processed in correct order
-                for child in doc.children(node).rev() {
-                    stack.push(child);
-                }
+                // TODO serialize declaration if needed on opening
             }
-            TagType::Element(tag_name) => {
-                // // Write opening tag
-                // let mut elem =
-                //     BytesStart::new(String::from_utf8_lossy(tag_name.local_name()).into_owned());
-
-                // writer.write_event(Event::Start(elem))?;
-
-                // // Push end tag marker (None) followed by children in reverse order
-                // stack.push(node); // Mark for end tag
-                for child in doc.children(node).rev() {
-                    stack.push(child);
+            TagType::Element(name) => match tag_state {
+                TagState::Open => {
+                    let elem = BytesStart::new(name.full_name());
+                    writer.write_event(Event::Start(elem));
                 }
+                TagState::Close => {
+                    let elem = BytesEnd::new(name.full_name());
+                    writer.write_event(Event::End(elem));
+                }
+                TagState::Empty => {
+                    let elem = BytesStart::new(name.full_name());
+                    writer.write_event(Event::Empty(elem));
+                }
+            },
+            TagType::Comment => {}
+            TagType::ProcessingInstruction => {}
+            TagType::Text => {}
+            TagType::Attributes
+            | TagType::Namespaces
+            | TagType::Attribute(_)
+            | TagType::Namespace(_) => {
+                unreachable!("We cannot reach these tag types during traverse");
             }
-            _ => {} // Skip other node types
         }
     }
+
     Ok(())
 }
+
+// The NamespaceTracker allows one to push a collection of prefix, namespace
+// combinations onto it, and pop that collection as a whole too.
+// It's possible to look up the namespace for a given prefix quickly.
+// Please make it work AI!
+struct NamespaceTracker {}
