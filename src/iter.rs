@@ -24,6 +24,42 @@ impl Iterator for NextSiblingIter<'_> {
     }
 }
 
+pub(crate) struct ChildrenIter<'a> {
+    doc: &'a Document,
+    parent: Node,
+    done: bool,
+    front_node: Option<Node>,
+    back_node: Option<Node>,
+}
+
+impl<'a> ChildrenIter<'a> {
+    pub(crate) fn new(doc: &'a Document, parent: Node) -> Self {
+        Self {
+            doc,
+            parent,
+            done: false,
+            front_node: None,
+            back_node: None,
+        }
+    }
+}
+
+impl<'a> Iterator for ChildrenIter<'a> {
+    type Item = Node;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        // this is the forward part of a double-ended iterator.
+        // We start at the first child. We update front_node.
+        // Where're done if we were to reach the back_node or if there is no
+        // more next sibling, AI!
+    }
+
+    // fn size_hint(&self) -> (usize, Option<usize>) {
+    //     let len = self.doc.children_count(self.parent);
+    //     (len, Some(len))
+    // }
+}
+
 pub(crate) struct PreviousSiblingIter<'a> {
     doc: &'a Document,
     node: Option<Node>,
@@ -347,5 +383,32 @@ where
         } else {
             self.iter.next()
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::builder::parse_document;
+
+    #[test]
+    fn test_double_ended_children() {
+        let doc = parse_document("<doc><a/><b/><c/><d/><e/></doc>").unwrap();
+        let root = doc.root();
+        let doc_elem = doc.first_child(root).unwrap();
+        let a = doc.first_child(doc_elem).unwrap();
+        let b = doc.next_sibling(a).unwrap();
+        let c = doc.next_sibling(b).unwrap();
+        let d = doc.next_sibling(c).unwrap();
+        let e = doc.next_sibling(d).unwrap();
+
+        let iter = ChildrenIter::new(&doc, doc_elem);
+        assert_eq!(iter.next(), Some(a));
+        assert_eq!(iter.next_back(), Some(e));
+        assert_eq!(iter.next(), Some(b));
+        assert_eq!(iter.next_back(), Some(d));
+        assert_eq!(iter.next(), Some(c));
+        assert_eq!(iter.next_back(), None);
+        assert_eq!(iter.next(), None);
     }
 }
