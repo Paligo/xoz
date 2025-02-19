@@ -1,6 +1,4 @@
-use std::{borrow::Cow, hash::Hasher};
-
-use quick_xml::name::QName;
+use std::borrow::Cow;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum TagType<'a> {
