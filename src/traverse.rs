@@ -46,17 +46,18 @@ impl<'a> Iterator for Traverse<'a> {
                 }
             }
             Some(node) => {
-                if let Some(child) = self.doc.first_child(node) {
+                let open_close = if let Some(child) = self.doc.first_child(node) {
                     self.stack.push(node);
                     self.node = Some(child);
-                    Some((OpenClose::Open, self.doc.value(node), node))
+                    OpenClose::Open
                 } else if let Some(sibling) = self.doc.next_sibling(node) {
                     self.node = Some(sibling);
-                    return Some((OpenClose::Empty, self.doc.value(node), node));
+                    OpenClose::Empty
                 } else {
                     self.node = None;
-                    return Some((OpenClose::Empty, self.doc.value(node), node));
-                }
+                    OpenClose::Empty
+                };
+                Some((open_close, self.doc.value(node), node))
             }
         }
     }
@@ -159,5 +160,118 @@ mod tests {
             ))
         );
         assert_eq!(traverse.next(), None);
+    }
+
+    #[test]
+    fn test_multiple_children2() {
+        let doc = parse_document("<a><b/><c/><d/></a>").unwrap();
+        let a = doc.document_element();
+        let b = doc.first_child(a).unwrap();
+        let c = doc.next_sibling(b).unwrap();
+        let d = doc.next_sibling(c).unwrap();
+
+        let traverse = Traverse::new(&doc, a).collect::<Vec<_>>();
+        assert_eq!(
+            traverse,
+            vec![
+                (OpenClose::Open, &TagType::Element(TagName::new("", "a")), a),
+                (
+                    OpenClose::Empty,
+                    &TagType::Element(TagName::new("", "b")),
+                    b
+                ),
+                (
+                    OpenClose::Empty,
+                    &TagType::Element(TagName::new("", "c")),
+                    c
+                ),
+                (
+                    OpenClose::Empty,
+                    &TagType::Element(TagName::new("", "d")),
+                    d
+                ),
+                (
+                    OpenClose::Close,
+                    &TagType::Element(TagName::new("", "a")),
+                    a
+                ),
+            ]
+        )
+    }
+
+    #[test]
+    fn test_deeper() {
+        let doc = parse_document("<a><b><c/></b></a>").unwrap();
+        let a = doc.document_element();
+        let b = doc.first_child(a).unwrap();
+        let c = doc.first_child(b).unwrap();
+
+        let traverse = Traverse::new(&doc, a).collect::<Vec<_>>();
+        assert_eq!(
+            traverse,
+            vec![
+                (OpenClose::Open, &TagType::Element(TagName::new("", "a")), a),
+                (OpenClose::Open, &TagType::Element(TagName::new("", "b")), b),
+                (
+                    OpenClose::Empty,
+                    &TagType::Element(TagName::new("", "c")),
+                    c
+                ),
+                (
+                    OpenClose::Close,
+                    &TagType::Element(TagName::new("", "b")),
+                    b
+                ),
+                (
+                    OpenClose::Close,
+                    &TagType::Element(TagName::new("", "a")),
+                    a
+                ),
+            ]
+        )
+    }
+
+    #[test]
+    fn test_nesting() {
+        let doc = parse_document("<a><b><c/><d/></b><e/></a>").unwrap();
+        let a = doc.document_element();
+        let b = doc.first_child(a).unwrap();
+        let c = doc.first_child(b).unwrap();
+        let d = doc.next_sibling(c).unwrap();
+        let e = doc.next_sibling(b).unwrap();
+
+        let traverse = Traverse::new(&doc, a).collect::<Vec<_>>();
+        assert_eq!(
+            traverse,
+            vec![
+                (OpenClose::Open, &TagType::Element(TagName::new("", "a")), a),
+                (OpenClose::Open, &TagType::Element(TagName::new("", "b")), b),
+                (
+                    OpenClose::Empty,
+                    &TagType::Element(TagName::new("", "c")),
+                    c
+                ),
+                (
+                    OpenClose::Empty,
+                    &TagType::Element(TagName::new("", "d")),
+                    d
+                ),
+                (
+                    OpenClose::Close,
+                    &TagType::Element(TagName::new("", "b")),
+                    b
+                ),
+                (
+                    OpenClose::Empty,
+                    &TagType::Element(TagName::new("", "e")),
+                    e
+                ),
+                (
+                    OpenClose::Close,
+                    &TagType::Element(TagName::new("", "a")),
+                    a
+                ),
+            ]
+        )
     }
 }
