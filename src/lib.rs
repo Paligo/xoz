@@ -14,6 +14,7 @@ mod tagvec;
 mod text;
 mod text_fm;
 mod textsearch;
+mod traverse;
 
 pub use parser::{parse_document, QuickXMLError};
 // pub use builder::parse_document;
