@@ -1,23 +1,23 @@
 use crate::{
     document::{Document, Node},
-    TagInfo, TagType,
+    TagType,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-enum State {
+pub enum TagState {
     Open,
     Close,
     Empty,
 }
 
-struct Traverse<'a> {
+pub(crate) struct TraverseIter<'a> {
     doc: &'a Document,
     node: Option<Node>,
     stack: Vec<Node>,
 }
 
-impl<'a> Traverse<'a> {
-    fn new(doc: &'a Document, node: Node) -> Self {
+impl<'a> TraverseIter<'a> {
+    pub(crate) fn new(doc: &'a Document, node: Node) -> Self {
         Self {
             doc,
             node: Some(node),
@@ -26,8 +26,8 @@ impl<'a> Traverse<'a> {
     }
 }
 
-impl<'a> Iterator for Traverse<'a> {
-    type Item = (&'a TagType<'a>, State, Node);
+impl<'a> Iterator for TraverseIter<'a> {
+    type Item = (&'a TagType<'a>, TagState, Node);
     fn next(&mut self) -> Option<Self::Item> {
         // we traverse down the tree, taking the first child when we can,
         // putting the parent on the stack when we do so. This is an open tag.
@@ -38,7 +38,7 @@ impl<'a> Iterator for Traverse<'a> {
             None => {
                 if let Some(node) = self.stack.pop() {
                     self.node = self.doc.next_sibling(node);
-                    Some((self.doc.value(node), State::Close, node))
+                    Some((self.doc.value(node), TagState::Close, node))
                 } else {
                     None
                 }
@@ -47,10 +47,10 @@ impl<'a> Iterator for Traverse<'a> {
                 let open_close = if let Some(child) = self.doc.first_child(node) {
                     self.stack.push(node);
                     self.node = Some(child);
-                    State::Open
+                    TagState::Open
                 } else {
                     self.node = self.doc.next_sibling(node);
-                    State::Empty
+                    TagState::Empty
                 };
                 Some((self.doc.value(node), open_close, node))
             }
@@ -68,10 +68,10 @@ mod tests {
     fn test_single_element() {
         let doc = parse_document("<a/>").unwrap();
         let a = doc.document_element();
-        let mut traverse = Traverse::new(&doc, a);
+        let mut traverse = TraverseIter::new(&doc, a);
         assert_eq!(
             traverse.next(),
-            Some((&TagType::Element(TagName::new("", "a")), State::Empty, a))
+            Some((&TagType::Element(TagName::new("", "a")), TagState::Empty, a))
         );
         assert_eq!(traverse.next(), None);
     }
@@ -81,18 +81,18 @@ mod tests {
         let doc = parse_document("<a><b/></a>").unwrap();
         let a = doc.document_element();
         let b = doc.first_child(a).unwrap();
-        let mut traverse = Traverse::new(&doc, a);
+        let mut traverse = TraverseIter::new(&doc, a);
         assert_eq!(
             traverse.next(),
-            Some((&TagType::Element(TagName::new("", "a")), State::Open, a))
+            Some((&TagType::Element(TagName::new("", "a")), TagState::Open, a))
         );
         assert_eq!(
             traverse.next(),
-            Some((&TagType::Element(TagName::new("", "b")), State::Empty, b))
+            Some((&TagType::Element(TagName::new("", "b")), TagState::Empty, b))
         );
         assert_eq!(
             traverse.next(),
-            Some((&TagType::Element(TagName::new("", "a")), State::Close, a))
+            Some((&TagType::Element(TagName::new("", "a")), TagState::Close, a))
         );
         assert_eq!(traverse.next(), None);
     }
@@ -105,26 +105,26 @@ mod tests {
         let c = doc.next_sibling(b).unwrap();
         let d = doc.next_sibling(c).unwrap();
 
-        let mut traverse = Traverse::new(&doc, a);
+        let mut traverse = TraverseIter::new(&doc, a);
         assert_eq!(
             traverse.next(),
-            Some((&TagType::Element(TagName::new("", "a")), State::Open, a))
+            Some((&TagType::Element(TagName::new("", "a")), TagState::Open, a))
         );
         assert_eq!(
             traverse.next(),
-            Some((&TagType::Element(TagName::new("", "b")), State::Empty, b))
+            Some((&TagType::Element(TagName::new("", "b")), TagState::Empty, b))
         );
         assert_eq!(
             traverse.next(),
-            Some((&TagType::Element(TagName::new("", "c")), State::Empty, c))
+            Some((&TagType::Element(TagName::new("", "c")), TagState::Empty, c))
         );
         assert_eq!(
             traverse.next(),
-            Some((&TagType::Element(TagName::new("", "d")), State::Empty, d))
+            Some((&TagType::Element(TagName::new("", "d")), TagState::Empty, d))
         );
         assert_eq!(
             traverse.next(),
-            Some((&TagType::Element(TagName::new("", "a")), State::Close, a))
+            Some((&TagType::Element(TagName::new("", "a")), TagState::Close, a))
         );
         assert_eq!(traverse.next(), None);
     }
@@ -137,15 +137,15 @@ mod tests {
         let c = doc.next_sibling(b).unwrap();
         let d = doc.next_sibling(c).unwrap();
 
-        let traverse = Traverse::new(&doc, a).collect::<Vec<_>>();
+        let traverse = TraverseIter::new(&doc, a).collect::<Vec<_>>();
         assert_eq!(
             traverse,
             vec![
-                (&TagType::Element(TagName::new("", "a")), State::Open, a),
-                (&TagType::Element(TagName::new("", "b")), State::Empty, b),
-                (&TagType::Element(TagName::new("", "c")), State::Empty, c),
-                (&TagType::Element(TagName::new("", "d")), State::Empty, d),
-                (&TagType::Element(TagName::new("", "a")), State::Close, a),
+                (&TagType::Element(TagName::new("", "a")), TagState::Open, a),
+                (&TagType::Element(TagName::new("", "b")), TagState::Empty, b),
+                (&TagType::Element(TagName::new("", "c")), TagState::Empty, c),
+                (&TagType::Element(TagName::new("", "d")), TagState::Empty, d),
+                (&TagType::Element(TagName::new("", "a")), TagState::Close, a),
             ]
         )
     }
@@ -157,15 +157,15 @@ mod tests {
         let b = doc.first_child(a).unwrap();
         let c = doc.first_child(b).unwrap();
 
-        let traverse = Traverse::new(&doc, a).collect::<Vec<_>>();
+        let traverse = TraverseIter::new(&doc, a).collect::<Vec<_>>();
         assert_eq!(
             traverse,
             vec![
-                (&TagType::Element(TagName::new("", "a")), State::Open, a),
-                (&TagType::Element(TagName::new("", "b")), State::Open, b),
-                (&TagType::Element(TagName::new("", "c")), State::Empty, c),
-                (&TagType::Element(TagName::new("", "b")), State::Close, b),
-                (&TagType::Element(TagName::new("", "a")), State::Close, a),
+                (&TagType::Element(TagName::new("", "a")), TagState::Open, a),
+                (&TagType::Element(TagName::new("", "b")), TagState::Open, b),
+                (&TagType::Element(TagName::new("", "c")), TagState::Empty, c),
+                (&TagType::Element(TagName::new("", "b")), TagState::Close, b),
+                (&TagType::Element(TagName::new("", "a")), TagState::Close, a),
             ]
         )
     }
@@ -179,17 +179,17 @@ mod tests {
         let d = doc.next_sibling(c).unwrap();
         let e = doc.next_sibling(b).unwrap();
 
-        let traverse = Traverse::new(&doc, a).collect::<Vec<_>>();
+        let traverse = TraverseIter::new(&doc, a).collect::<Vec<_>>();
         assert_eq!(
             traverse,
             vec![
-                (&TagType::Element(TagName::new("", "a")), State::Open, a),
-                (&TagType::Element(TagName::new("", "b")), State::Open, b),
-                (&TagType::Element(TagName::new("", "c")), State::Empty, c),
-                (&TagType::Element(TagName::new("", "d")), State::Empty, d),
-                (&TagType::Element(TagName::new("", "b")), State::Close, b),
-                (&TagType::Element(TagName::new("", "e")), State::Empty, e),
-                (&TagType::Element(TagName::new("", "a")), State::Close, a),
+                (&TagType::Element(TagName::new("", "a")), TagState::Open, a),
+                (&TagType::Element(TagName::new("", "b")), TagState::Open, b),
+                (&TagType::Element(TagName::new("", "c")), TagState::Empty, c),
+                (&TagType::Element(TagName::new("", "d")), TagState::Empty, d),
+                (&TagType::Element(TagName::new("", "b")), TagState::Close, b),
+                (&TagType::Element(TagName::new("", "e")), TagState::Empty, e),
+                (&TagType::Element(TagName::new("", "a")), TagState::Close, a),
             ]
         )
     }
@@ -200,13 +200,13 @@ mod tests {
         let a = doc.document_element();
         let text = doc.first_child(a).unwrap();
 
-        let traverse = Traverse::new(&doc, a).collect::<Vec<_>>();
+        let traverse = TraverseIter::new(&doc, a).collect::<Vec<_>>();
         assert_eq!(
             traverse,
             vec![
-                (&TagType::Element(TagName::new("", "a")), State::Open, a),
-                (&TagType::Text, State::Empty, text),
-                (&TagType::Element(TagName::new("", "a")), State::Close, a),
+                (&TagType::Element(TagName::new("", "a")), TagState::Open, a),
+                (&TagType::Text, TagState::Empty, text),
+                (&TagType::Element(TagName::new("", "a")), TagState::Close, a),
             ]
         )
     }
@@ -216,10 +216,10 @@ mod tests {
         let doc = parse_document(r#"<a b="B" c="C"/>"#).unwrap();
         let a = doc.document_element();
 
-        let traverse = Traverse::new(&doc, a).collect::<Vec<_>>();
+        let traverse = TraverseIter::new(&doc, a).collect::<Vec<_>>();
         assert_eq!(
             traverse,
-            vec![(&TagType::Element(TagName::new("", "a")), State::Empty, a),]
+            vec![(&TagType::Element(TagName::new("", "a")), TagState::Empty, a),]
         )
     }
 }

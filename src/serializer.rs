@@ -1,7 +1,9 @@
-use std::io;
+use ahash::{HashMap, HashMapExt};
+use std::{collections::hash_map::Entry, io};
 
 use quick_xml::{
     events::{BytesEnd, BytesStart, BytesText, Event},
+    name::QName,
     Writer,
 };
 
@@ -9,25 +11,47 @@ use crate::{document::Document, tag::TagType, TagState};
 
 pub(crate) fn serialize_document(doc: &Document, write: &mut impl io::Write) -> io::Result<()> {
     let mut writer = Writer::new(write);
+    let ns = NamespaceTracker::new();
+    let mut full_name = Vec::new();
     for (tag_type, tag_state, node) in doc.traverse(doc.root()) {
         match tag_type {
             TagType::Document => {
                 // TODO serialize declaration if needed on opening
             }
-            TagType::Element(name) => match tag_state {
-                TagState::Open => {
-                    let elem = BytesStart::new(name.full_name());
-                    writer.write_event(Event::Start(elem));
+            TagType::Element(name) => {
+                if tag_state == TagState::Open {
+                    // put namespace prefixes on the tracker
+                    todo!();
                 }
-                TagState::Close => {
-                    let elem = BytesEnd::new(name.full_name());
-                    writer.write_event(Event::End(elem));
+                let qname = if name.namespace().is_empty() {
+                    QName(name.local_name())
+                } else {
+                    let prefix = ns.get_prefix(name.namespace());
+                    if prefix.is_empty() {
+                        QName(name.local_name())
+                    } else {
+                        full_name.clear();
+                        full_name.extend(prefix);
+                        full_name.push(b':');
+                        full_name.extend(name.local_name());
+                        QName(&full_name)
+                    }
+                };
+                match tag_state {
+                    TagState::Open => {
+                        let elem: BytesStart = qname.into();
+                        writer.write_event(Event::Start(elem))?;
+                    }
+                    TagState::Close => {
+                        let elem: BytesEnd = qname.into();
+                        writer.write_event(Event::End(elem))?;
+                    }
+                    TagState::Empty => {
+                        let elem: BytesStart = qname.into();
+                        writer.write_event(Event::Empty(elem))?;
+                    }
                 }
-                TagState::Empty => {
-                    let elem = BytesStart::new(name.full_name());
-                    writer.write_event(Event::Empty(elem));
-                }
-            },
+            }
             TagType::Comment => {}
             TagType::ProcessingInstruction => {}
             TagType::Text => {}
@@ -43,15 +67,13 @@ pub(crate) fn serialize_document(doc: &Document, write: &mut impl io::Write) -> 
     Ok(())
 }
 
-use std::collections::HashMap;
-
 #[derive(Default)]
-struct NamespaceTracker {
+struct NamespaceTracker<'a> {
     // Stack of namespace mappings, each level contains prefix->namespace mappings
-    stack: Vec<HashMap<Vec<u8>, Vec<u8>>>,
+    stack: Vec<HashMap<&'a [u8], &'a [u8]>>,
 }
 
-impl NamespaceTracker {
+impl<'a> NamespaceTracker<'a> {
     fn new() -> Self {
         Self {
             stack: vec![HashMap::new()], // Start with empty root scope
@@ -65,25 +87,51 @@ impl NamespaceTracker {
 
     // Pop the current namespace scope
     fn pop_scope(&mut self) {
-        if self.stack.len() > 1 {
-            self.stack.pop();
-        }
+        self.stack.pop();
     }
 
     // Add a prefix->namespace mapping to current scope
-    fn add_namespace(&mut self, prefix: &[u8], namespace: &[u8]) {
+    fn add_namespace(&mut self, prefix: &'a [u8], namespace: &'a [u8]) {
         if let Some(current) = self.stack.last_mut() {
-            current.insert(prefix.to_vec(), namespace.to_vec());
+            let entry = current.entry(namespace);
+            match entry {
+                Entry::Occupied(mut entry) => {
+                    // if there is already an empty prefix for this namespace,
+                    // don't override
+                    if entry.get().is_empty() {
+                        return;
+                    }
+                    entry.insert(prefix);
+                }
+                Entry::Vacant(entry) => {
+                    entry.insert(prefix);
+                }
+            }
         }
     }
 
-    // Look up namespace for prefix, checking all scopes from current to root
-    fn get_namespace(&self, prefix: &[u8]) -> Option<&[u8]> {
+    // Look up prefix for uri, checking all scopes from current to root
+    fn get_prefix(&self, namespace: &[u8]) -> &[u8] {
         for scope in self.stack.iter().rev() {
-            if let Some(ns) = scope.get(prefix) {
-                return Some(ns);
+            if let Some(ns) = scope.get(namespace) {
+                return ns;
             }
         }
-        None
+        unreachable!()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::builder::parse_document;
+
+    use super::*;
+
+    #[test]
+    fn test_one_element() {
+        let doc = parse_document("<doc/>").unwrap();
+        let mut w = Vec::new();
+        serialize_document(&doc, &mut w).unwrap();
+        assert_eq!(w, b"<doc/>");
     }
 }

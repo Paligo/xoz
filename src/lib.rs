@@ -21,3 +21,4 @@ pub use parser::{parse_document, QuickXMLError};
 pub use document::Name;
 pub use tag::{Namespace, TagInfo, TagName, TagType};
 pub use tagvec::TagId;
+pub use traverse::TagState;

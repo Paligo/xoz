@@ -10,6 +10,7 @@ use crate::{
     tag::{TagInfo, TagType},
     tagvec::{SArrayMatrix, TagId},
     text::TextUsage,
+    traverse::{TagState, TraverseIter},
 };
 
 pub struct Document {
@@ -357,6 +358,13 @@ impl Document {
         tag_id: TagId,
     ) -> impl Iterator<Item = Node> + use<'_> {
         FollowingIter::new(node, TaggedTreeOps::new(self, tag_id))
+    }
+
+    pub fn traverse(
+        &self,
+        node: Node,
+    ) -> impl Iterator<Item = (&TagType, TagState, Node)> + use<'_> {
+        TraverseIter::new(self, node)
     }
 
     pub fn text_str(&self, node: Node) -> Option<&str> {
