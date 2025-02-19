@@ -21,7 +21,7 @@ pub(crate) fn serialize_document(doc: &Document, write: &mut impl io::Write) -> 
             TagType::Element(name) => {
                 if tag_state == TagState::Open {
                     // put namespace prefixes on the tracker
-                    todo!();
+                    // todo!();
                 }
                 let qname = if name.namespace().is_empty() {
                     QName(name.local_name())
@@ -133,5 +133,13 @@ mod tests {
         let mut w = Vec::new();
         serialize_document(&doc, &mut w).unwrap();
         assert_eq!(w, b"<doc/>");
+    }
+
+    #[test]
+    fn test_nested_elements() {
+        let doc = parse_document("<doc><a/><b/></doc>").unwrap();
+        let mut w = Vec::new();
+        serialize_document(&doc, &mut w).unwrap();
+        assert_eq!(w, b"<doc><a/><b/></doc>");
     }
 }
