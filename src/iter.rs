@@ -77,7 +77,31 @@ impl Iterator for ChildrenIter<'_> {
     // }
 }
 
-// Now implement the DoubleEndedIterator trait for ChildrenIter, AI!
+impl<'a> DoubleEndedIterator for ChildrenIter<'a> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if self.done {
+            return None;
+        }
+
+        // Initialize back_node if this is the first call from the back
+        if self.back_node.is_none() {
+            self.back_node = self.doc.last_child(self.parent);
+        }
+
+        let current = self.back_node?;
+
+        // Check if we've reached the front node
+        if Some(current) == self.front_node {
+            self.done = true;
+            return None;
+        }
+
+        // Move back pointer backward
+        self.back_node = self.doc.previous_sibling(current);
+        
+        Some(current)
+    }
+}
 
 pub(crate) struct PreviousSiblingIter<'a> {
     doc: &'a Document,
