@@ -4,7 +4,7 @@ use crate::{
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-enum OpenClose {
+enum State {
     Open,
     Close,
     Empty,
@@ -27,20 +27,18 @@ impl<'a> Traverse<'a> {
 }
 
 impl<'a> Iterator for Traverse<'a> {
-    type Item = (OpenClose, &'a TagType<'a>, Node);
+    type Item = (&'a TagType<'a>, State, Node);
     fn next(&mut self) -> Option<Self::Item> {
         // we traverse down the tree, taking the first child when we can,
         // putting the parent on the stack when we do so. This is an open tag.
-        // when we cannot go further down, we take the next sibling of the
-        // current node. when we cannot go further with next sibling, we pop
-        // the stack. if we can pop the stack immediately after going down,
-        // this node is empty. otherwise we pop a close for this node.
-
+        // When we cannot go further down, we take the next sibling of the
+        // current node. When we cannot go further with next sibling, we pop
+        // the stack. We know a child is empty if there is no first child.
         match self.node {
             None => {
                 if let Some(node) = self.stack.pop() {
                     self.node = self.doc.next_sibling(node);
-                    Some((OpenClose::Close, self.doc.value(node), node))
+                    Some((self.doc.value(node), State::Close, node))
                 } else {
                     None
                 }
@@ -49,12 +47,12 @@ impl<'a> Iterator for Traverse<'a> {
                 let open_close = if let Some(child) = self.doc.first_child(node) {
                     self.stack.push(node);
                     self.node = Some(child);
-                    OpenClose::Open
+                    State::Open
                 } else {
                     self.node = self.doc.next_sibling(node);
-                    OpenClose::Empty
+                    State::Empty
                 };
-                Some((open_close, self.doc.value(node), node))
+                Some((self.doc.value(node), open_close, node))
             }
         }
     }
@@ -66,6 +64,9 @@ mod tests {
 
     use super::*;
 
+    // The tests are wrong in that the state comes as the first in the tuple,
+    // but it should be the second. Please fix this AI!
+
     #[test]
     fn test_single_element() {
         let doc = parse_document("<a/>").unwrap();
@@ -73,11 +74,7 @@ mod tests {
         let mut traverse = Traverse::new(&doc, a);
         assert_eq!(
             traverse.next(),
-            Some((
-                OpenClose::Empty,
-                &TagType::Element(TagName::new("", "a")),
-                a
-            ))
+            Some((State::Empty, &TagType::Element(TagName::new("", "a")), a))
         );
         assert_eq!(traverse.next(), None);
     }
@@ -90,23 +87,15 @@ mod tests {
         let mut traverse = Traverse::new(&doc, a);
         assert_eq!(
             traverse.next(),
-            Some((OpenClose::Open, &TagType::Element(TagName::new("", "a")), a))
+            Some((State::Open, &TagType::Element(TagName::new("", "a")), a))
         );
         assert_eq!(
             traverse.next(),
-            Some((
-                OpenClose::Empty,
-                &TagType::Element(TagName::new("", "b")),
-                b
-            ))
+            Some((State::Empty, &TagType::Element(TagName::new("", "b")), b))
         );
         assert_eq!(
             traverse.next(),
-            Some((
-                OpenClose::Close,
-                &TagType::Element(TagName::new("", "a")),
-                a
-            ))
+            Some((State::Close, &TagType::Element(TagName::new("", "a")), a))
         );
         assert_eq!(traverse.next(), None);
     }
@@ -122,39 +111,23 @@ mod tests {
         let mut traverse = Traverse::new(&doc, a);
         assert_eq!(
             traverse.next(),
-            Some((OpenClose::Open, &TagType::Element(TagName::new("", "a")), a))
+            Some((State::Open, &TagType::Element(TagName::new("", "a")), a))
         );
         assert_eq!(
             traverse.next(),
-            Some((
-                OpenClose::Empty,
-                &TagType::Element(TagName::new("", "b")),
-                b
-            ))
+            Some((State::Empty, &TagType::Element(TagName::new("", "b")), b))
         );
         assert_eq!(
             traverse.next(),
-            Some((
-                OpenClose::Empty,
-                &TagType::Element(TagName::new("", "c")),
-                c
-            ))
+            Some((State::Empty, &TagType::Element(TagName::new("", "c")), c))
         );
         assert_eq!(
             traverse.next(),
-            Some((
-                OpenClose::Empty,
-                &TagType::Element(TagName::new("", "d")),
-                d
-            ))
+            Some((State::Empty, &TagType::Element(TagName::new("", "d")), d))
         );
         assert_eq!(
             traverse.next(),
-            Some((
-                OpenClose::Close,
-                &TagType::Element(TagName::new("", "a")),
-                a
-            ))
+            Some((State::Close, &TagType::Element(TagName::new("", "a")), a))
         );
         assert_eq!(traverse.next(), None);
     }
@@ -171,27 +144,11 @@ mod tests {
         assert_eq!(
             traverse,
             vec![
-                (OpenClose::Open, &TagType::Element(TagName::new("", "a")), a),
-                (
-                    OpenClose::Empty,
-                    &TagType::Element(TagName::new("", "b")),
-                    b
-                ),
-                (
-                    OpenClose::Empty,
-                    &TagType::Element(TagName::new("", "c")),
-                    c
-                ),
-                (
-                    OpenClose::Empty,
-                    &TagType::Element(TagName::new("", "d")),
-                    d
-                ),
-                (
-                    OpenClose::Close,
-                    &TagType::Element(TagName::new("", "a")),
-                    a
-                ),
+                (State::Open, &TagType::Element(TagName::new("", "a")), a),
+                (State::Empty, &TagType::Element(TagName::new("", "b")), b),
+                (State::Empty, &TagType::Element(TagName::new("", "c")), c),
+                (State::Empty, &TagType::Element(TagName::new("", "d")), d),
+                (State::Close, &TagType::Element(TagName::new("", "a")), a),
             ]
         )
     }
@@ -207,23 +164,11 @@ mod tests {
         assert_eq!(
             traverse,
             vec![
-                (OpenClose::Open, &TagType::Element(TagName::new("", "a")), a),
-                (OpenClose::Open, &TagType::Element(TagName::new("", "b")), b),
-                (
-                    OpenClose::Empty,
-                    &TagType::Element(TagName::new("", "c")),
-                    c
-                ),
-                (
-                    OpenClose::Close,
-                    &TagType::Element(TagName::new("", "b")),
-                    b
-                ),
-                (
-                    OpenClose::Close,
-                    &TagType::Element(TagName::new("", "a")),
-                    a
-                ),
+                (State::Open, &TagType::Element(TagName::new("", "a")), a),
+                (State::Open, &TagType::Element(TagName::new("", "b")), b),
+                (State::Empty, &TagType::Element(TagName::new("", "c")), c),
+                (State::Close, &TagType::Element(TagName::new("", "b")), b),
+                (State::Close, &TagType::Element(TagName::new("", "a")), a),
             ]
         )
     }
@@ -241,33 +186,13 @@ mod tests {
         assert_eq!(
             traverse,
             vec![
-                (OpenClose::Open, &TagType::Element(TagName::new("", "a")), a),
-                (OpenClose::Open, &TagType::Element(TagName::new("", "b")), b),
-                (
-                    OpenClose::Empty,
-                    &TagType::Element(TagName::new("", "c")),
-                    c
-                ),
-                (
-                    OpenClose::Empty,
-                    &TagType::Element(TagName::new("", "d")),
-                    d
-                ),
-                (
-                    OpenClose::Close,
-                    &TagType::Element(TagName::new("", "b")),
-                    b
-                ),
-                (
-                    OpenClose::Empty,
-                    &TagType::Element(TagName::new("", "e")),
-                    e
-                ),
-                (
-                    OpenClose::Close,
-                    &TagType::Element(TagName::new("", "a")),
-                    a
-                ),
+                (State::Open, &TagType::Element(TagName::new("", "a")), a),
+                (State::Open, &TagType::Element(TagName::new("", "b")), b),
+                (State::Empty, &TagType::Element(TagName::new("", "c")), c),
+                (State::Empty, &TagType::Element(TagName::new("", "d")), d),
+                (State::Close, &TagType::Element(TagName::new("", "b")), b),
+                (State::Empty, &TagType::Element(TagName::new("", "e")), e),
+                (State::Close, &TagType::Element(TagName::new("", "a")), a),
             ]
         )
     }
@@ -282,13 +207,9 @@ mod tests {
         assert_eq!(
             traverse,
             vec![
-                (OpenClose::Open, &TagType::Element(TagName::new("", "a")), a),
-                (OpenClose::Empty, &TagType::Text, text),
-                (
-                    OpenClose::Close,
-                    &TagType::Element(TagName::new("", "a")),
-                    a
-                ),
+                (State::Open, &TagType::Element(TagName::new("", "a")), a),
+                (State::Empty, &TagType::Text, text),
+                (State::Close, &TagType::Element(TagName::new("", "a")), a),
             ]
         )
     }
@@ -301,11 +222,7 @@ mod tests {
         let traverse = Traverse::new(&doc, a).collect::<Vec<_>>();
         assert_eq!(
             traverse,
-            vec![(
-                OpenClose::Empty,
-                &TagType::Element(TagName::new("", "a")),
-                a
-            ),]
+            vec![(State::Empty, &TagType::Element(TagName::new("", "a")), a),]
         )
     }
 }
