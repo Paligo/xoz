@@ -7,12 +7,12 @@ use quick_xml::{
     Writer,
 };
 
-use crate::{document::Document, tag::TagType, TagState};
+use crate::{document::Document, tag::TagType, TagName, TagState};
 
 pub(crate) fn serialize_document(doc: &Document, write: &mut impl io::Write) -> io::Result<()> {
     let mut writer = Writer::new(write);
-    let ns = NamespaceTracker::new();
-    let mut full_name = Vec::new();
+    let mut ns = NamespaceTracker::new();
+    let mut full_name_scratch_buf = Vec::with_capacity(64);
     for (tag_type, tag_state, node) in doc.traverse(doc.root()) {
         match tag_type {
             TagType::Document => {
@@ -23,20 +23,7 @@ pub(crate) fn serialize_document(doc: &Document, write: &mut impl io::Write) -> 
                     // put namespace prefixes on the tracker
                     // todo!();
                 }
-                let qname = if name.namespace().is_empty() {
-                    QName(name.local_name())
-                } else {
-                    let prefix = ns.get_prefix(name.namespace());
-                    if prefix.is_empty() {
-                        QName(name.local_name())
-                    } else {
-                        full_name.clear();
-                        full_name.extend(prefix);
-                        full_name.push(b':');
-                        full_name.extend(name.local_name());
-                        QName(&full_name)
-                    }
-                };
+                let qname = ns.qname(name, &mut full_name_scratch_buf);
                 match tag_state {
                     TagState::Open => {
                         let elem: BytesStart = qname.into();
@@ -127,6 +114,23 @@ impl<'a> NamespaceTracker<'a> {
             }
         }
         unreachable!()
+    }
+
+    fn qname(&self, name: &'a TagName<'a>, scratch_buf: &'a mut Vec<u8>) -> QName<'a> {
+        if name.namespace().is_empty() {
+            QName(name.local_name())
+        } else {
+            let prefix = self.get_prefix(name.namespace());
+            if prefix.is_empty() {
+                QName(name.local_name())
+            } else {
+                scratch_buf.clear();
+                scratch_buf.extend(prefix);
+                scratch_buf.push(b':');
+                scratch_buf.extend(name.local_name());
+                QName(scratch_buf)
+            }
+        }
     }
 }
 
