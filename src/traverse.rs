@@ -50,11 +50,8 @@ impl<'a> Iterator for Traverse<'a> {
                     self.stack.push(node);
                     self.node = Some(child);
                     OpenClose::Open
-                } else if let Some(sibling) = self.doc.next_sibling(node) {
-                    self.node = Some(sibling);
-                    OpenClose::Empty
                 } else {
-                    self.node = None;
+                    self.node = self.doc.next_sibling(node);
                     OpenClose::Empty
                 };
                 Some((open_close, self.doc.value(node), node))
@@ -272,6 +269,43 @@ mod tests {
                     a
                 ),
             ]
+        )
+    }
+
+    #[test]
+    fn test_text() {
+        let doc = parse_document("<a>text</a>").unwrap();
+        let a = doc.document_element();
+        let text = doc.first_child(a).unwrap();
+
+        let traverse = Traverse::new(&doc, a).collect::<Vec<_>>();
+        assert_eq!(
+            traverse,
+            vec![
+                (OpenClose::Open, &TagType::Element(TagName::new("", "a")), a),
+                (OpenClose::Empty, &TagType::Text, text),
+                (
+                    OpenClose::Close,
+                    &TagType::Element(TagName::new("", "a")),
+                    a
+                ),
+            ]
+        )
+    }
+
+    #[test]
+    fn test_attributes() {
+        let doc = parse_document(r#"<a b="B" c="C"/>"#).unwrap();
+        let a = doc.document_element();
+
+        let traverse = Traverse::new(&doc, a).collect::<Vec<_>>();
+        assert_eq!(
+            traverse,
+            vec![(
+                OpenClose::Empty,
+                &TagType::Element(TagName::new("", "a")),
+                a
+            ),]
         )
     }
 }
