@@ -60,7 +60,7 @@ impl<'a> Iterator for TraverseIter<'a> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{builder::parse_document, TagName};
+    use crate::{parser::parse_document, TagName};
 
     use super::*;
 

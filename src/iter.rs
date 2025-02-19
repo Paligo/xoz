@@ -405,7 +405,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::builder::parse_document;
+    use crate::parser::parse_document;
 
     #[test]
     fn test_double_ended_children() {

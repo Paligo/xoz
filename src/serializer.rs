@@ -2,7 +2,7 @@ use ahash::{HashMap, HashMapExt};
 use std::{collections::hash_map::Entry, io};
 
 use quick_xml::{
-    events::{BytesEnd, BytesStart, BytesText, Event},
+    events::{attributes::Attribute, BytesEnd, BytesStart, BytesText, Event},
     name::QName,
     Writer,
 };
@@ -12,7 +12,8 @@ use crate::{document::Document, tag::TagType, TagName, TagState};
 pub(crate) fn serialize_document(doc: &Document, write: &mut impl io::Write) -> io::Result<()> {
     let mut writer = Writer::new(write);
     let mut ns = NamespaceTracker::new();
-    let mut full_name_scratch_buf = Vec::with_capacity(64);
+    let mut element_name_scratch_buf = Vec::with_capacity(64);
+    let mut attribute_name_scratch_buf = Vec::with_capacity(64);
     for (tag_type, tag_state, node) in doc.traverse(doc.root()) {
         match tag_type {
             TagType::Document => {
@@ -23,13 +24,16 @@ pub(crate) fn serialize_document(doc: &Document, write: &mut impl io::Write) -> 
                     // put namespace prefixes on the tracker
                     // todo!();
                 }
-                let qname = ns.qname(name, &mut full_name_scratch_buf);
+                let qname = ns.qname(name, &mut element_name_scratch_buf);
                 match tag_state {
                     TagState::Open => {
-                        let elem: BytesStart = qname.into();
-                        // for attribute in doc.attribute_entries(node) {
-                        //     elem.push_attribute()
-                        // }
+                        let mut elem: BytesStart = qname.into();
+                        for (name, value) in doc.attribute_entries(node) {
+                            elem.push_attribute(Attribute {
+                                key: ns.qname(name, &mut attribute_name_scratch_buf),
+                                value: value.as_bytes().into(),
+                            })
+                        }
                         writer.write_event(Event::Start(elem))?;
                     }
                     TagState::Close => {
@@ -37,7 +41,14 @@ pub(crate) fn serialize_document(doc: &Document, write: &mut impl io::Write) -> 
                         writer.write_event(Event::End(elem))?;
                     }
                     TagState::Empty => {
-                        let elem: BytesStart = qname.into();
+                        let mut elem: BytesStart = qname.into();
+                        // TODO: duplicate code
+                        for (name, value) in doc.attribute_entries(node) {
+                            elem.push_attribute(Attribute {
+                                key: ns.qname(name, &mut attribute_name_scratch_buf),
+                                value: value.as_bytes().into(),
+                            })
+                        }
                         writer.write_event(Event::Empty(elem))?;
                     }
                 }
@@ -136,7 +147,7 @@ impl<'a> NamespaceTracker<'a> {
 
 #[cfg(test)]
 mod tests {
-    use crate::builder::parse_document;
+    use crate::parser::parse_document;
 
     use super::*;
 
@@ -152,9 +163,12 @@ mod tests {
         assert_eq!(serialize_document_to_string(&doc), "<doc><a/><b/></doc>");
     }
 
-    // #[test]
-    // fn test_attribute() {
-    //     let doc = parse_document(r#"<doc a="1"/>"#).unwrap();
-    //     assert_eq!(serialize_document_to_string(&doc), r#"<doc a="1"/>"#);
-    // }
+    #[test]
+    fn test_attribute() {
+        let doc = parse_document(r#"<doc a="1"/>"#).unwrap();
+        // let elem = doc.document_element();
+        // let attributes = doc.attribute_entries(elem).collect::<Vec<_>>();
+        // assert_eq!(attributes, []);
+        assert_eq!(serialize_document_to_string(&doc), r#"<doc a="1"/>"#);
+    }
 }
