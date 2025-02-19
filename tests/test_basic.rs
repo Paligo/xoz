@@ -148,6 +148,16 @@ fn test_attribute_value() {
 }
 
 #[test]
+fn test_attribute_entries() {
+    let doc = parse_document(r#"<doc a="A" b="B" />"#).unwrap();
+    let doc_el = doc.document_element();
+    let entries = doc.attribute_entries(doc_el).collect::<Vec<_>>();
+    let tag_name_a = TagName::new("", "a");
+    let tag_name_b = TagName::new("", "b");
+    assert_eq!(entries, vec![(&tag_name_a, "A"), (&tag_name_b, "B")]);
+}
+
+#[test]
 fn test_text_and_attribute_value() {
     let doc = parse_document(r#"<doc a="A">text</doc>"#).unwrap();
     let doc_el = doc.document_element();

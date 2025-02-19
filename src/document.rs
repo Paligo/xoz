@@ -320,7 +320,7 @@ impl Document {
         node: Node,
     ) -> impl Iterator<Item = (&TagName, &str)> + use<'_> {
         AttributesIter::new(self, node).map(move |n| {
-            let text_id = self.structure.text_id(node.0);
+            let text_id = self.structure.text_id(n.0);
             let value = self.text_usage.text_value(text_id);
             let tag_name = match self.value(n) {
                 TagType::Attribute(tag_name) => tag_name,
