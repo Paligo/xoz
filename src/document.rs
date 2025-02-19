@@ -11,6 +11,7 @@ use crate::{
     tagvec::{SArrayMatrix, TagId},
     text::TextUsage,
     traverse::{TagState, TraverseIter},
+    TagName,
 };
 
 pub struct Document {
@@ -312,6 +313,21 @@ impl Document {
 
     pub fn attributes(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
         AttributesIter::new(self, node)
+    }
+
+    pub fn attribute_entries(
+        &self,
+        node: Node,
+    ) -> impl Iterator<Item = (&TagName, &str)> + use<'_> {
+        AttributesIter::new(self, node).map(move |n| {
+            let text_id = self.structure.text_id(node.0);
+            let value = self.text_usage.text_value(text_id);
+            let tag_name = match self.value(n) {
+                TagType::Attribute(tag_name) => tag_name,
+                _ => unreachable!(),
+            };
+            (tag_name, value)
+        })
     }
 
     pub fn axis_attribute(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {

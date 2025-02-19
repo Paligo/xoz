@@ -40,6 +40,9 @@ pub(crate) fn serialize_document(doc: &Document, write: &mut impl io::Write) -> 
                 match tag_state {
                     TagState::Open => {
                         let elem: BytesStart = qname.into();
+                        // for attribute in doc.attribute_entries(node) {
+                        //     elem.push_attribute()
+                        // }
                         writer.write_event(Event::Start(elem))?;
                     }
                     TagState::Close => {
@@ -65,6 +68,12 @@ pub(crate) fn serialize_document(doc: &Document, write: &mut impl io::Write) -> 
     }
 
     Ok(())
+}
+
+pub(crate) fn serialize_document_to_string(doc: &Document) -> String {
+    let mut w = Vec::new();
+    serialize_document(doc, &mut w).unwrap();
+    String::from_utf8(w).unwrap()
 }
 
 #[derive(Default)]
@@ -130,16 +139,18 @@ mod tests {
     #[test]
     fn test_one_element() {
         let doc = parse_document("<doc/>").unwrap();
-        let mut w = Vec::new();
-        serialize_document(&doc, &mut w).unwrap();
-        assert_eq!(w, b"<doc/>");
+        assert_eq!(serialize_document_to_string(&doc), "<doc/>");
     }
 
     #[test]
     fn test_nested_elements() {
         let doc = parse_document("<doc><a/><b/></doc>").unwrap();
-        let mut w = Vec::new();
-        serialize_document(&doc, &mut w).unwrap();
-        assert_eq!(w, b"<doc><a/><b/></doc>");
+        assert_eq!(serialize_document_to_string(&doc), "<doc><a/><b/></doc>");
     }
+
+    // #[test]
+    // fn test_attribute() {
+    //     let doc = parse_document(r#"<doc a="1"/>"#).unwrap();
+    //     assert_eq!(serialize_document_to_string(&doc), r#"<doc a="1"/>"#);
+    // }
 }
