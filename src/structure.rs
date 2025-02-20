@@ -9,7 +9,7 @@ use crate::{
     error::Error,
     node::NodeInfo,
     tree_builder::{NodeInfoLookup, TreeBuilder},
-    tagvec::{NodeInfoId, NodeInfoVec},
+    node_info_vec::{NodeInfoId, NodeInfoVec},
     text::TextId,
 };
 
@@ -143,7 +143,7 @@ impl<T: NodeInfoVec> Structure<T> {
 mod tests {
     use crate::{
         node::{NodeName, NodeType},
-        tagvec::SArrayMatrix,
+        node_info_vec::SArrayMatrix,
     };
 
     use super::*;

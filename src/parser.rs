@@ -6,8 +6,8 @@ use quick_xml::reader::NsReader;
 
 use crate::document::Document;
 use crate::node::NodeName;
+use crate::node_info_vec::SArrayMatrix;
 use crate::structure::Structure;
-use crate::tagvec::SArrayMatrix;
 use crate::text::TextBuilder;
 use crate::tree_builder::TreeBuilder;
 use crate::{Namespace, NodeType};

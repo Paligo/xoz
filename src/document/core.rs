@@ -10,7 +10,7 @@ use crate::{
     node::{NodeInfo, NodeType},
     parser::parse_document,
     structure::Structure,
-    tagvec::{NodeInfoId, SArrayMatrix},
+    node_info_vec::{NodeInfoId, SArrayMatrix},
     text::TextUsage,
     traverse::{TagState, TraverseIter},
     NodeName, QuickXMLError,

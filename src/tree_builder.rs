@@ -3,7 +3,7 @@ use vers_vecs::BitVec;
 
 use crate::{
     node::{NodeInfo, NodeType},
-    tagvec::{NodeInfoId, ATTRIBUTES_NODE_INFO_ID, NAMESPACES_NODE_INFO_ID},
+    node_info_vec::{NodeInfoId, ATTRIBUTES_NODE_INFO_ID, NAMESPACES_NODE_INFO_ID},
 };
 
 pub(crate) struct NodeInfoLookup {
