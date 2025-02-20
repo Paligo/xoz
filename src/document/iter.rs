@@ -186,4 +186,11 @@ impl Document {
     pub fn attributes(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
         AttributesIter::new(self, node)
     }
+
+    /// Iterator representing the XPath attribute axis.
+    ///
+    /// This is the same as [`Document::attributes`].
+    pub fn axis_attribute(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
+        self.attributes(node)
+    }
 }
