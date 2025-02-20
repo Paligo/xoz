@@ -538,7 +538,7 @@ fn test_tagged_descendants_or_self() {
     let doc = parse_document(r#"<doc><a><b/><b/></a></doc>"#).unwrap();
     let doc_el = doc.document_element();
     let tagged_descendants: Vec<_> = doc
-        .tagged_descendants_or_self(doc_el, &NodeType::Element(NodeName::new("", "b")))
+        .typed_descendants_or_self(doc_el, &NodeType::Element(NodeName::new("", "b")))
         .collect();
     assert_eq!(tagged_descendants.len(), 2);
 }
@@ -548,7 +548,7 @@ fn test_tagged_descendants_or_self_next_sibling() {
     let doc = parse_document(r#"<doc><a><b/></a><c><b/></c></doc>"#).unwrap();
     let doc_el = doc.document_element();
     let tagged_descendants: Vec<_> = doc
-        .tagged_descendants_or_self(doc_el, &NodeType::Element(NodeName::new("", "b")))
+        .typed_descendants_or_self(doc_el, &NodeType::Element(NodeName::new("", "b")))
         .collect();
     assert_eq!(tagged_descendants.len(), 2);
 }
@@ -559,7 +559,7 @@ fn test_tagged_descendants_or_self_including_self() {
     let doc_el = doc.document_element();
     let outer_b = doc.first_child(doc_el).unwrap();
     let tagged_descendants: Vec<_> = doc
-        .tagged_descendants_or_self(outer_b, &NodeType::Element(NodeName::new("", "b")))
+        .typed_descendants_or_self(outer_b, &NodeType::Element(NodeName::new("", "b")))
         .collect();
     assert_eq!(tagged_descendants.len(), 3);
 }
@@ -570,7 +570,7 @@ fn test_tagged_descendants_or_self_including_self2() {
     let doc_el = doc.document_element();
     let outer_b = doc.first_child(doc_el).unwrap();
     let tagged_descendants: Vec<_> = doc
-        .tagged_descendants_or_self(outer_b, &NodeType::Element(NodeName::new("", "b")))
+        .typed_descendants_or_self(outer_b, &NodeType::Element(NodeName::new("", "b")))
         .collect();
     assert_eq!(tagged_descendants.len(), 1);
 }
@@ -607,10 +607,9 @@ fn test_tagged_following() {
     let e = doc.first_child(d).unwrap();
     let f = doc.next_sibling(e).unwrap();
 
-    let node_info_id = doc
-        .node_info_id(NodeType::Element(NodeName::new("", "f")))
-        .unwrap();
-    let following: Vec<_> = doc.tagged_following(c, node_info_id).collect();
+    let following: Vec<_> = doc
+        .typed_following(c, &NodeType::Element(NodeName::new("", "f")))
+        .collect();
     assert_eq!(following, vec![f]);
 }
 

@@ -255,7 +255,8 @@ impl Document {
     /// Iterate over descendants of a certain node type.
     ///
     /// This more efficient than filtering the descendants iterator, as it
-    /// only traverses the nodes that are of the given type.
+    /// only traverses the nodes that are of the given type, jumping over
+    /// irrelevant ones.
     pub fn typed_descendants(
         &self,
         node: Node,
@@ -272,7 +273,7 @@ impl Document {
         }
     }
 
-    pub fn tagged_descendants_or_self(
+    pub fn typed_descendants_or_self(
         &self,
         node: Node,
         node_type: &NodeType,
@@ -292,14 +293,28 @@ impl Document {
         }
     }
 
-    pub fn tagged_following(
+    pub fn typed_following(
         &self,
         node: Node,
-        node_info_id: NodeInfoId,
-    ) -> impl Iterator<Item = Node> + use<'_> {
-        FollowingIter::new(node, TaggedTreeOps::new(self, node_info_id))
+        node_type: &NodeType,
+    ) -> Box<dyn Iterator<Item = Node> + '_> {
+        let node_info_id = self.node_info_id(node_type.clone());
+        if let Some(node_info_id) = node_info_id {
+            Box::new(FollowingIter::new(
+                node,
+                TaggedTreeOps::new(self, node_info_id),
+            ))
+        } else {
+            Box::new(std::iter::empty())
+        }
     }
 
+    /// Iterate over the nodes in the tree.
+    ///
+    /// This goes in document order. Attributes and namespace nodes are not included.
+    ///
+    /// The iterator yields a tuple of the node type, the tag state (open, close, empty),
+    /// and the node itself. Only document and element node have an open and close state.
     pub fn traverse(
         &self,
         node: Node,
