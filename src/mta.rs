@@ -78,7 +78,7 @@ impl Automaton {
         states: States,
     ) -> Mapping {
         if let Some(node) = node {
-            let trans = self.state_lookup.matching(&states, document.value(node));
+            let trans = self.state_lookup.matching(&states, document.tag_type(node));
             let mut left_states = States::new();
             let mut right_states = States::new();
             for (_q, formula_id) in &trans {

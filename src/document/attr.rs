@@ -48,7 +48,7 @@ impl Document {
         let attributes = self.attributes_child(node)?;
         let name = name.into();
         for child in self.primitive_children(attributes) {
-            if let TagType::Attribute(tag_name) = self.value(child) {
+            if let TagType::Attribute(tag_name) = self.tag_type(child) {
                 if tag_name == &name {
                     return Some(child);
                 }

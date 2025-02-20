@@ -38,7 +38,7 @@ impl<'a> Iterator for TraverseIter<'a> {
             None => {
                 if let Some(node) = self.stack.pop() {
                     self.node = self.doc.next_sibling(node);
-                    Some((self.doc.value(node), TagState::Close, node))
+                    Some((self.doc.tag_type(node), TagState::Close, node))
                 } else {
                     None
                 }
@@ -52,7 +52,7 @@ impl<'a> Iterator for TraverseIter<'a> {
                     self.node = self.doc.next_sibling(node);
                     TagState::Empty
                 };
-                Some((self.doc.value(node), open_close, node))
+                Some((self.doc.tag_type(node), open_close, node))
             }
         }
     }

@@ -61,14 +61,14 @@ impl Document {
     }
 
     pub fn node_name(&self, node: Node) -> Option<&TagName> {
-        match self.value(node) {
+        match self.tag_type(node) {
             TagType::Element(tag_name) => Some(tag_name),
             TagType::Attribute(tag_name) => Some(tag_name),
             _ => None,
         }
     }
 
-    pub fn value(&self, node: Node) -> &TagType {
+    pub fn tag_type(&self, node: Node) -> &TagType {
         let tag_info = self.structure.get_tag(node.0);
         debug_assert!(tag_info.is_open_tag());
         tag_info.tag_type()
@@ -79,31 +79,31 @@ impl Document {
     }
 
     pub fn is_document(&self, node: Node) -> bool {
-        matches!(self.value(node), TagType::Document)
+        matches!(self.tag_type(node), TagType::Document)
     }
 
     pub fn is_element(&self, node: Node) -> bool {
-        matches!(self.value(node), TagType::Element { .. })
+        matches!(self.tag_type(node), TagType::Element { .. })
     }
 
     pub fn is_text(&self, node: Node) -> bool {
-        matches!(self.value(node), TagType::Text)
+        matches!(self.tag_type(node), TagType::Text)
     }
 
     pub fn is_comment(&self, node: Node) -> bool {
-        matches!(self.value(node), TagType::Comment)
+        matches!(self.tag_type(node), TagType::Comment)
     }
 
     pub fn is_processing_instruction(&self, node: Node) -> bool {
-        matches!(self.value(node), TagType::ProcessingInstruction)
+        matches!(self.tag_type(node), TagType::ProcessingInstruction)
     }
 
     pub fn is_attribute(&self, node: Node) -> bool {
-        matches!(self.value(node), TagType::Attribute { .. })
+        matches!(self.tag_type(node), TagType::Attribute { .. })
     }
 
     pub fn is_namespace(&self, node: Node) -> bool {
-        matches!(self.value(node), TagType::Namespace { .. })
+        matches!(self.tag_type(node), TagType::Namespace { .. })
     }
 
     pub fn is_ancestor(&self, node: Node, descendant: Node) -> bool {
@@ -191,7 +191,7 @@ impl Document {
         AttributesIter::new(self, node).map(move |n| {
             let text_id = self.structure.text_id(n.0);
             let value = self.text_usage.text_value(text_id);
-            let tag_name = match self.value(n) {
+            let tag_name = match self.tag_type(n) {
                 TagType::Attribute(tag_name) => tag_name,
                 _ => unreachable!(),
             };
@@ -200,7 +200,7 @@ impl Document {
     }
 
     pub fn namespace_entries(&self, node: Node) -> impl Iterator<Item = (&[u8], &[u8])> + use<'_> {
-        NamespacesIter::new(self, node).map(move |n| match self.value(n) {
+        NamespacesIter::new(self, node).map(move |n| match self.tag_type(n) {
             TagType::Namespace(namespace) => (namespace.prefix(), namespace.uri()),
             _ => unreachable!(),
         })
@@ -260,7 +260,7 @@ impl Document {
     }
 
     pub fn text_str(&self, node: Node) -> Option<&str> {
-        if matches!(self.value(node), TagType::Text) {
+        if matches!(self.tag_type(node), TagType::Text) {
             self.node_str(node)
         } else {
             None
@@ -268,7 +268,7 @@ impl Document {
     }
 
     pub fn comment_str(&self, node: Node) -> Option<&str> {
-        if matches!(self.value(node), TagType::Comment) {
+        if matches!(self.tag_type(node), TagType::Comment) {
             self.node_str(node)
         } else {
             None
@@ -276,7 +276,7 @@ impl Document {
     }
 
     pub fn processing_instruction_str(&self, node: Node) -> Option<&str> {
-        if matches!(self.value(node), TagType::ProcessingInstruction) {
+        if matches!(self.tag_type(node), TagType::ProcessingInstruction) {
             self.node_str(node)
         } else {
             None
@@ -284,7 +284,7 @@ impl Document {
     }
 
     pub fn processing_instruction(&self, node: Node) -> Option<ProcessingInstruction> {
-        if matches!(self.value(node), TagType::ProcessingInstruction) {
+        if matches!(self.tag_type(node), TagType::ProcessingInstruction) {
             let s = self.node_str(node).expect("Missing PI data");
             Some(ProcessingInstruction { data: s })
         } else {
@@ -293,7 +293,7 @@ impl Document {
     }
 
     pub fn string_value(&self, node: Node) -> String {
-        match self.value(node) {
+        match self.tag_type(node) {
             TagType::Document | TagType::Element(_) => self.descendants_to_string(node),
             TagType::Text | TagType::Comment | TagType::Attribute(_) => {
                 self.node_str(node).unwrap().to_string()

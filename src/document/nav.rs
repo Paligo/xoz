@@ -28,7 +28,7 @@ impl Document {
     /// ```
     pub fn document_element(&self) -> Node {
         for child in self.children(self.root()) {
-            if let TagType::Element { .. } = self.value(child) {
+            if let TagType::Element { .. } = self.tag_type(child) {
                 return child;
             }
         }
