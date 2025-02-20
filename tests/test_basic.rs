@@ -207,38 +207,44 @@ fn test_preorder() {
 #[test]
 fn test_subtree_tags() {
     let doc = parse_document(r#"<doc><a/><a/></doc>"#).unwrap();
-    let node_info_id = doc
-        .node_info_id(NodeType::Element(NodeName::new("", "a")))
-        .unwrap();
-    assert_eq!(doc.subtree_tags(doc.document_element(), node_info_id), 2);
+    assert_eq!(
+        doc.subtree_tags(
+            doc.document_element(),
+            &NodeType::Element(NodeName::new("", "a"))
+        ),
+        2
+    );
 }
 
 #[test]
 fn test_subtree_tags_root() {
     let doc = parse_document(r#"<doc><a/><a/></doc>"#).unwrap();
-    let node_info_id = doc
-        .node_info_id(NodeType::Element(NodeName::new("", "a")))
-        .unwrap();
-    assert_eq!(doc.subtree_tags(doc.root(), node_info_id), 2);
+    assert_eq!(
+        doc.subtree_tags(doc.root(), &NodeType::Element(NodeName::new("", "a"))),
+        2
+    );
 }
 
 #[test]
 fn test_subtree_tags_deeper() {
     let doc = parse_document(r#"<doc><b><a/></b><a/></doc>"#).unwrap();
-    let node_info_id = doc
-        .node_info_id(NodeType::Element(NodeName::new("", "a")))
-        .unwrap();
-    assert_eq!(doc.subtree_tags(doc.document_element(), node_info_id), 2);
+    assert_eq!(
+        doc.subtree_tags(
+            doc.document_element(),
+            &NodeType::Element(NodeName::new("", "a"))
+        ),
+        2
+    );
 }
 
 #[test]
 fn test_tagged_descendant() {
     let doc = parse_document(r#"<doc><a><b/></a></doc>"#).unwrap();
-    let node_info_id = doc
-        .node_info_id(NodeType::Element(NodeName::new("", "b")))
-        .unwrap();
     let b = doc
-        .tagged_descendant(doc.document_element(), node_info_id)
+        .typed_descendant(
+            doc.document_element(),
+            &NodeType::Element(NodeName::new("", "b")),
+        )
         .unwrap();
     assert_eq!(doc.node_name(b).unwrap().local_name(), b"b");
 }
@@ -250,10 +256,7 @@ fn test_tagged_descendant_node_itself() {
     let a = doc.first_child(doc_el).unwrap();
     let b = doc.first_child(a).unwrap();
 
-    let node_info_id = doc
-        .node_info_id(NodeType::Element(NodeName::new("", "b")))
-        .unwrap();
-    let found = doc.tagged_descendant(b, node_info_id);
+    let found = doc.typed_descendant(b, &NodeType::Element(NodeName::new("", "b")));
     assert!(found.is_none());
 }
 
@@ -266,15 +269,16 @@ fn test_tagged_descendant2() {
     let a2 = doc.first_child(first_b).unwrap();
     let second_b = doc.first_child(a2).unwrap();
 
-    let node_info_id = doc
-        .node_info_id(NodeType::Element(NodeName::new("", "b")))
-        .unwrap();
-
     let b = doc
-        .tagged_descendant(doc.document_element(), node_info_id)
+        .typed_descendant(
+            doc.document_element(),
+            &NodeType::Element(NodeName::new("", "b")),
+        )
         .unwrap();
     assert_eq!(b, first_b);
-    let b = doc.tagged_descendant(b, node_info_id).unwrap();
+    let b = doc
+        .typed_descendant(b, &NodeType::Element(NodeName::new("", "b")))
+        .unwrap();
     assert_eq!(b, second_b);
 }
 

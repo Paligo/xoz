@@ -377,7 +377,8 @@ impl TreeOps for TaggedTreeOps<'_> {
     }
 
     fn matching_descendant(&self, node: Node) -> Option<Node> {
-        self.doc.tagged_descendant(node, self.node_info_id)
+        self.doc
+            .typed_descendant_by_node_info_id(node, self.node_info_id)
     }
 
     fn matching_descendant_or_self(&self, node: Node) -> Option<Node> {

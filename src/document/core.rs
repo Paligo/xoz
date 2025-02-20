@@ -41,7 +41,7 @@ impl Document {
 
     /// Given node info, return the node info id, if it exists.
     /// TODO: owned node type creation is not ideal
-    pub fn node_info_id(&self, node_type: NodeType) -> Option<NodeInfoId> {
+    pub(crate) fn node_info_id(&self, node_type: NodeType) -> Option<NodeInfoId> {
         self.structure.lookup_node_info_id_for_node_type(node_type)
     }
 
@@ -203,22 +203,15 @@ impl Document {
         r
     }
 
-    pub fn subtree_tags(&self, node: Node, node_info_id: NodeInfoId) -> usize {
-        self.structure
-            .subtree_tags(node.0, node_info_id)
-            .unwrap_or(0)
-    }
-
-    pub fn tagged_descendant(&self, node: Node, node_info_id: NodeInfoId) -> Option<Node> {
-        self.structure
-            .tagged_descendant(node.0, node_info_id)
-            .map(Node)
-    }
-
-    pub fn tagged_foll(&self, node: Node, node_info_id: NodeInfoId) -> Option<Node> {
-        self.structure
-            .tagged_following(node.0, node_info_id)
-            .map(Node)
+    pub fn subtree_tags(&self, node: Node, node_type: &NodeType) -> usize {
+        let node_info_id = self.node_info_id(node_type.clone());
+        if let Some(node_info_id) = node_info_id {
+            self.structure
+                .subtree_tags(node.0, node_info_id)
+                .unwrap_or(0)
+        } else {
+            0
+        }
     }
 
     pub(crate) fn primitive_parent(&self, node: Node) -> Option<Node> {

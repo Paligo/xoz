@@ -1,6 +1,6 @@
 use vers_vecs::trees::Tree;
 
-use crate::{NodeName, NodeType};
+use crate::{NodeInfoId, NodeName, NodeType};
 
 use super::{Document, Node};
 
@@ -150,5 +150,35 @@ impl Document {
         } else {
             Some(prev)
         }
+    }
+
+    pub fn typed_descendant(&self, node: Node, node_type: &NodeType) -> Option<Node> {
+        let node_info_id = self.node_info_id(node_type.clone())?;
+        self.typed_descendant_by_node_info_id(node, node_info_id)
+    }
+
+    pub(crate) fn typed_descendant_by_node_info_id(
+        &self,
+        node: Node,
+        node_info_id: NodeInfoId,
+    ) -> Option<Node> {
+        self.structure
+            .tagged_descendant(node.get(), node_info_id)
+            .map(Node::new)
+    }
+
+    pub fn typed_foll(&self, node: Node, node_type: &NodeType) -> Option<Node> {
+        let node_info_id = self.node_info_id(node_type.clone())?;
+        self.typed_foll_by_node_info_id(node, node_info_id)
+    }
+
+    pub(crate) fn typed_foll_by_node_info_id(
+        &self,
+        node: Node,
+        node_info_id: NodeInfoId,
+    ) -> Option<Node> {
+        self.structure
+            .tagged_following(node.get(), node_info_id)
+            .map(Node::new)
     }
 }
