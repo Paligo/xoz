@@ -36,12 +36,8 @@ fn test_elements_multiple_a() {
 fn test_attribute_names() {
     let doc = parse_document(r#"<doc a="A" b="B" />"#).unwrap();
     let doc_el = doc.document_element();
-    let a = doc
-        .attribute_node(doc_el, &TagName::unprefixed("a"))
-        .unwrap();
-    let b = doc
-        .attribute_node(doc_el, &TagName::unprefixed("b"))
-        .unwrap();
+    let a = doc.attribute_node(doc_el, "a").unwrap();
+    let b = doc.attribute_node(doc_el, "b").unwrap();
 
     let a_name = doc.node_name(a).unwrap();
     let b_name = doc.node_name(b).unwrap();
@@ -104,12 +100,8 @@ fn test_element_parent() {
 fn test_attribute_parent() {
     let doc = parse_document(r#"<doc a="A" b="B" />"#).unwrap();
     let doc_el = doc.document_element();
-    let a = doc
-        .attribute_node(doc_el, &TagName::unprefixed("a"))
-        .unwrap();
-    let b = doc
-        .attribute_node(doc_el, &TagName::unprefixed("b"))
-        .unwrap();
+    let a = doc.attribute_node(doc_el, "a").unwrap();
+    let b = doc.attribute_node(doc_el, "b").unwrap();
     assert_eq!(doc.parent(a), Some(doc_el));
     assert_eq!(doc.parent(b), Some(doc_el));
 }
@@ -139,9 +131,9 @@ fn test_multiple_text() {
 fn test_attribute_value() {
     let doc = parse_document(r#"<doc a="A" b="B" />"#).unwrap();
     let doc_el = doc.document_element();
-    let a = doc.attribute_value(doc_el, &TagName::unprefixed("a"));
-    let b = doc.attribute_value(doc_el, &TagName::unprefixed("b"));
-    let c = doc.attribute_value(doc_el, &TagName::unprefixed("c"));
+    let a = doc.attribute_value(doc_el, "a");
+    let b = doc.attribute_value(doc_el, "b");
+    let c = doc.attribute_value(doc_el, "c");
     assert_eq!(a, Some("A"));
     assert_eq!(b, Some("B"));
     assert_eq!(c, None);
@@ -162,7 +154,7 @@ fn test_text_and_attribute_value() {
     let doc = parse_document(r#"<doc a="A">text</doc>"#).unwrap();
     let doc_el = doc.document_element();
     let text = doc.first_child(doc_el).unwrap();
-    let a = doc.attribute_value(doc_el, &TagName::unprefixed("a"));
+    let a = doc.attribute_value(doc_el, "a");
     assert_eq!(doc.text_str(text), Some("text"));
     assert_eq!(a, Some("A"));
 }
@@ -345,9 +337,7 @@ fn test_ancestors_of_attribute() {
     let doc = parse_document(r#"<doc a="A" b="B" />"#).unwrap();
     let root = doc.root();
     let doc_el = doc.document_element();
-    let a = doc
-        .attribute_node(doc_el, &TagName::unprefixed("a"))
-        .unwrap();
+    let a = doc.attribute_node(doc_el, "a").unwrap();
     let ancestors: Vec<_> = doc.ancestors(a).collect();
     assert_eq!(ancestors, vec![doc_el, root]);
 }
@@ -357,9 +347,7 @@ fn test_ancestors_or_self_of_attribute() {
     let doc = parse_document(r#"<doc a="A" b="B" />"#).unwrap();
     let root = doc.root();
     let doc_el = doc.document_element();
-    let a = doc
-        .attribute_node(doc_el, &TagName::unprefixed("a"))
-        .unwrap();
+    let a = doc.attribute_node(doc_el, "a").unwrap();
     let ancestors: Vec<_> = doc.ancestors_or_self(a).collect();
     assert_eq!(ancestors, vec![a, doc_el, root]);
 }
@@ -617,15 +605,9 @@ fn test_tagged_following() {
 fn test_attributes_axis() {
     let doc = parse_document(r#"<doc a="A" b="B" c="C" />"#).unwrap();
     let doc_el = doc.document_element();
-    let a = doc
-        .attribute_node(doc_el, &TagName::unprefixed("a"))
-        .unwrap();
-    let b = doc
-        .attribute_node(doc_el, &TagName::unprefixed("b"))
-        .unwrap();
-    let c = doc
-        .attribute_node(doc_el, &TagName::unprefixed("c"))
-        .unwrap();
+    let a = doc.attribute_node(doc_el, "a").unwrap();
+    let b = doc.attribute_node(doc_el, "b").unwrap();
+    let c = doc.attribute_node(doc_el, "c").unwrap();
 
     let attributes: Vec<_> = doc.attributes(doc_el).collect();
     assert_eq!(attributes, vec![a, b, c]);

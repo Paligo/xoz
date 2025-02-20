@@ -16,7 +16,7 @@ mod text_fm;
 mod textsearch;
 mod traverse;
 
-pub use document::Document;
+pub use document::{Document, Node};
 pub use parser::{parse_document, QuickXMLError};
 // pub use builder::parse_document;
 pub use tag::{Namespace, TagInfo, TagName, TagType};

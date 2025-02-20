@@ -68,17 +68,19 @@ pub struct TagName<'a> {
     local_name: Cow<'a, [u8]>,
 }
 
+impl<'a> From<&'a str> for TagName<'a> {
+    fn from(s: &'a str) -> Self {
+        Self {
+            namespace: Cow::Borrowed(&[]),
+            local_name: Cow::Borrowed(s.as_bytes()),
+        }
+    }
+}
+
 impl<'a> TagName<'a> {
     pub fn new(namespace: &'a str, local_name: &'a str) -> Self {
         Self {
             namespace: Cow::Borrowed(namespace.as_bytes()),
-            local_name: Cow::Borrowed(local_name.as_bytes()),
-        }
-    }
-
-    pub fn unprefixed(local_name: &'a str) -> Self {
-        Self {
-            namespace: Cow::Borrowed(&[]),
             local_name: Cow::Borrowed(local_name.as_bytes()),
         }
     }

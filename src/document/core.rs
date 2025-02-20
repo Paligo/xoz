@@ -1,4 +1,4 @@
-use quick_xml::{events::BytesPI, Error};
+use quick_xml::events::BytesPI;
 use vers_vecs::trees::Tree;
 
 use crate::{
@@ -24,6 +24,16 @@ pub struct Document {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Node(usize);
 
+impl Node {
+    pub(crate) fn new(index: usize) -> Self {
+        Node(index)
+    }
+
+    pub(crate) fn get(self) -> usize {
+        self.0
+    }
+}
+
 impl Document {
     pub fn parse_str(xml: &str) -> Result<Self, QuickXMLError> {
         parse_document(xml)
@@ -32,16 +42,6 @@ impl Document {
     /// Given a tag info, return the tag id, if it exists.
     pub fn tag(&self, tag_info: &TagInfo) -> Option<TagId> {
         self.structure.lookup_tag_id(tag_info)
-    }
-
-    /// Give the document node of the XML document
-    pub fn root(&self) -> Node {
-        Node(
-            self.structure
-                .tree()
-                .root()
-                .expect("XML document always has a root"),
-        )
     }
 
     /// Preorder number of node
@@ -54,165 +54,7 @@ impl Document {
         self.structure.tree().node_index(node.0)
     }
 
-    /// Obtain the document element.
-    ///
-    /// ```rust
-    /// use xoz::Document;
-    /// let doc = Document::parse_str("<p>Example</p>").unwrap();
-    ///
-    /// let doc_el = doc.document_element();
-    ///
-    /// assert!(doc.is_element(doc_el));
-    /// assert_eq!(doc.parent(doc_el), Some(doc.root()));
-    /// ```
-    pub fn document_element(&self) -> Node {
-        for child in self.children(self.root()) {
-            if let TagType::Element { .. } = self.value(child) {
-                return child;
-            }
-        }
-        unreachable!()
-    }
-
-    /// Get parent node.
-    ///
-    /// Returns [`None`] if this is the document node or if the node is
-    /// unattached to a document.
-    ///
-    /// Attribute and namespace nodes have a parent, even though they aren't
-    /// children of the element they are in.
-    ///
-    /// ```rust
-    /// use xoz::Document;
-    /// let doc = Document::parse_str("<p>Example</p>").unwrap();
-    /// let root = doc.root();
-    /// let p = doc.document_element();
-    /// let text = doc.first_child(p).unwrap();
-    ///
-    /// assert_eq!(doc.parent(text), Some(p));
-    /// assert_eq!(doc.parent(p), Some(root));
-    /// assert_eq!(doc.parent(root), None);
-    /// ```
-    pub fn parent(&self, node: Node) -> Option<Node> {
-        // two strategies are possible: skipping the attributes and namespaces nodes
-        // if found, or checking whether we are an attribute or namespace node before
-        // we even try. I've chosen the first strategy.
-        let parent = self.primitive_parent(node)?;
-        if self.tag_id(parent).is_special() {
-            // if the parent is an attribute or namespace node, we skip it
-            self.primitive_parent(parent)
-        } else {
-            // if it's not, then it's a parent
-            Some(parent)
-        }
-    }
-
-    /// Get first child.
-    ///
-    /// Returns [`None`] if there are no children.
-    ///
-    /// ```rust
-    /// let doc = xoz::Document::parse_str("<p>Example</p>").unwrap();
-    /// let root = doc.root();
-    /// let p = doc.document_element();
-    /// let text = doc.first_child(p).unwrap();
-    /// assert_eq!(doc.first_child(root), Some(p));
-    /// assert_eq!(doc.first_child(p), Some(text));
-    /// assert_eq!(doc.first_child(text), None);
-    /// ```
-    pub fn first_child(&self, node: Node) -> Option<Node> {
-        let node = self.primitive_first_child(node)?;
-        let tag_id = self.tag_id(node);
-        if tag_id.is_attributes() {
-            // the first child is the attributes node, skip it
-            self.next_sibling(node)
-        } else if tag_id.is_namespaces() {
-            // the first child is the namespaces node
-            // check if the next sibling is the attributes node
-            let next = self.next_sibling(node)?;
-            // if so, the first child is the next sibling
-            if self.tag_id(next).is_attributes() {
-                self.next_sibling(next)
-            } else {
-                // if not, the first child is this sibling
-                Some(next)
-            }
-        } else {
-            // if it's not a special node, then it's definitely a first child
-            Some(node)
-        }
-    }
-
-    pub fn last_child(&self, node: Node) -> Option<Node> {
-        let child = self.primitive_last_child(node)?;
-        if self.tag_id(child).is_special() {
-            None
-        } else {
-            Some(child)
-        }
-    }
-
-    pub fn next_sibling(&self, node: Node) -> Option<Node> {
-        self.structure.tree().next_sibling(node.0).map(Node)
-    }
-
-    pub fn previous_sibling(&self, node: Node) -> Option<Node> {
-        let prev = self.primitive_previous_sibling(node)?;
-        if self.tag_id(prev).is_special() {
-            // attributes and namespaces nodes are not siblings
-            None
-        } else {
-            Some(prev)
-        }
-    }
-
-    pub(crate) fn attributes_child(&self, node: Node) -> Option<Node> {
-        let node = self.primitive_first_child(node);
-        if let Some(node) = node {
-            let tag_id = self.tag_id(node);
-            if tag_id.is_attributes() {
-                // the first child is the attributes node
-                Some(node)
-            } else if tag_id.is_namespaces() {
-                // the first child is the namespaces node, check for attributes node
-                let next = self.next_sibling(node);
-                next.filter(|next| self.tag_id(*next).is_attributes())
-            } else {
-                None
-            }
-        } else {
-            None
-        }
-    }
-
-    pub(crate) fn namespaces_child(&self, node: Node) -> Option<Node> {
-        let node = self.primitive_first_child(node);
-        if let Some(node) = node {
-            let tag_id = self.tag_id(node);
-            if tag_id.is_namespaces() {
-                // the first child is the namespaces node
-                Some(node)
-            } else {
-                None
-            }
-        } else {
-            None
-        }
-    }
-
-    pub fn attribute_node(&self, node: Node, name: &TagName) -> Option<Node> {
-        let attributes = self.attributes_child(node)?;
-        for child in self.primitive_children(attributes) {
-            if let TagType::Attribute(tag_name) = self.value(child) {
-                if tag_name == name {
-                    return Some(child);
-                }
-            }
-        }
-        None
-    }
-
-    pub fn attribute_value(&self, node: Node, name: &TagName) -> Option<&str> {
+    pub fn attribute_value<'a>(&self, node: Node, name: impl Into<TagName<'a>>) -> Option<&str> {
         let attribute_node = self.attribute_node(node, name)?;
         let text_id = self.structure.text_id(attribute_node.0);
         Some(self.text_usage.text_value(text_id))
