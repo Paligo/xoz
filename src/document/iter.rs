@@ -260,9 +260,9 @@ impl Document {
     pub fn typed_descendants(
         &self,
         node: Node,
-        node_type: &NodeType,
+        node_type: NodeType,
     ) -> Box<dyn Iterator<Item = Node> + '_> {
-        let node_info_id = self.node_info_id(node_type.clone());
+        let node_info_id = self.node_info_id(node_type);
         if let Some(node_info_id) = node_info_id {
             Box::new(DescendantsIter::new(
                 node,
@@ -276,7 +276,7 @@ impl Document {
     pub fn typed_descendants_or_self(
         &self,
         node: Node,
-        node_type: &NodeType,
+        node_type: NodeType,
     ) -> Box<dyn Iterator<Item = Node> + '_> {
         let node_info_id = self.node_info_id(node_type.clone());
         if let Some(node_info_id) = node_info_id {
@@ -296,9 +296,9 @@ impl Document {
     pub fn typed_following(
         &self,
         node: Node,
-        node_type: &NodeType,
+        node_type: NodeType,
     ) -> Box<dyn Iterator<Item = Node> + '_> {
-        let node_info_id = self.node_info_id(node_type.clone());
+        let node_info_id = self.node_info_id(node_type);
         if let Some(node_info_id) = node_info_id {
             Box::new(FollowingIter::new(
                 node,

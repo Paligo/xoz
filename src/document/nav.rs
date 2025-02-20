@@ -152,8 +152,8 @@ impl Document {
         }
     }
 
-    pub fn typed_descendant(&self, node: Node, node_type: &NodeType) -> Option<Node> {
-        let node_info_id = self.node_info_id(node_type.clone())?;
+    pub fn typed_descendant(&self, node: Node, node_type: NodeType) -> Option<Node> {
+        let node_info_id = self.node_info_id(node_type)?;
         self.typed_descendant_by_node_info_id(node, node_info_id)
     }
 
@@ -167,8 +167,8 @@ impl Document {
             .map(Node::new)
     }
 
-    pub fn typed_foll(&self, node: Node, node_type: &NodeType) -> Option<Node> {
-        let node_info_id = self.node_info_id(node_type.clone())?;
+    pub fn typed_foll(&self, node: Node, node_type: NodeType) -> Option<Node> {
+        let node_info_id = self.node_info_id(node_type)?;
         self.typed_foll_by_node_info_id(node, node_info_id)
     }
 

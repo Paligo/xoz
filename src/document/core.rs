@@ -198,8 +198,8 @@ impl Document {
         r
     }
 
-    pub fn subtree_tags(&self, node: Node, node_type: &NodeType) -> usize {
-        let node_info_id = self.node_info_id(node_type.clone());
+    pub fn subtree_tags(&self, node: Node, node_type: NodeType) -> usize {
+        let node_info_id = self.node_info_id(node_type);
         if let Some(node_info_id) = node_info_id {
             self.structure
                 .subtree_tags(node.0, node_info_id)
