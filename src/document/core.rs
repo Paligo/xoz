@@ -40,6 +40,7 @@ impl Document {
     }
 
     /// Given node info, return the node info id, if it exists.
+    /// TODO: owned node type creation is not ideal
     pub fn node_info_id(&self, node_type: NodeType) -> Option<NodeInfoId> {
         self.structure.lookup_node_info_id_for_node_type(node_type)
     }
@@ -135,52 +136,6 @@ impl Document {
             NodeType::Namespace(namespace) => (namespace.prefix(), namespace.uri()),
             _ => unreachable!(),
         })
-    }
-
-    pub fn tagged_descendants(
-        &self,
-        node: Node,
-        node_info_id: NodeInfoId,
-    ) -> impl Iterator<Item = Node> + use<'_> {
-        DescendantsIter::new(node, TaggedTreeOps::new(self, node_info_id))
-    }
-
-    pub fn tagged_descendants_or_self(
-        &self,
-        node: Node,
-        node_info_id: NodeInfoId,
-    ) -> impl Iterator<Item = Node> + use<'_> {
-        WithTaggedSelfIter::new(
-            self,
-            node,
-            self.tagged_descendants(node, node_info_id),
-            node_info_id,
-        )
-    }
-
-    pub fn following(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
-        FollowingIter::new(node, NodeTreeOps::new(self))
-    }
-
-    pub fn preceding(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
-        self.descendants(self.root())
-            .take_while(move |n| *n != node)
-            .filter(move |n| !self.is_ancestor(*n, node))
-    }
-
-    pub fn tagged_following(
-        &self,
-        node: Node,
-        node_info_id: NodeInfoId,
-    ) -> impl Iterator<Item = Node> + use<'_> {
-        FollowingIter::new(node, TaggedTreeOps::new(self, node_info_id))
-    }
-
-    pub fn traverse(
-        &self,
-        node: Node,
-    ) -> impl Iterator<Item = (&NodeType, TagState, Node)> + use<'_> {
-        TraverseIter::new(self, node)
     }
 
     pub fn text_str(&self, node: Node) -> Option<&str> {

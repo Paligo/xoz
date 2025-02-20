@@ -1,6 +1,11 @@
-use crate::iter::{
-    AncestorIter, AttributesIter, ChildrenIter, DescendantsIter, NextSiblingIter, NodeTreeOps,
-    PreviousSiblingIter, WithSelfIter,
+use crate::{
+    iter::{
+        AncestorIter, AttributesIter, ChildrenIter, DescendantsIter, FollowingIter,
+        NextSiblingIter, NodeTreeOps, PreviousSiblingIter, TaggedTreeOps, WithSelfIter,
+        WithTaggedSelfIter,
+    },
+    traverse::TraverseIter,
+    NodeInfoId, NodeType, TagState,
 };
 
 use super::{Document, Node};
@@ -190,7 +195,7 @@ impl Document {
     /// Iterator representing the XPath attribute axis.
     ///
     /// This is the same as [`Document::attributes`].
-    pub fn axis_attribute(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
+    pub fn axis_attributes(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
         self.attributes(node)
     }
 
@@ -202,5 +207,103 @@ impl Document {
     /// Iterator representing the XPath self axis
     pub fn axis_self(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
         std::iter::once(node)
+    }
+
+    /// Following nodes in document order
+    ///
+    /// These are nodes that come after given node in document order,
+    /// without that node itself, its ancestors, or its descendants.
+    ///
+    /// Does not include namespace or attribute nodes.
+    ///
+    /// ```rust
+    /// let doc = xoz::Document::parse_str("<p><a/><b><c/><d/><e/></b><f><g/><h/></f></p>").unwrap();
+    /// let p = doc.document_element();
+    /// let a = doc.first_child(p).unwrap();
+    /// let b = doc.next_sibling(a).unwrap();
+    /// let c = doc.first_child(b).unwrap();
+    /// let d = doc.next_sibling(c).unwrap();
+    /// let e = doc.next_sibling(d).unwrap();
+    /// let f = doc.next_sibling(b).unwrap();
+    /// let g = doc.first_child(f).unwrap();
+    /// let h = doc.next_sibling(g).unwrap();
+    /// let siblings = doc.following(c).collect::<Vec<_>>();
+    /// assert_eq!(siblings, vec![d, e, f, g, h]);
+    /// ```
+    pub fn following(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
+        FollowingIter::new(node, NodeTreeOps::new(self))
+    }
+
+    /// Iterator representing the XPath following axis.
+    ///
+    /// This is the same as [`Document::following`].
+    pub fn axis_following(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
+        self.following(node)
+    }
+
+    // TODO: non-xpath preceding
+
+    /// Iterator representing the XPath preceding axis.
+    ///
+    /// These are nodes that come before given node in document order.
+    pub fn axis_preceding(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
+        self.descendants(self.root())
+            .take_while(move |n| *n != node)
+            .filter(move |n| !self.is_ancestor(*n, node))
+    }
+
+    /// Iterate over descendants of a certain node type.
+    ///
+    /// This more efficient than filtering the descendants iterator, as it
+    /// only traverses the nodes that are of the given type.
+    pub fn typed_descendants(
+        &self,
+        node: Node,
+        node_type: &NodeType,
+    ) -> Box<dyn Iterator<Item = Node> + '_> {
+        let node_info_id = self.node_info_id(node_type.clone());
+        if let Some(node_info_id) = node_info_id {
+            Box::new(DescendantsIter::new(
+                node,
+                TaggedTreeOps::new(self, node_info_id),
+            ))
+        } else {
+            Box::new(std::iter::empty())
+        }
+    }
+
+    pub fn tagged_descendants_or_self(
+        &self,
+        node: Node,
+        node_type: &NodeType,
+    ) -> Box<dyn Iterator<Item = Node> + '_> {
+        let node_info_id = self.node_info_id(node_type.clone());
+        if let Some(node_info_id) = node_info_id {
+            Box::new(WithTaggedSelfIter::new(
+                self,
+                node,
+                self.typed_descendants(node, node_type),
+                node_info_id,
+            ))
+        } else {
+            // since node_info_id cannot be found, self cannot be
+            // matching either
+            Box::new(std::iter::empty())
+        }
+    }
+
+    pub fn tagged_following(
+        &self,
+        node: Node,
+        node_info_id: NodeInfoId,
+    ) -> impl Iterator<Item = Node> + use<'_> {
+        FollowingIter::new(node, TaggedTreeOps::new(self, node_info_id))
+    }
+
+    pub fn traverse(
+        &self,
+        node: Node,
+    ) -> impl Iterator<Item = (&NodeType, TagState, Node)> + use<'_> {
+        TraverseIter::new(self, node)
     }
 }

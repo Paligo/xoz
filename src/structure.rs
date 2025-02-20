@@ -134,7 +134,7 @@ impl<T: NodeInfoVec> Structure<T> {
         if d <= self.tree.close(i)? {
             Some(d)
         } else {
-            println!("not within close");
+            // println!("not within close");
             None
         }
     }
