@@ -36,7 +36,7 @@ impl NodeInfoId {
         self.0
     }
 }
-pub(crate) trait TagVec {
+pub(crate) trait NodeInfoVec {
     /// Returns the node info id at position `i`.
     ///
     /// Returns `None` if `i` is out of bounds.
@@ -54,7 +54,7 @@ pub(crate) trait TagVec {
 }
 
 // A wavelet matrix implementation, based on Vers' wavelet matrix
-impl TagVec for WaveletMatrix {
+impl NodeInfoVec for WaveletMatrix {
     fn get_node_info_id(&self, i: usize) -> Option<NodeInfoId> {
         self.get_u64(i).map(NodeInfoId::new)
     }
@@ -109,7 +109,7 @@ impl SArrayMatrix {
     }
 }
 
-impl TagVec for SArrayMatrix {
+impl NodeInfoVec for SArrayMatrix {
     fn get_node_info_id(&self, i: usize) -> Option<NodeInfoId> {
         self.tags.get_int(i).map(|i| NodeInfoId::new(i as u64))
     }

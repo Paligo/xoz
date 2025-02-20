@@ -110,11 +110,11 @@ impl TagsBuilder {
         self.usage.push(node_info_id.id())
     }
 
-    pub(crate) fn close(&mut self, tag_type: NodeType) {
+    pub(crate) fn close(&mut self, node_type: NodeType) {
         self.parentheses.append(false);
         self.text_opening_parens.append(false);
-        let tag_info = NodeInfo::close(tag_type);
-        let node_info_id = self.register_node_info(tag_info);
+        let node_info = NodeInfo::close(node_type);
+        let node_info_id = self.register_node_info(node_info);
         self.usage.push(node_info_id.id())
     }
 }

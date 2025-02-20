@@ -40,8 +40,8 @@ impl Document {
     }
 
     /// Given a tag info, return the tag id, if it exists.
-    pub fn tag(&self, tag_info: &NodeInfo) -> Option<NodeInfoId> {
-        self.structure.lookup_node_info_id(tag_info)
+    pub fn tag(&self, node_info: &NodeInfo) -> Option<NodeInfoId> {
+        self.structure.lookup_node_info_id(node_info)
     }
 
     /// Preorder number of node
@@ -63,9 +63,9 @@ impl Document {
     }
 
     pub fn node_type(&self, node: Node) -> &NodeType {
-        let tag_info = self.structure.get_node_info(node.0);
-        debug_assert!(tag_info.is_open_tag());
-        tag_info.node_type()
+        let node_info = self.structure.get_node_info(node.0);
+        debug_assert!(node_info.is_open_tag());
+        node_info.node_type()
     }
 
     pub fn node_info_id(&self, node: Node) -> NodeInfoId {

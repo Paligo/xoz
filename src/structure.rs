@@ -9,18 +9,18 @@ use crate::{
     error::Error,
     node::NodeInfo,
     tags_builder::{NodeInfoLookup, TagsBuilder},
-    tagvec::{NodeInfoId, TagVec},
+    tagvec::{NodeInfoId, NodeInfoVec},
     text::TextId,
 };
 
-pub(crate) struct Structure<T: TagVec> {
+pub(crate) struct Structure<T: NodeInfoVec> {
     node_info_lookup: NodeInfoLookup,
     text_opening_parens: RsVec,
     tree: BpTree,
     tag_vec: T,
 }
 
-impl<T: TagVec> Structure<T> {
+impl<T: NodeInfoVec> Structure<T> {
     pub(crate) fn new(
         tags_builder: TagsBuilder,
         make_tag_vec: impl Fn(&TagsBuilder) -> Result<T, Error>,
