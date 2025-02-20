@@ -1,6 +1,6 @@
 use crate::{
     document::{Document, Node},
-    NodeInfoId,
+    node_info_vec::NodeInfoId,
 };
 
 pub(crate) struct NextSiblingIter<'a> {

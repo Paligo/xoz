@@ -1,5 +1,3 @@
-use std::borrow::Cow;
-
 use crate::{Namespace, NodeName};
 
 /// Which type of node we are in the XML tree.

@@ -7,7 +7,7 @@ use vers_vecs::{BitVec, WaveletMatrix};
 use crate::error::Error;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct NodeInfoId(u64);
+pub(crate) struct NodeInfoId(u64);
 
 // we ensure we always register these first in any document
 pub(crate) const NAMESPACES_NODE_INFO_ID: NodeInfoId = NodeInfoId(0);

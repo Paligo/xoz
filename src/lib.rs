@@ -22,5 +22,4 @@ pub use parser::{parse_document, QuickXMLError};
 // pub use builder::parse_document;
 pub use name::{Namespace, NodeName};
 pub use node::{NodeInfo, NodeType};
-pub use node_info_vec::NodeInfoId;
 pub use traverse::TagState;

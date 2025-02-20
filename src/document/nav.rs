@@ -1,6 +1,6 @@
 use vers_vecs::trees::Tree;
 
-use crate::{NodeInfoId, NodeName, NodeType};
+use crate::{node_info_vec::NodeInfoId, NodeType};
 
 use super::{Document, Node};
 

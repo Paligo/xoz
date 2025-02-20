@@ -5,7 +5,7 @@ use crate::{
         WithTaggedSelfIter,
     },
     traverse::TraverseIter,
-    NodeInfoId, NodeType, TagState,
+    NodeType, TagState,
 };
 
 use super::{Document, Node};
