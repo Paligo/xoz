@@ -2,17 +2,12 @@ use quick_xml::events::BytesPI;
 use vers_vecs::trees::Tree;
 
 use crate::{
-    iter::{
-        AncestorIter, AttributesIter, ChildrenIter, DescendantsIter, FollowingIter, NamespacesIter,
-        NextSiblingIter, NodeTreeOps, PreviousSiblingIter, TaggedTreeOps, WithSelfIter,
-        WithTaggedSelfIter,
-    },
-    node::{NodeInfo, NodeType},
+    iter::{AttributesIter, NamespacesIter, NextSiblingIter},
+    node::NodeType,
     node_info_vec::{NodeInfoId, SArrayMatrix},
     parser::parse_document,
     structure::Structure,
     text::TextUsage,
-    traverse::{TagState, TraverseIter},
     NodeName, QuickXMLError,
 };
 
