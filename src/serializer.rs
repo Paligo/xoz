@@ -248,4 +248,22 @@ mod tests {
             r#"<doc xmlns:ns="http://example.com"/>"#
         );
     }
+
+    #[test]
+    fn test_default_ns() {
+        let doc = parse_document(r#"<doc xmlns="http://example.com"/>"#).unwrap();
+        assert_eq!(
+            serialize_document_to_string(&doc),
+            r#"<doc xmlns="http://example.com"/>"#
+        );
+    }
+
+    #[test]
+    fn test_prefixed_el() {
+        let doc = parse_document(r#"<prefix:doc xmlns:prefix="http://example.com"/>"#).unwrap();
+        assert_eq!(
+            serialize_document_to_string(&doc),
+            r#"<prefix:doc xmlns:prefix="http://example.com"/>"#
+        );
+    }
 }
