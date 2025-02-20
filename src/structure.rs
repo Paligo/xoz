@@ -8,13 +8,13 @@ use vers_vecs::{
 use crate::{
     error::Error,
     node::NodeInfo,
-    tags_builder::{TagsBuilder, TagsLookup},
+    tags_builder::{NodeInfoLookup, TagsBuilder},
     tagvec::{TagId, TagVec},
     text::TextId,
 };
 
 pub(crate) struct Structure<T: TagVec> {
-    tags_lookup: TagsLookup,
+    tags_lookup: NodeInfoLookup,
     text_opening_parens: RsVec,
     tree: BpTree,
     tag_vec: T,
@@ -27,7 +27,7 @@ impl<T: TagVec> Structure<T> {
     ) -> Result<Self, Error> {
         let tag_vec = make_tag_vec(&tags_builder)?;
         Ok(Self {
-            tags_lookup: tags_builder.tags_lookup,
+            tags_lookup: tags_builder.node_info_lookup,
             text_opening_parens: RsVec::from_bit_vec(tags_builder.text_opening_parens),
             tree: BpTree::from_bit_vector(tags_builder.parentheses),
             tag_vec,
@@ -36,7 +36,7 @@ impl<T: TagVec> Structure<T> {
 
     /// Given a tag info, return the tag id if it exists
     pub(crate) fn lookup_tag_id(&self, tag_info: &NodeInfo) -> Option<TagId> {
-        self.tags_lookup.by_tag_info(tag_info)
+        self.tags_lookup.by_node_info(tag_info)
     }
 
     /// Given a tag id, return the tag info.

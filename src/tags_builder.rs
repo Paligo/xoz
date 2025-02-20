@@ -6,47 +6,47 @@ use crate::{
     tagvec::{TagId, ATTRIBUTES_TAG_ID, NAMESPACES_TAG_ID},
 };
 
-pub(crate) struct TagsLookup {
-    pub(crate) tags: Vec<NodeInfo<'static>>,
-    pub(crate) tag_lookup: HashMap<NodeInfo<'static>, TagId>,
+pub(crate) struct NodeInfoLookup {
+    pub(crate) node_infos: Vec<NodeInfo<'static>>,
+    pub(crate) node_info_lookup: HashMap<NodeInfo<'static>, TagId>,
 }
 
-impl TagsLookup {
+impl NodeInfoLookup {
     pub(crate) fn new() -> Self {
         Self {
-            tags: Vec::new(),
-            tag_lookup: HashMap::new(),
+            node_infos: Vec::new(),
+            node_info_lookup: HashMap::new(),
         }
     }
 
-    fn register(&mut self, tag_info: NodeInfo) -> TagId {
-        if let Some(&idx) = self.tag_lookup.get(&tag_info) {
+    fn register(&mut self, node_info: NodeInfo) -> TagId {
+        if let Some(&idx) = self.node_info_lookup.get(&node_info) {
             return idx;
         }
-        let idx = TagId::new(self.tags.len() as u64);
-        let owned_tag_info = tag_info.into_owned();
-        self.tags.push(owned_tag_info.clone());
-        self.tag_lookup.insert(owned_tag_info, idx);
+        let idx = TagId::new(self.node_infos.len() as u64);
+        let owned_node_info = node_info.into_owned();
+        self.node_infos.push(owned_node_info.clone());
+        self.node_info_lookup.insert(owned_node_info, idx);
         idx
     }
 
-    pub(crate) fn by_tag_info(&self, tag_info: &NodeInfo) -> Option<TagId> {
-        self.tag_lookup.get(tag_info).copied()
+    pub(crate) fn by_node_info(&self, node_info: &NodeInfo) -> Option<TagId> {
+        self.node_info_lookup.get(node_info).copied()
     }
 
     pub(crate) fn by_tag_id(&self, tag_id: TagId) -> &NodeInfo {
-        self.tags
+        self.node_infos
             .get(tag_id.id() as usize)
             .expect("Tag id does not exist in this document")
     }
 
     pub(crate) fn len(&self) -> usize {
-        self.tags.len()
+        self.node_infos.len()
     }
 }
 
 pub(crate) struct TagsBuilder {
-    pub(crate) tags_lookup: TagsLookup,
+    pub(crate) node_info_lookup: NodeInfoLookup,
 
     pub(crate) parentheses: BitVec,
     // store the opening parens of all text content, i.e. text nodes
@@ -59,41 +59,43 @@ pub(crate) struct TagsBuilder {
 
 impl TagsBuilder {
     pub(crate) fn new() -> Self {
-        let mut tags_lookup = TagsLookup::new();
+        let mut node_info_lookup = NodeInfoLookup::new();
         // we ensure these always exist, so that we quickly compare with tag id
-        let namespaces_tag_id = tags_lookup.register(NodeInfo::open(NodeType::Namespaces));
-        let attributes_tag_id = tags_lookup.register(NodeInfo::open(NodeType::Attributes));
+        let namespaces_tag_id = node_info_lookup.register(NodeInfo::open(NodeType::Namespaces));
+        let attributes_tag_id = node_info_lookup.register(NodeInfo::open(NodeType::Attributes));
         debug_assert_eq!(namespaces_tag_id.id(), NAMESPACES_TAG_ID.id());
         debug_assert_eq!(attributes_tag_id.id(), ATTRIBUTES_TAG_ID.id());
         Self {
-            tags_lookup,
-
+            node_info_lookup,
             parentheses: BitVec::new(),
             text_opening_parens: BitVec::new(),
             usage: Vec::new(),
         }
     }
 
-    fn register_tag(&mut self, tag_info: NodeInfo) -> TagId {
-        self.tags_lookup.register(tag_info)
+    fn register_node_info(&mut self, node_info: NodeInfo) -> TagId {
+        self.node_info_lookup.register(node_info)
     }
 
     pub(crate) fn bits_per_element(&self) -> usize {
-        self.tags_lookup.len().next_power_of_two().trailing_zeros() as usize
+        self.node_info_lookup
+            .len()
+            .next_power_of_two()
+            .trailing_zeros() as usize
     }
 
     pub(crate) fn tags_amount(&self) -> usize {
-        self.tags_lookup.len()
+        self.node_info_lookup.len()
     }
 
     pub(crate) fn usage(&self) -> &[u64] {
         &self.usage
     }
 
-    pub(crate) fn open(&mut self, tag_type: NodeType) {
+    pub(crate) fn open(&mut self, node_type: NodeType) {
         self.parentheses.append(true);
 
-        match tag_type {
+        match node_type {
             NodeType::Attribute { .. } | NodeType::Text => {
                 self.text_opening_parens.append(true);
             }
@@ -101,8 +103,8 @@ impl TagsBuilder {
                 self.text_opening_parens.append(false);
             }
         }
-        let tag_info = NodeInfo::open(tag_type);
-        let tag_id = self.register_tag(tag_info);
+        let node_info = NodeInfo::open(node_type);
+        let tag_id = self.register_node_info(node_info);
         self.usage.push(tag_id.id())
     }
 
@@ -110,7 +112,7 @@ impl TagsBuilder {
         self.parentheses.append(false);
         self.text_opening_parens.append(false);
         let tag_info = NodeInfo::close(tag_type);
-        let tag_id = self.register_tag(tag_info);
+        let tag_id = self.register_node_info(tag_info);
         self.usage.push(tag_id.id())
     }
 }
