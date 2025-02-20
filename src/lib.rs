@@ -21,5 +21,5 @@ pub use document::{Document, Node};
 pub use parser::{parse_document, QuickXMLError};
 // pub use builder::parse_document;
 pub use name::{Namespace, NodeName};
-pub use node::{NodeInfo, NodeType};
+pub use node::NodeType;
 pub use traverse::TagState;

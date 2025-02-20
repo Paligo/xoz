@@ -43,7 +43,7 @@ impl NodeType<'_> {
 ///
 /// It's a combination of [`NodeType`] and whether it's an opening or closing tag.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct NodeInfo<'a> {
+pub(crate) struct NodeInfo<'a> {
     node_type: NodeType<'a>,
     // this would seem to be redundant as we already store it in the
     // balanced parentheses structure, but we want to be able to
@@ -53,14 +53,14 @@ pub struct NodeInfo<'a> {
 }
 
 impl<'a> NodeInfo<'a> {
-    pub fn open(node_type: NodeType<'a>) -> Self {
+    pub(crate) fn open(node_type: NodeType<'a>) -> Self {
         Self {
             node_type,
             open_close: true,
         }
     }
 
-    pub fn close(node_type: NodeType<'a>) -> Self {
+    pub(crate) fn close(node_type: NodeType<'a>) -> Self {
         Self {
             node_type,
             open_close: false,

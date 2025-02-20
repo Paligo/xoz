@@ -1,4 +1,4 @@
-use xoz::{parse_document, NodeInfo, NodeName, NodeType};
+use xoz::{parse_document, NodeName, NodeType};
 
 #[test]
 fn test_elements() {
