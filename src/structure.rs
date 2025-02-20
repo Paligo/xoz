@@ -158,10 +158,7 @@ impl<T: NodeInfoVec> Structure<T> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        node::{NodeName, NodeType},
-        node_info_vec::SArrayMatrix,
-    };
+    use crate::{name::NodeName, node::NodeType, node_info_vec::SArrayMatrix};
 
     use super::*;
 

@@ -5,7 +5,7 @@ use quick_xml::name::{LocalName, NamespaceError, PrefixDeclaration, ResolveResul
 use quick_xml::reader::NsReader;
 
 use crate::document::Document;
-use crate::node::NodeName;
+use crate::name::NodeName;
 use crate::node_info_vec::SArrayMatrix;
 use crate::structure::Structure;
 use crate::text::TextBuilder;

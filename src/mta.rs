@@ -474,7 +474,7 @@ impl Guard {
 #[cfg(test)]
 mod tests {
 
-    use crate::node::NodeName;
+    use crate::name::NodeName;
 
     use super::*;
 
