@@ -356,18 +356,18 @@ impl<T: TreeOps> Iterator for FollowingIter<T> {
     }
 }
 
-pub(crate) struct TaggedTreeOps<'a> {
+pub(crate) struct TypedTreeOps<'a> {
     doc: &'a Document,
     node_info_id: NodeInfoId,
 }
 
-impl<'a> TaggedTreeOps<'a> {
+impl<'a> TypedTreeOps<'a> {
     pub(crate) fn new(doc: &'a Document, node_info_id: NodeInfoId) -> Self {
         Self { doc, node_info_id }
     }
 }
 
-impl TreeOps for TaggedTreeOps<'_> {
+impl TreeOps for TypedTreeOps<'_> {
     fn parent(&self, node: Node) -> Option<Node> {
         self.doc.parent(node)
     }
@@ -390,14 +390,14 @@ impl TreeOps for TaggedTreeOps<'_> {
     }
 }
 
-pub(crate) struct WithTaggedSelfIter<'a, I: Iterator<Item = Node>> {
+pub(crate) struct WithTypedSelfIter<'a, I: Iterator<Item = Node>> {
     doc: &'a Document,
     node: Option<Node>,
     iter: I,
     node_info_id: NodeInfoId,
 }
 
-impl<'a, I> WithTaggedSelfIter<'a, I>
+impl<'a, I> WithTypedSelfIter<'a, I>
 where
     I: Iterator<Item = Node>,
 {
@@ -411,7 +411,7 @@ where
     }
 }
 
-impl<I> Iterator for WithTaggedSelfIter<'_, I>
+impl<I> Iterator for WithTypedSelfIter<'_, I>
 where
     I: Iterator<Item = Node>,
 {

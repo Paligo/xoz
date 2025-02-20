@@ -1,8 +1,8 @@
 use crate::{
     iter::{
         AncestorIter, AttributesIter, ChildrenIter, DescendantsIter, FollowingIter,
-        NextSiblingIter, NodeTreeOps, PreviousSiblingIter, TaggedTreeOps, WithSelfIter,
-        WithTaggedSelfIter,
+        NextSiblingIter, NodeTreeOps, PreviousSiblingIter, TypedTreeOps, WithSelfIter,
+        WithTypedSelfIter,
     },
     traverse::TraverseIter,
     NodeType, TagState,
@@ -266,7 +266,7 @@ impl Document {
         if let Some(node_info_id) = node_info_id {
             Box::new(DescendantsIter::new(
                 node,
-                TaggedTreeOps::new(self, node_info_id),
+                TypedTreeOps::new(self, node_info_id),
             ))
         } else {
             Box::new(std::iter::empty())
@@ -280,7 +280,7 @@ impl Document {
     ) -> Box<dyn Iterator<Item = Node> + '_> {
         let node_info_id = self.node_info_id(node_type.clone());
         if let Some(node_info_id) = node_info_id {
-            Box::new(WithTaggedSelfIter::new(
+            Box::new(WithTypedSelfIter::new(
                 self,
                 node,
                 self.typed_descendants(node, node_type),
@@ -302,7 +302,7 @@ impl Document {
         if let Some(node_info_id) = node_info_id {
             Box::new(FollowingIter::new(
                 node,
-                TaggedTreeOps::new(self, node_info_id),
+                TypedTreeOps::new(self, node_info_id),
             ))
         } else {
             Box::new(std::iter::empty())

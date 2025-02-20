@@ -163,7 +163,7 @@ impl Document {
         node_info_id: NodeInfoId,
     ) -> Option<Node> {
         self.structure
-            .tagged_descendant(node.get(), node_info_id)
+            .typed_descendant(node.get(), node_info_id)
             .map(Node::new)
     }
 
@@ -178,7 +178,7 @@ impl Document {
         node_info_id: NodeInfoId,
     ) -> Option<Node> {
         self.structure
-            .tagged_following(node.get(), node_info_id)
+            .typed_following(node.get(), node_info_id)
             .map(Node::new)
     }
 }
