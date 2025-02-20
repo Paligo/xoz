@@ -63,7 +63,11 @@ pub fn parse_document(xml: &str) -> Result<Document, QuickXMLError> {
                     text_builder.text_node(&text.minimal_escape()?.unescape()?);
                     tags_builder.close(TagType::Text);
                 }
-                Event::Comment(comment) => {}
+                Event::Comment(comment) => {
+                    tags_builder.open(TagType::Comment);
+                    text_builder.text_node(&comment.unescape()?);
+                    tags_builder.close(TagType::Comment);
+                }
                 Event::PI(pi) => {}
                 Event::Decl(_decl) => {}
                 Event::DocType(doctype) => {

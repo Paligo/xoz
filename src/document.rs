@@ -368,11 +368,23 @@ impl Document {
 
     pub fn text_str(&self, node: Node) -> Option<&str> {
         if matches!(self.value(node), TagType::Text) {
-            let text_id = self.structure.text_id(node.0);
-            Some(self.text_usage.text_value(text_id))
+            self.node_str(node)
         } else {
             None
         }
+    }
+
+    pub fn comment_str(&self, node: Node) -> Option<&str> {
+        if matches!(self.value(node), TagType::Comment) {
+            self.node_str(node)
+        } else {
+            None
+        }
+    }
+
+    fn node_str(&self, node: Node) -> Option<&str> {
+        let text_id = self.structure.text_id(node.0);
+        Some(self.text_usage.text_value(text_id))
     }
 
     pub fn subtree_tags(&self, node: Node, tag_id: TagId) -> usize {

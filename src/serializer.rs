@@ -70,7 +70,11 @@ impl<'a, W: io::Write> Serializer<'a, W> {
                         }
                     }
                 }
-                TagType::Comment => {}
+                TagType::Comment => {
+                    let text = self.doc.comment_str(node).expect("Must be comment node");
+                    self.writer
+                        .write_event(Event::Comment(BytesText::new(text)))?;
+                }
                 TagType::ProcessingInstruction => {}
                 TagType::Text => {
                     let text = self.doc.text_str(node).expect("Must be text node");
@@ -135,6 +139,9 @@ pub(crate) fn serialize_document_to_string(doc: &Document) -> String {
 
 #[derive(Default)]
 struct NamespaceTracker<'a> {
+    // TODO: could this be faster with a plain vec instead of a hashmap?
+    // but perhaps that requires interning the strings
+
     // Stack of namespace mappings, each level contains prefix->namespace mappings
     stack: Vec<HashMap<&'a [u8], &'a [u8]>>,
 }
@@ -322,6 +329,15 @@ mod tests {
         assert_eq!(
             serialize_document_to_string(&doc),
             r#"<doc xmlns="http://example.com" xmlns:prefix="http://example.com"/>"#
+        );
+    }
+
+    #[test]
+    fn test_comment() {
+        let doc = parse_document(r#"<doc><!-- comment --></doc>"#).unwrap();
+        assert_eq!(
+            serialize_document_to_string(&doc),
+            r#"<doc><!-- comment --></doc>"#
         );
     }
 }
