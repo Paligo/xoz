@@ -54,7 +54,7 @@ impl Document {
         self.structure.tree().node_index(node.0)
     }
 
-    pub fn node_name(&self, node: Node) -> Option<&TagName> {
+    pub fn tag_name(&self, node: Node) -> Option<&TagName> {
         match self.tag_type(node) {
             TagType::Element(tag_name) => Some(tag_name),
             TagType::Attribute(tag_name) => Some(tag_name),
