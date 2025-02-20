@@ -65,7 +65,7 @@ impl Document {
     pub fn node_type(&self, node: Node) -> &NodeType {
         let tag_info = self.structure.get_tag(node.0);
         debug_assert!(tag_info.is_open_tag());
-        tag_info.tag_type()
+        tag_info.node_type()
     }
 
     pub fn tag_id(&self, node: Node) -> TagId {

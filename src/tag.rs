@@ -29,8 +29,8 @@ impl NodeType<'_> {
             NodeType::Namespaces => NodeType::Namespaces,
             NodeType::Attributes => NodeType::Attributes,
             NodeType::Namespace(namespace) => NodeType::Namespace(namespace.clone()),
-            NodeType::Attribute(tag_name) => NodeType::Attribute(tag_name.into_owned()),
-            NodeType::Element(tag_name) => NodeType::Element(tag_name.into_owned()),
+            NodeType::Attribute(node_name) => NodeType::Attribute(node_name.into_owned()),
+            NodeType::Element(node_name) => NodeType::Element(node_name.into_owned()),
             NodeType::Text => NodeType::Text,
             NodeType::Comment => NodeType::Comment,
             NodeType::ProcessingInstruction => NodeType::ProcessingInstruction,
@@ -110,7 +110,7 @@ impl<'a> NodeName<'a> {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct NodeInfo<'a> {
-    tag_type: NodeType<'a>,
+    node_type: NodeType<'a>,
     // this would seem to be redundant as we already store it in the
     // balanced parentheses structure, but we want to be able to
     // look quickly for specifically opening tags, so we need it
@@ -119,29 +119,29 @@ pub struct NodeInfo<'a> {
 }
 
 impl<'a> NodeInfo<'a> {
-    pub fn open(tag_type: NodeType<'a>) -> Self {
+    pub fn open(node_type: NodeType<'a>) -> Self {
         Self {
-            tag_type,
+            node_type,
             open_close: true,
         }
     }
 
-    pub fn close(tag_type: NodeType<'a>) -> Self {
+    pub fn close(node_type: NodeType<'a>) -> Self {
         Self {
-            tag_type,
+            node_type,
             open_close: false,
         }
     }
 
     pub(crate) fn into_owned(self) -> NodeInfo<'static> {
         NodeInfo {
-            tag_type: self.tag_type.into_owned(),
+            node_type: self.node_type.into_owned(),
             open_close: self.open_close,
         }
     }
 
-    pub(crate) fn tag_type(&self) -> &NodeType {
-        &self.tag_type
+    pub(crate) fn node_type(&self) -> &NodeType {
+        &self.node_type
     }
 
     pub(crate) fn is_open_tag(&self) -> bool {
