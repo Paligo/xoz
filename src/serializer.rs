@@ -34,10 +34,13 @@ impl<'a, W: io::Write> Serializer<'a, W> {
                     // TODO serialize declaration if needed on opening
                 }
                 TagType::Element(name) => {
-                    if tag_state == TagState::Open {
-                        // put namespace prefixes on the tracker
-                        // todo!();
+                    if matches!(tag_state, TagState::Open | TagState::Empty) {
+                        self.ns.push_scope();
+                        // for (prefix, uri) in self.doc.namespace_entries(node) {
+                        //     self.ns.add_namespace(prefix, uri);
+                        // }
                     }
+
                     let qname = self.ns.qname(name, &mut element_name_scratch_buf);
                     match tag_state {
                         TagState::Open => {
@@ -48,11 +51,13 @@ impl<'a, W: io::Write> Serializer<'a, W> {
                         TagState::Close => {
                             let elem: BytesEnd = qname.into();
                             self.writer.write_event(Event::End(elem))?;
+                            self.ns.pop_scope();
                         }
                         TagState::Empty => {
                             let elem =
                                 self.create_elem(qname, node, &mut attribute_name_scratch_buf);
                             self.writer.write_event(Event::Empty(elem))?;
+                            self.ns.pop_scope();
                         }
                     }
                 }
@@ -209,4 +214,13 @@ mod tests {
         let doc = parse_document("<doc>text</doc>").unwrap();
         assert_eq!(serialize_document_to_string(&doc), "<doc>text</doc>");
     }
+
+    // #[test]
+    // fn test_explicit_prefix() {
+    //     let doc = parse_document(r#"<doc xmlns:ns="http://example.com"/>"#).unwrap();
+    //     assert_eq!(
+    //         serialize_document_to_string(&doc),
+    //         r#"<doc xmlns:ns="http://example.com"/>"#
+    //     );
+    // }
 }

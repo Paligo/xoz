@@ -291,6 +291,20 @@ impl Document {
         })
     }
 
+    // pub fn namespace_entries(&self, node: Node) -> impl Iterator<Item = (&str, &str)> + use<'_> {
+    //     todo!();
+
+    //     // NamespacesIter::new(self, node).map(move |n| {
+    //     //     let text_id = self.structure.text_id(n.0);
+    //     //     let value = self.text_usage.text_value(text_id);
+    //     //     let tag_name = match self.value(n) {
+    //     //         TagType::Namespace(tag_name) => tag_name,
+    //     //         _ => unreachable!(),
+    //     //     };
+    //     //     (tag_name, value)
+    //     // })
+    // }
+
     pub fn axis_attribute(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
         self.attributes(node)
     }
