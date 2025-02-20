@@ -58,7 +58,10 @@ impl<'a, W: io::Write> Serializer<'a, W> {
                 }
                 TagType::Comment => {}
                 TagType::ProcessingInstruction => {}
-                TagType::Text => {}
+                TagType::Text => {
+                    let text = self.doc.text_str(node).expect("Must be text node");
+                    self.writer.write_event(Event::Text(BytesText::new(text)))?;
+                }
                 TagType::Attributes
                 | TagType::Namespaces
                 | TagType::Attribute(_)
@@ -201,9 +204,9 @@ mod tests {
         assert_eq!(serialize_document_to_string(&doc), r#"<doc a="1" b="2"/>"#);
     }
 
-    // #[test]
-    // fn test_text() {
-    //     let doc = parse_document("<doc>text</doc>").unwrap();
-    //     assert_eq!(serialize_document_to_string(&doc), "<doc>text</doc>");
-    // }
+    #[test]
+    fn test_text() {
+        let doc = parse_document("<doc>text</doc>").unwrap();
+        assert_eq!(serialize_document_to_string(&doc), "<doc>text</doc>");
+    }
 }
