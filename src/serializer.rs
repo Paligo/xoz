@@ -259,11 +259,33 @@ mod tests {
     }
 
     #[test]
-    fn test_prefixed_el() {
+    fn test_prefixed_el_empty() {
         let doc = parse_document(r#"<prefix:doc xmlns:prefix="http://example.com"/>"#).unwrap();
         assert_eq!(
             serialize_document_to_string(&doc),
             r#"<prefix:doc xmlns:prefix="http://example.com"/>"#
+        );
+    }
+
+    #[test]
+    fn test_prefixed_el_open_close() {
+        let doc =
+            parse_document(r#"<prefix:doc xmlns:prefix="http://example.com">text</prefix:doc>"#)
+                .unwrap();
+        assert_eq!(
+            serialize_document_to_string(&doc),
+            r#"<prefix:doc xmlns:prefix="http://example.com">text</prefix:doc>"#
+        );
+    }
+
+    #[test]
+    fn test_prefix_override() {
+        let doc = parse_document(
+            r#"<doc xmlns:p="http://example.com"><a><p:b xmlns:p="http://example.com/2" /></a></doc>"#,
+        ).unwrap();
+        assert_eq!(
+            serialize_document_to_string(&doc),
+            r#"<doc xmlns:p="http://example.com"><a><p:b xmlns:p="http://example.com/2"/></a></doc>"#
         );
     }
 
