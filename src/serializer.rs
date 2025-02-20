@@ -166,9 +166,6 @@ mod tests {
     #[test]
     fn test_attribute() {
         let doc = parse_document(r#"<doc a="1"/>"#).unwrap();
-        // let elem = doc.document_element();
-        // let attributes = doc.attribute_entries(elem).collect::<Vec<_>>();
-        // assert_eq!(attributes, []);
         assert_eq!(serialize_document_to_string(&doc), r#"<doc a="1"/>"#);
     }
 }
