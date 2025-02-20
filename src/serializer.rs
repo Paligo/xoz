@@ -9,52 +9,83 @@ use quick_xml::{
 
 use crate::{document::Document, tag::TagType, TagName, TagState};
 
-pub(crate) fn serialize_document(doc: &Document, write: &mut impl io::Write) -> io::Result<()> {
-    let mut writer = Writer::new(write);
-    let mut ns = NamespaceTracker::new();
-    let mut element_name_scratch_buf = Vec::with_capacity(64);
-    let mut attribute_name_scratch_buf = Vec::with_capacity(64);
-    for (tag_type, tag_state, node) in doc.traverse(doc.root()) {
-        match tag_type {
-            TagType::Document => {
-                // TODO serialize declaration if needed on opening
-            }
-            TagType::Element(name) => {
-                if tag_state == TagState::Open {
-                    // put namespace prefixes on the tracker
-                    // todo!();
-                }
-                let qname = ns.qname(name, &mut element_name_scratch_buf);
-                match tag_state {
-                    TagState::Open => {
-                        let elem =
-                            create_elem(doc, node, qname, &ns, &mut attribute_name_scratch_buf);
-                        writer.write_event(Event::Start(elem))?;
-                    }
-                    TagState::Close => {
-                        let elem: BytesEnd = qname.into();
-                        writer.write_event(Event::End(elem))?;
-                    }
-                    TagState::Empty => {
-                        let elem =
-                            create_elem(doc, node, qname, &ns, &mut attribute_name_scratch_buf);
-                        writer.write_event(Event::Empty(elem))?;
-                    }
-                }
-            }
-            TagType::Comment => {}
-            TagType::ProcessingInstruction => {}
-            TagType::Text => {}
-            TagType::Attributes
-            | TagType::Namespaces
-            | TagType::Attribute(_)
-            | TagType::Namespace(_) => {
-                unreachable!("We cannot reach these tag types during traverse");
-            }
+struct Serializer<'a, W: io::Write> {
+    doc: &'a Document,
+    writer: Writer<W>,
+    ns: NamespaceTracker<'a>,
+    element_name_scratch_buf: Vec<u8>,
+    attribute_name_scratch_buf: Vec<u8>,
+}
+
+impl<'a, W: io::Write> Serializer<'a, W> {
+    fn new(doc: &'a Document, write: W) -> Self {
+        Self {
+            doc,
+            writer: Writer::new(write),
+            ns: NamespaceTracker::new(),
+            element_name_scratch_buf: Vec::with_capacity(64),
+            attribute_name_scratch_buf: Vec::with_capacity(64),
         }
     }
 
-    Ok(())
+    fn serialize_document(&mut self) -> io::Result<()> {
+        for (tag_type, tag_state, node) in self.doc.traverse(self.doc.root()) {
+            match tag_type {
+                TagType::Document => {
+                    // TODO serialize declaration if needed on opening
+                }
+                TagType::Element(name) => {
+                    if tag_state == TagState::Open {
+                        // put namespace prefixes on the tracker
+                        // todo!();
+                    }
+                    let qname = self.ns.qname(name, &mut self.element_name_scratch_buf);
+                    match tag_state {
+                        TagState::Open => {
+                            let elem = create_elem(
+                                self.doc,
+                                node,
+                                qname,
+                                &self.ns,
+                                &mut self.attribute_name_scratch_buf,
+                            );
+                            self.writer.write_event(Event::Start(elem))?;
+                        }
+                        TagState::Close => {
+                            let elem: BytesEnd = qname.into();
+                            self.writer.write_event(Event::End(elem))?;
+                        }
+                        TagState::Empty => {
+                            let elem = create_elem(
+                                self.doc,
+                                node,
+                                qname,
+                                &self.ns,
+                                &mut self.attribute_name_scratch_buf,
+                            );
+                            self.writer.write_event(Event::Empty(elem))?;
+                        }
+                    }
+                }
+                TagType::Comment => {}
+                TagType::ProcessingInstruction => {}
+                TagType::Text => {}
+                TagType::Attributes
+                | TagType::Namespaces
+                | TagType::Attribute(_)
+                | TagType::Namespace(_) => {
+                    unreachable!("We cannot reach these tag types during traverse");
+                }
+            }
+        }
+
+        Ok(())
+    }
+}
+
+pub(crate) fn serialize_document(doc: &Document, write: &mut impl io::Write) -> io::Result<()> {
+    let mut serializer = Serializer::new(doc, write);
+    serializer.serialize_document()
 }
 
 fn create_elem<'a>(
