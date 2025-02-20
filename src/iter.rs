@@ -148,6 +148,33 @@ impl Iterator for AttributesIter<'_> {
     }
 }
 
+pub(crate) struct NamespacesIter<'a> {
+    doc: &'a Document,
+    node: Option<Node>,
+}
+
+impl<'a> NamespacesIter<'a> {
+    pub(crate) fn new(doc: &'a Document, node: Node) -> Self {
+        let node = doc.namespaces_child(node);
+        let node = if let Some(node) = node {
+            doc.first_child(node)
+        } else {
+            None
+        };
+        Self { doc, node }
+    }
+}
+
+impl Iterator for NamespacesIter<'_> {
+    type Item = Node;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let node = self.node?;
+        self.node = self.doc.next_sibling(node);
+        Some(node)
+    }
+}
+
 pub(crate) struct WithSelfIter<I: Iterator<Item = Node>> {
     node: Option<Node>,
     iter: I,

@@ -2,7 +2,7 @@ use vers_vecs::trees::Tree;
 
 use crate::{
     iter::{
-        AncestorIter, AttributesIter, ChildrenIter, DescendantsIter, FollowingIter,
+        AncestorIter, AttributesIter, ChildrenIter, DescendantsIter, FollowingIter, NamespacesIter,
         NextSiblingIter, NodeTreeOps, PreviousSiblingIter, TaggedTreeOps, WithSelfIter,
         WithTaggedSelfIter,
     },
@@ -126,6 +126,21 @@ impl Document {
                 // the first child is the namespaces node, check for attributes node
                 let next = self.next_sibling(node);
                 next.filter(|next| self.tag_id(*next).is_attributes())
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
+
+    pub(crate) fn namespaces_child(&self, node: Node) -> Option<Node> {
+        let node = self.primitive_first_child(node);
+        if let Some(node) = node {
+            let tag_id = self.tag_id(node);
+            if tag_id.is_namespaces() {
+                // the first child is the namespaces node
+                Some(node)
             } else {
                 None
             }
@@ -291,19 +306,12 @@ impl Document {
         })
     }
 
-    // pub fn namespace_entries(&self, node: Node) -> impl Iterator<Item = (&str, &str)> + use<'_> {
-    //     todo!();
-
-    //     // NamespacesIter::new(self, node).map(move |n| {
-    //     //     let text_id = self.structure.text_id(n.0);
-    //     //     let value = self.text_usage.text_value(text_id);
-    //     //     let tag_name = match self.value(n) {
-    //     //         TagType::Namespace(tag_name) => tag_name,
-    //     //         _ => unreachable!(),
-    //     //     };
-    //     //     (tag_name, value)
-    //     // })
-    // }
+    pub fn namespace_entries(&self, node: Node) -> impl Iterator<Item = (&[u8], &[u8])> + use<'_> {
+        NamespacesIter::new(self, node).map(move |n| match self.value(n) {
+            TagType::Namespace(namespace) => (namespace.prefix(), namespace.uri()),
+            _ => unreachable!(),
+        })
+    }
 
     pub fn axis_attribute(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
         self.attributes(node)

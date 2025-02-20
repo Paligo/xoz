@@ -53,6 +53,14 @@ impl Namespace {
             uri: uri.as_ref().to_vec(),
         }
     }
+
+    pub fn prefix(&self) -> &[u8] {
+        &self.prefix
+    }
+
+    pub fn uri(&self) -> &[u8] {
+        &self.uri
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]

@@ -26,6 +26,7 @@ impl<'a, W: io::Write> Serializer<'a, W> {
 
     fn serialize_document(&mut self) -> io::Result<()> {
         let mut element_name_scratch_buf = Vec::with_capacity(64);
+        let mut xmlns_scratch_buf = Vec::with_capacity(64);
         let mut attribute_name_scratch_buf = Vec::with_capacity(64);
 
         for (tag_type, tag_state, node) in self.doc.traverse(self.doc.root()) {
@@ -36,16 +37,20 @@ impl<'a, W: io::Write> Serializer<'a, W> {
                 TagType::Element(name) => {
                     if matches!(tag_state, TagState::Open | TagState::Empty) {
                         self.ns.push_scope();
-                        // for (prefix, uri) in self.doc.namespace_entries(node) {
-                        //     self.ns.add_namespace(prefix, uri);
-                        // }
+                        for (prefix, uri) in self.doc.namespace_entries(node) {
+                            self.ns.add_namespace(prefix, uri);
+                        }
                     }
 
                     let qname = self.ns.qname(name, &mut element_name_scratch_buf);
                     match tag_state {
                         TagState::Open => {
-                            let elem =
-                                self.create_elem(qname, node, &mut attribute_name_scratch_buf);
+                            let elem = self.create_elem(
+                                qname,
+                                node,
+                                &mut xmlns_scratch_buf,
+                                &mut attribute_name_scratch_buf,
+                            );
                             self.writer.write_event(Event::Start(elem))?;
                         }
                         TagState::Close => {
@@ -54,8 +59,12 @@ impl<'a, W: io::Write> Serializer<'a, W> {
                             self.ns.pop_scope();
                         }
                         TagState::Empty => {
-                            let elem =
-                                self.create_elem(qname, node, &mut attribute_name_scratch_buf);
+                            let elem = self.create_elem(
+                                qname,
+                                node,
+                                &mut xmlns_scratch_buf,
+                                &mut attribute_name_scratch_buf,
+                            );
                             self.writer.write_event(Event::Empty(elem))?;
                             self.ns.pop_scope();
                         }
@@ -83,10 +92,26 @@ impl<'a, W: io::Write> Serializer<'a, W> {
         &self,
         qname: QName<'a>,
         node: crate::document::Node,
+        xmlns_scratch_buf: &mut Vec<u8>,
         attribute_name_scratch_buf: &mut Vec<u8>,
     ) -> BytesStart<'a> {
         let mut elem: BytesStart = qname.into();
-        // TODO: duplicate code
+
+        for (prefix, uri) in self.doc.namespace_entries(node) {
+            let key = if prefix.is_empty() {
+                QName(b"xmlns")
+            } else {
+                xmlns_scratch_buf.clear();
+                xmlns_scratch_buf.extend(b"xmlns:");
+                xmlns_scratch_buf.extend(prefix);
+                QName(xmlns_scratch_buf)
+            };
+            elem.push_attribute(Attribute {
+                key,
+                value: uri.into(),
+            });
+        }
+
         for (name, value) in self.doc.attribute_entries(node) {
             elem.push_attribute(Attribute {
                 key: self.ns.qname(name, attribute_name_scratch_buf),
@@ -215,12 +240,12 @@ mod tests {
         assert_eq!(serialize_document_to_string(&doc), "<doc>text</doc>");
     }
 
-    // #[test]
-    // fn test_explicit_prefix() {
-    //     let doc = parse_document(r#"<doc xmlns:ns="http://example.com"/>"#).unwrap();
-    //     assert_eq!(
-    //         serialize_document_to_string(&doc),
-    //         r#"<doc xmlns:ns="http://example.com"/>"#
-    //     );
-    // }
+    #[test]
+    fn test_explicit_prefix() {
+        let doc = parse_document(r#"<doc xmlns:ns="http://example.com"/>"#).unwrap();
+        assert_eq!(
+            serialize_document_to_string(&doc),
+            r#"<doc xmlns:ns="http://example.com"/>"#
+        );
+    }
 }
