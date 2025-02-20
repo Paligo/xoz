@@ -27,13 +27,8 @@ pub(crate) fn serialize_document(doc: &Document, write: &mut impl io::Write) -> 
                 let qname = ns.qname(name, &mut element_name_scratch_buf);
                 match tag_state {
                     TagState::Open => {
-                        let mut elem: BytesStart = qname.into();
-                        for (name, value) in doc.attribute_entries(node) {
-                            elem.push_attribute(Attribute {
-                                key: ns.qname(name, &mut attribute_name_scratch_buf),
-                                value: value.as_bytes().into(),
-                            })
-                        }
+                        let elem =
+                            create_elem(doc, node, qname, &ns, &mut attribute_name_scratch_buf);
                         writer.write_event(Event::Start(elem))?;
                     }
                     TagState::Close => {
@@ -41,14 +36,8 @@ pub(crate) fn serialize_document(doc: &Document, write: &mut impl io::Write) -> 
                         writer.write_event(Event::End(elem))?;
                     }
                     TagState::Empty => {
-                        let mut elem: BytesStart = qname.into();
-                        // TODO: duplicate code
-                        for (name, value) in doc.attribute_entries(node) {
-                            elem.push_attribute(Attribute {
-                                key: ns.qname(name, &mut attribute_name_scratch_buf),
-                                value: value.as_bytes().into(),
-                            })
-                        }
+                        let elem =
+                            create_elem(doc, node, qname, &ns, &mut attribute_name_scratch_buf);
                         writer.write_event(Event::Empty(elem))?;
                     }
                 }
@@ -66,6 +55,24 @@ pub(crate) fn serialize_document(doc: &Document, write: &mut impl io::Write) -> 
     }
 
     Ok(())
+}
+
+fn create_elem<'a>(
+    doc: &'a Document,
+    node: crate::document::Node,
+    qname: QName<'a>,
+    ns: &'a NamespaceTracker<'a>,
+    attribute_name_scratch_buf: &mut Vec<u8>,
+) -> BytesStart<'a> {
+    let mut elem: BytesStart = qname.into();
+    // TODO: duplicate code
+    for (name, value) in doc.attribute_entries(node) {
+        elem.push_attribute(Attribute {
+            key: ns.qname(name, attribute_name_scratch_buf),
+            value: value.as_bytes().into(),
+        })
+    }
+    elem
 }
 
 pub(crate) fn serialize_document_to_string(doc: &Document) -> String {
@@ -174,4 +181,10 @@ mod tests {
         let doc = parse_document(r#"<doc a="1" b="2"/>"#).unwrap();
         assert_eq!(serialize_document_to_string(&doc), r#"<doc a="1" b="2"/>"#);
     }
+
+    // #[test]
+    // fn test_text() {
+    //     let doc = parse_document("<doc>text</doc>").unwrap();
+    //     assert_eq!(serialize_document_to_string(&doc), "<doc>text</doc>");
+    // }
 }
