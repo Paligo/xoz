@@ -2,7 +2,7 @@ use ahash::{HashMap, HashMapExt};
 use std::{collections::hash_map::Entry, io};
 
 use quick_xml::{
-    events::{attributes::Attribute, BytesEnd, BytesStart, BytesText, Event},
+    events::{attributes::Attribute, BytesEnd, BytesPI, BytesStart, BytesText, Event},
     name::QName,
     Writer,
 };
@@ -75,7 +75,13 @@ impl<'a, W: io::Write> Serializer<'a, W> {
                     self.writer
                         .write_event(Event::Comment(BytesText::new(text)))?;
                 }
-                TagType::ProcessingInstruction => {}
+                TagType::ProcessingInstruction => {
+                    let text = self
+                        .doc
+                        .processing_instruction_str(node)
+                        .expect("Must be PI node");
+                    self.writer.write_event(Event::PI(BytesPI::new(text)))?;
+                }
                 TagType::Text => {
                     let text = self.doc.text_str(node).expect("Must be text node");
                     self.writer.write_event(Event::Text(BytesText::new(text)))?;
@@ -338,6 +344,15 @@ mod tests {
         assert_eq!(
             serialize_document_to_string(&doc),
             r#"<doc><!-- comment --></doc>"#
+        );
+    }
+
+    #[test]
+    fn test_pi() {
+        let doc = parse_document(r#"<doc><?pi data?></doc>"#).unwrap();
+        assert_eq!(
+            serialize_document_to_string(&doc),
+            r#"<doc><?pi data?></doc>"#
         );
     }
 }

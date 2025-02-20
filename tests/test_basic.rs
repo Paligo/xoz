@@ -664,3 +664,14 @@ fn test_self_axis() {
     let nodes: Vec<_> = doc.axis_self(a).collect();
     assert_eq!(nodes, vec![a]);
 }
+
+#[test]
+fn test_processing_instruction() {
+    let doc = parse_document(r#"<doc><?target content?></doc>"#).unwrap();
+    let doc_el = doc.document_element();
+    let p = doc.first_child(doc_el).unwrap();
+
+    let pi = doc.processing_instruction(p).unwrap();
+    assert_eq!(pi.target(), "target".to_string());
+    assert_eq!(pi.content(), " content".to_string());
+}

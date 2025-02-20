@@ -68,7 +68,13 @@ pub fn parse_document(xml: &str) -> Result<Document, QuickXMLError> {
                     text_builder.text_node(&comment.unescape()?);
                     tags_builder.close(TagType::Comment);
                 }
-                Event::PI(pi) => {}
+                Event::PI(pi) => {
+                    tags_builder.open(TagType::ProcessingInstruction);
+                    let pi = std::str::from_utf8(&pi).expect("PI is not utf8");
+                    dbg!(&pi);
+                    text_builder.text_node(pi);
+                    tags_builder.close(TagType::ProcessingInstruction);
+                }
                 Event::Decl(_decl) => {}
                 Event::DocType(doctype) => {
                     todo!()

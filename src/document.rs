@@ -1,3 +1,4 @@
+use quick_xml::events::BytesPI;
 use vers_vecs::trees::Tree;
 
 use crate::{
@@ -382,6 +383,23 @@ impl Document {
         }
     }
 
+    pub fn processing_instruction_str(&self, node: Node) -> Option<&str> {
+        if matches!(self.value(node), TagType::ProcessingInstruction) {
+            self.node_str(node)
+        } else {
+            None
+        }
+    }
+
+    pub fn processing_instruction(&self, node: Node) -> Option<ProcessingInstruction> {
+        if matches!(self.value(node), TagType::ProcessingInstruction) {
+            let s = self.node_str(node).expect("Missing PI data");
+            Some(ProcessingInstruction { data: s })
+        } else {
+            None
+        }
+    }
+
     fn node_str(&self, node: Node) -> Option<&str> {
         let text_id = self.structure.text_id(node.0);
         Some(self.text_usage.text_value(text_id))
@@ -419,5 +437,23 @@ impl Document {
 
     pub(crate) fn primitive_children(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
         NextSiblingIter::new(self, self.primitive_first_child(node))
+    }
+}
+
+pub struct ProcessingInstruction<'a> {
+    data: &'a str,
+}
+
+impl ProcessingInstruction<'_> {
+    pub fn target(&self) -> String {
+        let bytes_pi = BytesPI::new(self.data);
+        let target = std::str::from_utf8(bytes_pi.target()).expect("PI target is not utf8");
+        target.to_string()
+    }
+
+    pub fn content(&self) -> String {
+        let bytes_pi = BytesPI::new(self.data);
+        let content = std::str::from_utf8(bytes_pi.content()).expect("PI content is not utf8");
+        content.to_string()
     }
 }

@@ -12,14 +12,13 @@ pub enum TagType<'a> {
     Namespace(Namespace),
     // under attributes. has associated text
     Attribute(TagName<'a>),
-    // under document or element
+    // under document. contains namespaces, attributes, children
     Element(TagName<'a>),
-    // under document or element. has associated text
+    // child node, has associated text
     Text,
-    // since there are going to be a limited amount of prefix
-    // declarations, we directly encode them as a tag type
+    // child node, has associated text
     Comment,
-    // TODO: this might have name information too
+    // child node, has associated text
     ProcessingInstruction,
 }
 
