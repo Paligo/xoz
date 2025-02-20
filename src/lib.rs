@@ -5,16 +5,16 @@ mod error;
 mod iter;
 mod mta;
 mod mta_compiler;
+mod node;
 mod parser;
 mod serializer;
 mod structure;
-mod node;
-mod tags_builder;
 mod tagvec;
 mod text;
 mod text_fm;
 mod textsearch;
 mod traverse;
+mod tree_builder;
 
 pub use document::{Document, Node};
 pub use parser::{parse_document, QuickXMLError};

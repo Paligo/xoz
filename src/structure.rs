@@ -8,7 +8,7 @@ use vers_vecs::{
 use crate::{
     error::Error,
     node::NodeInfo,
-    tags_builder::{NodeInfoLookup, TreeBuilder},
+    tree_builder::{NodeInfoLookup, TreeBuilder},
     tagvec::{NodeInfoId, NodeInfoVec},
     text::TextId,
 };

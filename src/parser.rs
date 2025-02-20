@@ -7,9 +7,9 @@ use quick_xml::reader::NsReader;
 use crate::document::Document;
 use crate::node::NodeName;
 use crate::structure::Structure;
-use crate::tags_builder::TreeBuilder;
 use crate::tagvec::SArrayMatrix;
 use crate::text::TextBuilder;
+use crate::tree_builder::TreeBuilder;
 use crate::{Namespace, NodeType};
 
 pub fn parse_document(xml: &str) -> Result<Document, QuickXMLError> {
