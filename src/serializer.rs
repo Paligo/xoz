@@ -266,4 +266,16 @@ mod tests {
             r#"<prefix:doc xmlns:prefix="http://example.com"/>"#
         );
     }
+
+    #[test]
+    fn test_prefer_default() {
+        let doc = parse_document(
+            r#"<doc xmlns="http://example.com" xmlns:prefix="http://example.com"/>"#,
+        )
+        .unwrap();
+        assert_eq!(
+            serialize_document_to_string(&doc),
+            r#"<doc xmlns="http://example.com" xmlns:prefix="http://example.com"/>"#
+        );
+    }
 }
