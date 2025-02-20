@@ -59,7 +59,7 @@ impl Document {
         // if found, or checking whether we are an attribute or namespace node before
         // we even try. I've chosen the first strategy.
         let parent = self.primitive_parent(node)?;
-        if self.node_info_id(parent).is_special() {
+        if self.node_info_id_for_node(parent).is_special() {
             // if the parent is an attribute or namespace node, we skip it
             self.primitive_parent(parent)
         } else {
@@ -83,7 +83,7 @@ impl Document {
     /// ```
     pub fn first_child(&self, node: Node) -> Option<Node> {
         let node = self.primitive_first_child(node)?;
-        let node_info_id = self.node_info_id(node);
+        let node_info_id = self.node_info_id_for_node(node);
         if node_info_id.is_attributes() {
             // the first child is the attributes node, skip it
             self.next_sibling(node)
@@ -92,7 +92,7 @@ impl Document {
             // check if the next sibling is the attributes node
             let next = self.next_sibling(node)?;
             // if so, the first child is the next sibling
-            if self.node_info_id(next).is_attributes() {
+            if self.node_info_id_for_node(next).is_attributes() {
                 self.next_sibling(next)
             } else {
                 // if not, the first child is this sibling
@@ -109,7 +109,7 @@ impl Document {
     /// Returns [`None`] if there are no children.
     pub fn last_child(&self, node: Node) -> Option<Node> {
         let child = self.primitive_last_child(node)?;
-        if self.node_info_id(child).is_special() {
+        if self.node_info_id_for_node(child).is_special() {
             None
         } else {
             Some(child)
@@ -144,7 +144,7 @@ impl Document {
     /// Returns [`None`] if there is no previous sibling.
     pub fn previous_sibling(&self, node: Node) -> Option<Node> {
         let prev = self.primitive_previous_sibling(node)?;
-        if self.node_info_id(prev).is_special() {
+        if self.node_info_id_for_node(prev).is_special() {
             // attributes and namespaces nodes are not siblings
             None
         } else {

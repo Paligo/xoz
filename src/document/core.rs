@@ -39,9 +39,13 @@ impl Document {
         parse_document(xml)
     }
 
-    /// Given a tag info, return the tag id, if it exists.
-    pub fn tag(&self, node_info: &NodeInfo) -> Option<NodeInfoId> {
+    /// Given node info, return the node info id, if it exists.
+    pub fn node_info_id(&self, node_info: &NodeInfo) -> Option<NodeInfoId> {
         self.structure.lookup_node_info_id(node_info)
+    }
+
+    pub(crate) fn node_info_id_for_node(&self, node: Node) -> NodeInfoId {
+        self.structure.node_info_id(node.0)
     }
 
     /// Preorder number of node
@@ -66,10 +70,6 @@ impl Document {
         let node_info = self.structure.get_node_info(node.0);
         debug_assert!(node_info.is_open_tag());
         node_info.node_type()
-    }
-
-    pub fn node_info_id(&self, node: Node) -> NodeInfoId {
-        self.structure.node_info_id(node.0)
     }
 
     pub fn is_document(&self, node: Node) -> bool {

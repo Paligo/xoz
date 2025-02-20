@@ -381,7 +381,7 @@ impl TreeOps for TaggedTreeOps<'_> {
     }
 
     fn matching_descendant_or_self(&self, node: Node) -> Option<Node> {
-        if self.doc.node_info_id(node) == self.node_info_id {
+        if self.doc.node_info_id_for_node(node) == self.node_info_id {
             Some(node)
         } else {
             self.matching_descendant(node)
@@ -418,7 +418,7 @@ where
 
     fn next(&mut self) -> Option<Self::Item> {
         if let Some(node) = self.node.take() {
-            if self.doc.node_info_id(node) == self.node_info_id {
+            if self.doc.node_info_id_for_node(node) == self.node_info_id {
                 Some(node)
             } else {
                 self.next()

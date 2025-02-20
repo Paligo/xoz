@@ -15,7 +15,7 @@ impl Document {
     pub(crate) fn namespaces_child(&self, node: Node) -> Option<Node> {
         let node = self.primitive_first_child(node);
         if let Some(node) = node {
-            let node_info_id = self.node_info_id(node);
+            let node_info_id = self.node_info_id_for_node(node);
             if node_info_id.is_namespaces() {
                 // the first child is the namespaces node
                 Some(node)

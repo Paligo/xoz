@@ -208,7 +208,7 @@ fn test_preorder() {
 fn test_subtree_tags() {
     let doc = parse_document(r#"<doc><a/><a/></doc>"#).unwrap();
     let tag_id = doc
-        .tag(&NodeInfo::open(NodeType::Element(NodeName::new("", "a"))))
+        .node_info_id(&NodeInfo::open(NodeType::Element(NodeName::new("", "a"))))
         .unwrap();
     assert_eq!(doc.subtree_tags(doc.document_element(), tag_id), 2);
 }
@@ -217,7 +217,7 @@ fn test_subtree_tags() {
 fn test_subtree_tags_root() {
     let doc = parse_document(r#"<doc><a/><a/></doc>"#).unwrap();
     let tag_id = doc
-        .tag(&NodeInfo::open(NodeType::Element(NodeName::new("", "a"))))
+        .node_info_id(&NodeInfo::open(NodeType::Element(NodeName::new("", "a"))))
         .unwrap();
     assert_eq!(doc.subtree_tags(doc.root(), tag_id), 2);
 }
@@ -226,7 +226,7 @@ fn test_subtree_tags_root() {
 fn test_subtree_tags_deeper() {
     let doc = parse_document(r#"<doc><b><a/></b><a/></doc>"#).unwrap();
     let tag_id = doc
-        .tag(&NodeInfo::open(NodeType::Element(NodeName::new("", "a"))))
+        .node_info_id(&NodeInfo::open(NodeType::Element(NodeName::new("", "a"))))
         .unwrap();
     assert_eq!(doc.subtree_tags(doc.document_element(), tag_id), 2);
 }
@@ -235,7 +235,7 @@ fn test_subtree_tags_deeper() {
 fn test_tagged_descendant() {
     let doc = parse_document(r#"<doc><a><b/></a></doc>"#).unwrap();
     let tag_id = doc
-        .tag(&NodeInfo::open(NodeType::Element(NodeName::new("", "b"))))
+        .node_info_id(&NodeInfo::open(NodeType::Element(NodeName::new("", "b"))))
         .unwrap();
     let b = doc
         .tagged_descendant(doc.document_element(), tag_id)
@@ -251,7 +251,7 @@ fn test_tagged_descendant_node_itself() {
     let b = doc.first_child(a).unwrap();
 
     let tag_id = doc
-        .tag(&NodeInfo::open(NodeType::Element(NodeName::new("", "b"))))
+        .node_info_id(&NodeInfo::open(NodeType::Element(NodeName::new("", "b"))))
         .unwrap();
     let found = doc.tagged_descendant(b, tag_id);
     assert!(found.is_none());
@@ -267,7 +267,7 @@ fn test_tagged_descendant2() {
     let second_b = doc.first_child(a2).unwrap();
 
     let tag_id = doc
-        .tag(&NodeInfo::open(NodeType::Element(NodeName::new("", "b"))))
+        .node_info_id(&NodeInfo::open(NodeType::Element(NodeName::new("", "b"))))
         .unwrap();
 
     let b = doc
@@ -496,7 +496,7 @@ fn test_tagged_descendants() {
     let doc = parse_document(r#"<doc><a><b/><b/></a></doc>"#).unwrap();
     let doc_el = doc.document_element();
     let tag_id = doc
-        .tag(&NodeInfo::open(NodeType::Element(NodeName::new("", "b"))))
+        .node_info_id(&NodeInfo::open(NodeType::Element(NodeName::new("", "b"))))
         .unwrap();
     let tagged_descendants: Vec<_> = doc.tagged_descendants(doc_el, tag_id).collect();
     assert_eq!(tagged_descendants.len(), 2);
@@ -507,7 +507,7 @@ fn test_tagged_descendants_next_sibling() {
     let doc = parse_document(r#"<doc><a><b/></a><c><b/></c></doc>"#).unwrap();
     let doc_el = doc.document_element();
     let tag_id = doc
-        .tag(&NodeInfo::open(NodeType::Element(NodeName::new("", "b"))))
+        .node_info_id(&NodeInfo::open(NodeType::Element(NodeName::new("", "b"))))
         .unwrap();
     let tagged_descendants: Vec<_> = doc.tagged_descendants(doc_el, tag_id).collect();
     assert_eq!(tagged_descendants.len(), 2);
@@ -519,7 +519,7 @@ fn test_tagged_descendants_including_self() {
     let doc_el = doc.document_element();
     let outer_b = doc.first_child(doc_el).unwrap();
     let tag_id = doc
-        .tag(&NodeInfo::open(NodeType::Element(NodeName::new("", "b"))))
+        .node_info_id(&NodeInfo::open(NodeType::Element(NodeName::new("", "b"))))
         .unwrap();
     let tagged_descendants: Vec<_> = doc.tagged_descendants(outer_b, tag_id).collect();
     assert_eq!(tagged_descendants.len(), 2);
@@ -531,7 +531,7 @@ fn test_tagged_descendants_including_self2() {
     let doc_el = doc.document_element();
     let outer_b = doc.first_child(doc_el).unwrap();
     let tag_id = doc
-        .tag(&NodeInfo::open(NodeType::Element(NodeName::new("", "b"))))
+        .node_info_id(&NodeInfo::open(NodeType::Element(NodeName::new("", "b"))))
         .unwrap();
     let tagged_descendants: Vec<_> = doc.tagged_descendants(outer_b, tag_id).collect();
     assert_eq!(tagged_descendants.len(), 0);
@@ -542,7 +542,7 @@ fn test_tagged_descendants_or_self() {
     let doc = parse_document(r#"<doc><a><b/><b/></a></doc>"#).unwrap();
     let doc_el = doc.document_element();
     let tag_id = doc
-        .tag(&NodeInfo::open(NodeType::Element(NodeName::new("", "b"))))
+        .node_info_id(&NodeInfo::open(NodeType::Element(NodeName::new("", "b"))))
         .unwrap();
     let tagged_descendants: Vec<_> = doc.tagged_descendants_or_self(doc_el, tag_id).collect();
     assert_eq!(tagged_descendants.len(), 2);
@@ -553,7 +553,7 @@ fn test_tagged_descendants_or_self_next_sibling() {
     let doc = parse_document(r#"<doc><a><b/></a><c><b/></c></doc>"#).unwrap();
     let doc_el = doc.document_element();
     let tag_id = doc
-        .tag(&NodeInfo::open(NodeType::Element(NodeName::new("", "b"))))
+        .node_info_id(&NodeInfo::open(NodeType::Element(NodeName::new("", "b"))))
         .unwrap();
     let tagged_descendants: Vec<_> = doc.tagged_descendants_or_self(doc_el, tag_id).collect();
     assert_eq!(tagged_descendants.len(), 2);
@@ -565,7 +565,7 @@ fn test_tagged_descendants_or_self_including_self() {
     let doc_el = doc.document_element();
     let outer_b = doc.first_child(doc_el).unwrap();
     let tag_id = doc
-        .tag(&NodeInfo::open(NodeType::Element(NodeName::new("", "b"))))
+        .node_info_id(&NodeInfo::open(NodeType::Element(NodeName::new("", "b"))))
         .unwrap();
     let tagged_descendants: Vec<_> = doc.tagged_descendants_or_self(outer_b, tag_id).collect();
     assert_eq!(tagged_descendants.len(), 3);
@@ -577,7 +577,7 @@ fn test_tagged_descendants_or_self_including_self2() {
     let doc_el = doc.document_element();
     let outer_b = doc.first_child(doc_el).unwrap();
     let tag_id = doc
-        .tag(&NodeInfo::open(NodeType::Element(NodeName::new("", "b"))))
+        .node_info_id(&NodeInfo::open(NodeType::Element(NodeName::new("", "b"))))
         .unwrap();
     let tagged_descendants: Vec<_> = doc.tagged_descendants_or_self(outer_b, tag_id).collect();
     assert_eq!(tagged_descendants.len(), 1);
@@ -595,7 +595,7 @@ fn test_tagged_following() {
     let f = doc.next_sibling(e).unwrap();
 
     let tag_id = doc
-        .tag(&NodeInfo::open(NodeType::Element(NodeName::new("", "f"))))
+        .node_info_id(&NodeInfo::open(NodeType::Element(NodeName::new("", "f"))))
         .unwrap();
     let following: Vec<_> = doc.tagged_following(c, tag_id).collect();
     assert_eq!(following, vec![f]);
