@@ -1,5 +1,6 @@
 mod attr;
 mod core;
+mod iter;
 mod nav;
 mod ns;
 
