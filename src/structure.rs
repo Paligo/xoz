@@ -99,11 +99,15 @@ impl<T: NodeInfoVec> Structure<T> {
         start..end
     }
 
-    pub(crate) fn rank_tag(&self, i: usize, node_info_id: NodeInfoId) -> Option<usize> {
+    pub(crate) fn rank_node_info_id(&self, i: usize, node_info_id: NodeInfoId) -> Option<usize> {
         self.tag_vec.rank_node_info_id(i, node_info_id)
     }
 
-    pub(crate) fn select_tag(&self, rank: usize, node_info_id: NodeInfoId) -> Option<usize> {
+    pub(crate) fn select_node_info_id(
+        &self,
+        rank: usize,
+        node_info_id: NodeInfoId,
+    ) -> Option<usize> {
         self.tag_vec.select_node_info_id(rank, node_info_id)
     }
 
@@ -111,11 +115,11 @@ impl<T: NodeInfoVec> Structure<T> {
     pub(crate) fn subtree_tags(&self, i: usize, node_info_id: NodeInfoId) -> Option<usize> {
         if i == 0 {
             // root node has no parent
-            Some(self.rank_tag(self.tree.close(i)?, node_info_id)?)
+            Some(self.rank_node_info_id(self.tree.close(i)?, node_info_id)?)
         } else {
             Some(
-                self.rank_tag(self.tree.close(i)?, node_info_id)?
-                    - (self.rank_tag(i - 1, node_info_id)?),
+                self.rank_node_info_id(self.tree.close(i)?, node_info_id)?
+                    - (self.rank_node_info_id(i - 1, node_info_id)?),
             )
         }
     }
@@ -125,7 +129,8 @@ impl<T: NodeInfoVec> Structure<T> {
     pub(crate) fn tagged_descendant(&self, i: usize, node_info_id: NodeInfoId) -> Option<usize> {
         // Note: the "Fast in-memory XPath search using compressed trees" contains
         // a bug where the i is added to the result of rank, but that doesn't work.
-        let d = self.select_tag(self.rank_tag(i + 1, node_info_id)?, node_info_id)?;
+        let d =
+            self.select_node_info_id(self.rank_node_info_id(i + 1, node_info_id)?, node_info_id)?;
         if d <= self.tree.close(i)? {
             Some(d)
         } else {
@@ -144,8 +149,8 @@ impl<T: NodeInfoVec> Structure<T> {
     // and not in the subtree of i. Returns None if there is no such node
     pub(crate) fn tagged_following(&self, i: usize, node_info_id: NodeInfoId) -> Option<usize> {
         // TODO: no tests yet
-        self.select_tag(
-            self.rank_tag(self.tree.close(i)?, node_info_id)? + 1,
+        self.select_node_info_id(
+            self.rank_node_info_id(self.tree.close(i)?, node_info_id)? + 1,
             node_info_id,
         )
     }
