@@ -23,7 +23,7 @@ pub enum NodeType<'a> {
     ProcessingInstruction,
 }
 
-impl NodeType<'_> {
+impl<'a> NodeType<'a> {
     pub(crate) fn into_owned(self) -> NodeType<'static> {
         match self {
             NodeType::Document => NodeType::Document,
@@ -36,6 +36,14 @@ impl NodeType<'_> {
             NodeType::Comment => NodeType::Comment,
             NodeType::ProcessingInstruction => NodeType::ProcessingInstruction,
         }
+    }
+
+    pub fn attribute(name: impl Into<NodeName<'a>>) -> Self {
+        NodeType::Attribute(name.into())
+    }
+
+    pub fn element(name: impl Into<NodeName<'a>>) -> Self {
+        NodeType::Element(name.into())
     }
 }
 
