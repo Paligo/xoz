@@ -4,9 +4,9 @@ Xoz is an experimental read-only XML library with the following features:
 
 * small representation of the XML in memory.
 
-* fast text search
-
 * fast iteration over named tags.
+
+* fast text search
 
 ## Implementation notes
 

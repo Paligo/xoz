@@ -1,4 +1,4 @@
-use quick_xml::events::BytesPI;
+use quick_xml::{events::BytesPI, Error};
 use vers_vecs::trees::Tree;
 
 use crate::{
@@ -7,12 +7,13 @@ use crate::{
         NextSiblingIter, NodeTreeOps, PreviousSiblingIter, TaggedTreeOps, WithSelfIter,
         WithTaggedSelfIter,
     },
+    parser::parse_document,
     structure::Structure,
     tag::{TagInfo, TagType},
     tagvec::{SArrayMatrix, TagId},
     text::TextUsage,
     traverse::{TagState, TraverseIter},
-    TagName,
+    QuickXMLError, TagName,
 };
 
 pub struct Document {
@@ -24,10 +25,16 @@ pub struct Document {
 pub struct Node(usize);
 
 impl Document {
+    pub fn parse_str(xml: &str) -> Result<Self, QuickXMLError> {
+        parse_document(xml)
+    }
+
+    /// Given a tag info, return the tag id, if it exists.
     pub fn tag(&self, tag_info: &TagInfo) -> Option<TagId> {
         self.structure.lookup_tag_id(tag_info)
     }
 
+    /// Give the document node of the XML document
     pub fn root(&self) -> Node {
         Node(
             self.structure
@@ -47,6 +54,17 @@ impl Document {
         self.structure.tree().node_index(node.0)
     }
 
+    /// Obtain the document element.
+    ///
+    /// ```rust
+    /// use xoz::Document;
+    /// let doc = Document::parse_str("<p>Example</p>").unwrap();
+    ///
+    /// let doc_el = doc.document_element();
+    ///
+    /// assert!(doc.is_element(doc_el));
+    /// assert_eq!(doc.parent(doc_el), Some(doc.root()));
+    /// ```
     pub fn document_element(&self) -> Node {
         for child in self.children(self.root()) {
             if let TagType::Element { .. } = self.value(child) {
@@ -56,6 +74,25 @@ impl Document {
         unreachable!()
     }
 
+    /// Get parent node.
+    ///
+    /// Returns [`None`] if this is the document node or if the node is
+    /// unattached to a document.
+    ///
+    /// Attribute and namespace nodes have a parent, even though they aren't
+    /// children of the element they are in.
+    ///
+    /// ```rust
+    /// use xoz::Document;
+    /// let doc = Document::parse_str("<p>Example</p>").unwrap();
+    /// let root = doc.root();
+    /// let p = doc.document_element();
+    /// let text = doc.first_child(p).unwrap();
+    ///
+    /// assert_eq!(doc.parent(text), Some(p));
+    /// assert_eq!(doc.parent(p), Some(root));
+    /// assert_eq!(doc.parent(root), None);
+    /// ```
     pub fn parent(&self, node: Node) -> Option<Node> {
         // two strategies are possible: skipping the attributes and namespaces nodes
         // if found, or checking whether we are an attribute or namespace node before
@@ -70,6 +107,19 @@ impl Document {
         }
     }
 
+    /// Get first child.
+    ///
+    /// Returns [`None`] if there are no children.
+    ///
+    /// ```rust
+    /// let doc = xoz::Document::parse_str("<p>Example</p>").unwrap();
+    /// let root = doc.root();
+    /// let p = doc.document_element();
+    /// let text = doc.first_child(p).unwrap();
+    /// assert_eq!(doc.first_child(root), Some(p));
+    /// assert_eq!(doc.first_child(p), Some(text));
+    /// assert_eq!(doc.first_child(text), None);
+    /// ```
     pub fn first_child(&self, node: Node) -> Option<Node> {
         let node = self.primitive_first_child(node)?;
         let tag_id = self.tag_id(node);
@@ -400,9 +450,36 @@ impl Document {
         }
     }
 
+    pub fn string_value(&self, node: Node) -> String {
+        match self.value(node) {
+            TagType::Document | TagType::Element(_) => self.descendants_to_string(node),
+            TagType::Text | TagType::Comment | TagType::Attribute(_) => {
+                self.node_str(node).unwrap().to_string()
+            }
+            TagType::ProcessingInstruction => self.processing_instruction(node).unwrap().content(),
+            TagType::Namespace(namespace) => {
+                let uri = namespace.uri();
+                String::from_utf8(uri.to_vec()).expect("Namespace URI is not utf8")
+            }
+            TagType::Namespaces | TagType::Attributes => {
+                panic!("Cannot use this with namespaces or attribute node")
+            }
+        }
+    }
+
     fn node_str(&self, node: Node) -> Option<&str> {
         let text_id = self.structure.text_id(node.0);
         Some(self.text_usage.text_value(text_id))
+    }
+
+    fn descendants_to_string(&self, node: Node) -> String {
+        let texts = self.descendants(node).filter_map(|n| self.text_str(n));
+        let (lower_bound, _) = texts.size_hint();
+        let mut r = String::with_capacity(lower_bound);
+        for text in texts {
+            r.push_str(text);
+        }
+        r
     }
 
     pub fn subtree_tags(&self, node: Node, tag_id: TagId) -> usize {
