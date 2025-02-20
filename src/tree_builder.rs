@@ -86,7 +86,7 @@ impl TreeBuilder {
             .trailing_zeros() as usize
     }
 
-    pub(crate) fn tags_amount(&self) -> usize {
+    pub(crate) fn node_info_amount(&self) -> usize {
         self.node_info_lookup.len()
     }
 

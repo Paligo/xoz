@@ -88,7 +88,7 @@ pub fn parse_document(xml: &str) -> Result<Document, QuickXMLError> {
     tree_builder.close(NodeType::Document);
     // TODO: an unwrap here is not great
     let structure = Structure::new(tree_builder, |tags_builder| {
-        SArrayMatrix::new(tags_builder.usage(), tags_builder.tags_amount())
+        SArrayMatrix::new(tags_builder.usage(), tags_builder.node_info_amount())
     })
     .unwrap();
     let text_usage = text_builder.build();

@@ -178,7 +178,7 @@ mod tests {
         builder.close(NodeType::Element(NodeName::new("", "doc")));
 
         let structure = Structure::new(builder, |builder| {
-            SArrayMatrix::new(builder.usage(), builder.tags_amount())
+            SArrayMatrix::new(builder.usage(), builder.node_info_amount())
         })
         .unwrap();
 
@@ -220,7 +220,7 @@ mod tests {
         builder.close(NodeType::Element(NodeName::new("", "doc")));
 
         let structure = Structure::new(builder, |builder| {
-            SArrayMatrix::new(builder.usage(), builder.tags_amount())
+            SArrayMatrix::new(builder.usage(), builder.node_info_amount())
         })
         .unwrap();
 
@@ -276,7 +276,7 @@ mod tests {
         builder.close(NodeType::Element(NodeName::new("", "doc")));
 
         let structure = Structure::new(builder, |builder| {
-            SArrayMatrix::new(builder.usage(), builder.tags_amount())
+            SArrayMatrix::new(builder.usage(), builder.node_info_amount())
         })
         .unwrap();
 
