@@ -71,7 +71,6 @@ pub fn parse_document(xml: &str) -> Result<Document, QuickXMLError> {
                 Event::PI(pi) => {
                     tags_builder.open(TagType::ProcessingInstruction);
                     let pi = std::str::from_utf8(&pi).expect("PI is not utf8");
-                    dbg!(&pi);
                     text_builder.text_node(pi);
                     tags_builder.close(TagType::ProcessingInstruction);
                 }
