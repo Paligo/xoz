@@ -168,4 +168,10 @@ mod tests {
         let doc = parse_document(r#"<doc a="1"/>"#).unwrap();
         assert_eq!(serialize_document_to_string(&doc), r#"<doc a="1"/>"#);
     }
+
+    #[test]
+    fn test_attributes() {
+        let doc = parse_document(r#"<doc a="1" b="2"/>"#).unwrap();
+        assert_eq!(serialize_document_to_string(&doc), r#"<doc a="1" b="2"/>"#);
+    }
 }
