@@ -8,9 +8,9 @@ use crate::{
         WithTaggedSelfIter,
     },
     node::{NodeInfo, NodeType},
+    node_info_vec::{NodeInfoId, SArrayMatrix},
     parser::parse_document,
     structure::Structure,
-    node_info_vec::{NodeInfoId, SArrayMatrix},
     text::TextUsage,
     traverse::{TagState, TraverseIter},
     NodeName, QuickXMLError,
@@ -40,8 +40,8 @@ impl Document {
     }
 
     /// Given node info, return the node info id, if it exists.
-    pub fn node_info_id(&self, node_info: &NodeInfo) -> Option<NodeInfoId> {
-        self.structure.lookup_node_info_id(node_info)
+    pub fn node_info_id(&self, node_type: NodeType) -> Option<NodeInfoId> {
+        self.structure.lookup_node_info_id_for_node_type(node_type)
     }
 
     pub(crate) fn node_info_id_for_node(&self, node: Node) -> NodeInfoId {

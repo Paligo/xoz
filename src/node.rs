@@ -1,5 +1,6 @@
 use std::borrow::Cow;
 
+/// Which type of node we are in the XML tree.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum NodeType<'a> {
     // contains namespaces, elements, other nodes
@@ -108,6 +109,9 @@ impl<'a> NodeName<'a> {
     }
 }
 
+/// Information about a node in the document.
+///
+/// It's a combination of [`NodeType`] and whether it's an opening or closing tag.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct NodeInfo<'a> {
     node_type: NodeType<'a>,

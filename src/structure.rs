@@ -8,9 +8,10 @@ use vers_vecs::{
 use crate::{
     error::Error,
     node::NodeInfo,
-    tree_builder::{NodeInfoLookup, TreeBuilder},
     node_info_vec::{NodeInfoId, NodeInfoVec},
     text::TextId,
+    tree_builder::{NodeInfoLookup, TreeBuilder},
+    NodeType,
 };
 
 pub(crate) struct Structure<T: NodeInfoVec> {
@@ -34,14 +35,25 @@ impl<T: NodeInfoVec> Structure<T> {
         })
     }
 
-    /// Given a tag info, return the tag id if it exists
+    /// Given a node info, return the tag id if it exists
     pub(crate) fn lookup_node_info_id(&self, node_info: &NodeInfo) -> Option<NodeInfoId> {
         self.node_info_lookup.by_node_info(node_info)
     }
 
-    /// Given a tag id, return the tag info.
+    /// Given a node type return the node info id if it exists.
     ///
-    /// Should always succeed given a valid tag info.
+    /// It's always the node info for the opening node.
+    pub(crate) fn lookup_node_info_id_for_node_type(
+        &self,
+        node_type: NodeType,
+    ) -> Option<NodeInfoId> {
+        let node_info = NodeInfo::open(node_type);
+        self.lookup_node_info_id(&node_info)
+    }
+
+    /// Given a node info id, return the node info.
+    ///
+    /// Should always succeed given a valid node info.
     pub(crate) fn lookup_node_info(&self, node_info_id: NodeInfoId) -> &NodeInfo {
         self.node_info_lookup.by_node_info_id(node_info_id)
     }
