@@ -13,8 +13,6 @@ struct Serializer<'a, W: io::Write> {
     doc: &'a Document,
     writer: Writer<W>,
     ns: NamespaceTracker<'a>,
-    element_name_scratch_buf: Vec<u8>,
-    attribute_name_scratch_buf: Vec<u8>,
 }
 
 impl<'a, W: io::Write> Serializer<'a, W> {
@@ -23,12 +21,13 @@ impl<'a, W: io::Write> Serializer<'a, W> {
             doc,
             writer: Writer::new(write),
             ns: NamespaceTracker::new(),
-            element_name_scratch_buf: Vec::with_capacity(64),
-            attribute_name_scratch_buf: Vec::with_capacity(64),
         }
     }
 
     fn serialize_document(&mut self) -> io::Result<()> {
+        let mut element_name_scratch_buf = Vec::with_capacity(64);
+        let mut attribute_name_scratch_buf = Vec::with_capacity(64);
+
         for (tag_type, tag_state, node) in self.doc.traverse(self.doc.root()) {
             match tag_type {
                 TagType::Document => {
@@ -39,16 +38,11 @@ impl<'a, W: io::Write> Serializer<'a, W> {
                         // put namespace prefixes on the tracker
                         // todo!();
                     }
-                    let qname = self.ns.qname(name, &mut self.element_name_scratch_buf);
+                    let qname = self.ns.qname(name, &mut element_name_scratch_buf);
                     match tag_state {
                         TagState::Open => {
-                            let elem = create_elem(
-                                self.doc,
-                                node,
-                                qname,
-                                &self.ns,
-                                &mut self.attribute_name_scratch_buf,
-                            );
+                            let elem =
+                                self.create_elem(qname, node, &mut attribute_name_scratch_buf);
                             self.writer.write_event(Event::Start(elem))?;
                         }
                         TagState::Close => {
@@ -56,13 +50,8 @@ impl<'a, W: io::Write> Serializer<'a, W> {
                             self.writer.write_event(Event::End(elem))?;
                         }
                         TagState::Empty => {
-                            let elem = create_elem(
-                                self.doc,
-                                node,
-                                qname,
-                                &self.ns,
-                                &mut self.attribute_name_scratch_buf,
-                            );
+                            let elem =
+                                self.create_elem(qname, node, &mut attribute_name_scratch_buf);
                             self.writer.write_event(Event::Empty(elem))?;
                         }
                     }
@@ -81,29 +70,28 @@ impl<'a, W: io::Write> Serializer<'a, W> {
 
         Ok(())
     }
+
+    fn create_elem(
+        &self,
+        qname: QName<'a>,
+        node: crate::document::Node,
+        attribute_name_scratch_buf: &mut Vec<u8>,
+    ) -> BytesStart<'a> {
+        let mut elem: BytesStart = qname.into();
+        // TODO: duplicate code
+        for (name, value) in self.doc.attribute_entries(node) {
+            elem.push_attribute(Attribute {
+                key: self.ns.qname(name, attribute_name_scratch_buf),
+                value: value.as_bytes().into(),
+            })
+        }
+        elem
+    }
 }
 
 pub(crate) fn serialize_document(doc: &Document, write: &mut impl io::Write) -> io::Result<()> {
     let mut serializer = Serializer::new(doc, write);
     serializer.serialize_document()
-}
-
-fn create_elem<'a>(
-    doc: &'a Document,
-    node: crate::document::Node,
-    qname: QName<'a>,
-    ns: &'a NamespaceTracker<'a>,
-    attribute_name_scratch_buf: &mut Vec<u8>,
-) -> BytesStart<'a> {
-    let mut elem: BytesStart = qname.into();
-    // TODO: duplicate code
-    for (name, value) in doc.attribute_entries(node) {
-        elem.push_attribute(Attribute {
-            key: ns.qname(name, attribute_name_scratch_buf),
-            value: value.as_bytes().into(),
-        })
-    }
-    elem
 }
 
 pub(crate) fn serialize_document_to_string(doc: &Document) -> String {
