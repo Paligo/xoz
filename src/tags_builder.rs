@@ -45,7 +45,7 @@ impl NodeInfoLookup {
     }
 }
 
-pub(crate) struct TagsBuilder {
+pub(crate) struct TreeBuilder {
     pub(crate) node_info_lookup: NodeInfoLookup,
 
     pub(crate) parentheses: BitVec,
@@ -57,7 +57,7 @@ pub(crate) struct TagsBuilder {
     usage: Vec<u64>,
 }
 
-impl TagsBuilder {
+impl TreeBuilder {
     pub(crate) fn new() -> Self {
         let mut node_info_lookup = NodeInfoLookup::new();
         // we ensure these always exist, so that we quickly compare with tag id
@@ -127,7 +127,7 @@ mod tests {
 
     #[test]
     fn test_tags_builder() {
-        let mut builder = TagsBuilder::new();
+        let mut builder = TreeBuilder::new();
         // <doc><a/><b/></doc>
         builder.open(NodeType::Element(NodeName::new("", "doc")));
         builder.open(NodeType::Element(NodeName::new("", "a")));
@@ -143,7 +143,7 @@ mod tests {
 
     #[test]
     fn test_tags_builder_multiple_a() {
-        let mut builder = TagsBuilder::new();
+        let mut builder = TreeBuilder::new();
         // <doc><a/><a/></doc>
         builder.open(NodeType::Element(NodeName::new("", "doc")));
         builder.open(NodeType::Element(NodeName::new("", "a")));

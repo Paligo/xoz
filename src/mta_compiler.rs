@@ -123,11 +123,11 @@ impl LocationStep {
             } => {
                 // TODO: namespace and wildcard handling
                 // we construct the matching tag type
-                let tag_type = NodeType::Element(NodeName::new(
+                let node_type = NodeType::Element(NodeName::new(
                     "",
                     local_name.as_ref().expect("local name is not wildcard"),
                 ));
-                Guard::include(tag_type)
+                Guard::include(node_type)
             }
             _ => unimplemented!(),
         }
@@ -163,7 +163,11 @@ mod tests {
         let q2 = State::new();
         let q3 = State::new();
 
-        automaton.add(q0, Guard::include(NodeType::Document), Formula::DownLeft(q1));
+        automaton.add(
+            q0,
+            Guard::include(NodeType::Document),
+            Formula::DownLeft(q1),
+        );
         // down left q1 and down left q2 and down right q1
         let formula = Formula::and(
             Formula::and(Formula::DownLeft(q1), Formula::DownLeft(q2)),
@@ -227,7 +231,11 @@ mod tests {
         let q1 = State::new();
         let q2 = State::new();
 
-        automaton.add(q0, Guard::include(NodeType::Document), Formula::DownLeft(q1));
+        automaton.add(
+            q0,
+            Guard::include(NodeType::Document),
+            Formula::DownLeft(q1),
+        );
         // down left q1 and down left q2 and down right q1
         let formula = Formula::and(
             Formula::and(Formula::DownLeft(q1), Formula::DownLeft(q2)),

@@ -29,8 +29,8 @@ impl<'a, W: io::Write> Serializer<'a, W> {
         let mut xmlns_scratch_buf = Vec::with_capacity(64);
         let mut attribute_name_scratch_buf = Vec::with_capacity(64);
 
-        for (tag_type, tag_state, node) in self.doc.traverse(self.doc.root()) {
-            match tag_type {
+        for (node_type, tag_state, node) in self.doc.traverse(self.doc.root()) {
+            match node_type {
                 NodeType::Document => {
                     // TODO serialize declaration if needed on opening
                 }

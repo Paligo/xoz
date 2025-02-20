@@ -8,7 +8,7 @@ use vers_vecs::{
 use crate::{
     error::Error,
     node::NodeInfo,
-    tags_builder::{NodeInfoLookup, TagsBuilder},
+    tags_builder::{NodeInfoLookup, TreeBuilder},
     tagvec::{NodeInfoId, NodeInfoVec},
     text::TextId,
 };
@@ -22,8 +22,8 @@ pub(crate) struct Structure<T: NodeInfoVec> {
 
 impl<T: NodeInfoVec> Structure<T> {
     pub(crate) fn new(
-        tags_builder: TagsBuilder,
-        make_tag_vec: impl Fn(&TagsBuilder) -> Result<T, Error>,
+        tags_builder: TreeBuilder,
+        make_tag_vec: impl Fn(&TreeBuilder) -> Result<T, Error>,
     ) -> Result<Self, Error> {
         let tag_vec = make_tag_vec(&tags_builder)?;
         Ok(Self {
@@ -150,7 +150,7 @@ mod tests {
 
     #[test]
     fn test_structure() {
-        let mut builder = TagsBuilder::new();
+        let mut builder = TreeBuilder::new();
 
         // <doc><a/><b/></doc>
         builder.open(NodeType::Element(NodeName::new("", "doc")));
@@ -193,7 +193,7 @@ mod tests {
 
     #[test]
     fn test_structure_multiple_a() {
-        let mut builder = TagsBuilder::new();
+        let mut builder = TreeBuilder::new();
         // <doc><a/><a/></doc>
         builder.open(NodeType::Element(NodeName::new("", "doc")));
         builder.open(NodeType::Element(NodeName::new("", "a")));
@@ -236,7 +236,7 @@ mod tests {
     #[test]
     fn test_structure_multiple_text() {
         // <doc><a>A</a><b>B</b>/doc>
-        let mut builder = TagsBuilder::new();
+        let mut builder = TreeBuilder::new();
         // 0
         builder.open(NodeType::Element(NodeName::new("", "doc")));
         // 1

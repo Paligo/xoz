@@ -5,9 +5,9 @@ use quick_xml::name::{LocalName, NamespaceError, PrefixDeclaration, ResolveResul
 use quick_xml::reader::NsReader;
 
 use crate::document::Document;
-use crate::structure::Structure;
 use crate::node::NodeName;
-use crate::tags_builder::TagsBuilder;
+use crate::structure::Structure;
+use crate::tags_builder::TreeBuilder;
 use crate::tagvec::SArrayMatrix;
 use crate::text::TextBuilder;
 use crate::{Namespace, NodeType};
@@ -15,7 +15,7 @@ use crate::{Namespace, NodeType};
 pub fn parse_document(xml: &str) -> Result<Document, QuickXMLError> {
     let mut reader = NsReader::from_str(xml);
     reader.config_mut().enable_all_checks(true);
-    let mut tags_builder = TagsBuilder::new();
+    let mut tags_builder = TreeBuilder::new();
     let mut text_builder = TextBuilder::new();
     tags_builder.open(NodeType::Document);
     loop {
@@ -24,9 +24,9 @@ pub fn parse_document(xml: &str) -> Result<Document, QuickXMLError> {
             Ok(event) => match event {
                 Event::Start(start) => {
                     let qname = start.name();
-                    let name = tag_name(reader.resolve_element(qname))?;
-                    let tag_type = NodeType::Element(name);
-                    tags_builder.open(tag_type);
+                    let name = node_name(reader.resolve_element(qname))?;
+                    let node_type = NodeType::Element(name);
+                    tags_builder.open(node_type);
                     build_element_attributes(
                         &reader,
                         &mut tags_builder,
@@ -36,22 +36,22 @@ pub fn parse_document(xml: &str) -> Result<Document, QuickXMLError> {
                 }
                 Event::End(end) => {
                     let qname = end.name();
-                    let name = tag_name(reader.resolve_element(qname))?;
-                    let tag_type = NodeType::Element(name);
-                    tags_builder.close(tag_type);
+                    let name = node_name(reader.resolve_element(qname))?;
+                    let node_type = NodeType::Element(name);
+                    tags_builder.close(node_type);
                 }
                 Event::Empty(empty) => {
                     let qname = empty.name();
-                    let name = tag_name(reader.resolve_element(qname))?;
-                    let tag_type = NodeType::Element(name);
-                    tags_builder.open(tag_type.clone());
+                    let name = node_name(reader.resolve_element(qname))?;
+                    let node_type = NodeType::Element(name);
+                    tags_builder.open(node_type.clone());
                     build_element_attributes(
                         &reader,
                         &mut tags_builder,
                         &mut text_builder,
                         empty.attributes(),
                     )?;
-                    tags_builder.close(tag_type);
+                    tags_builder.close(node_type);
                 }
                 Event::Text(text) => {
                     tags_builder.open(NodeType::Text);
@@ -100,7 +100,7 @@ pub fn parse_document(xml: &str) -> Result<Document, QuickXMLError> {
 
 fn build_element_attributes(
     reader: &NsReader<&[u8]>,
-    tags_builder: &mut TagsBuilder,
+    tags_builder: &mut TreeBuilder,
     text_builder: &mut TextBuilder,
     attributes_iter: Attributes<'_>,
 ) -> Result<(), QuickXMLError> {
@@ -111,17 +111,17 @@ fn build_element_attributes(
         let qname = attribute.key;
         let value = attribute.decode_and_unescape_value(reader.decoder())?;
         if let Some(prefix_declaration) = qname.as_namespace_binding() {
-            let tag_type = match prefix_declaration {
+            let node_type = match prefix_declaration {
                 PrefixDeclaration::Default => NodeType::Namespace(Namespace::new("", &*value)),
                 PrefixDeclaration::Named(prefix) => {
                     NodeType::Namespace(Namespace::new(prefix, &*value))
                 }
             };
-            namespaces.push(tag_type);
+            namespaces.push(node_type);
         } else {
-            let name = tag_name(reader.resolve_attribute(qname))?;
-            let tag_type = NodeType::Attribute(name);
-            attributes.push((tag_type, value));
+            let name = node_name(reader.resolve_attribute(qname))?;
+            let node_type = NodeType::Attribute(name);
+            attributes.push((node_type, value));
         }
     }
     if !namespaces.is_empty() {
@@ -134,17 +134,17 @@ fn build_element_attributes(
     }
     if !attributes.is_empty() {
         tags_builder.open(NodeType::Attributes);
-        for (tag_type, value) in attributes {
-            tags_builder.open(tag_type.clone());
+        for (node_type, value) in attributes {
+            tags_builder.open(node_type.clone());
             text_builder.text_node(&value);
-            tags_builder.close(tag_type);
+            tags_builder.close(node_type);
         }
         tags_builder.close(NodeType::Attributes);
     }
     Ok(())
 }
 
-fn tag_name<'a>(r: (ResolveResult<'a>, LocalName<'a>)) -> Result<NodeName<'a>, QuickXMLError> {
+fn node_name<'a>(r: (ResolveResult<'a>, LocalName<'a>)) -> Result<NodeName<'a>, QuickXMLError> {
     let (resolved, local_name) = r;
     Ok(match resolved {
         ResolveResult::Unbound => NodeName::from_u8(b"", local_name.into_inner()),
