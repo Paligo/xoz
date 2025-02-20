@@ -54,12 +54,6 @@ impl Document {
         self.structure.tree().node_index(node.0)
     }
 
-    pub fn attribute_value<'a>(&self, node: Node, name: impl Into<TagName<'a>>) -> Option<&str> {
-        let attribute_node = self.attribute_node(node, name)?;
-        let text_id = self.structure.text_id(attribute_node.0);
-        Some(self.text_usage.text_value(text_id))
-    }
-
     pub fn node_name(&self, node: Node) -> Option<&TagName> {
         match self.tag_type(node) {
             TagType::Element(tag_name) => Some(tag_name),

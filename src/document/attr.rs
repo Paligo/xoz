@@ -56,4 +56,21 @@ impl Document {
         }
         None
     }
+
+    /// Get the value of the attribute with the given name.
+    ///
+    /// If this is not an element node, or there is no attribute with the given name,
+    /// it returns `None`.
+    ///
+    /// ```rust
+    /// let doc = xoz::Document::parse_str(r#"<p a="1" b="2"/>"#).unwrap();
+    /// let p = doc.document_element();
+    /// let value = doc.attribute_value(p, "a").unwrap();
+    /// assert_eq!(value, "1");
+    /// ```
+    pub fn attribute_value<'a>(&self, node: Node, name: impl Into<TagName<'a>>) -> Option<&str> {
+        let attribute_node = self.attribute_node(node, name)?;
+        let text_id = self.structure.text_id(attribute_node.get());
+        Some(self.text_usage.text_value(text_id))
+    }
 }
