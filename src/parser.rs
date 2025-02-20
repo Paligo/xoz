@@ -15,9 +15,9 @@ use crate::{Namespace, NodeType};
 pub fn parse_document(xml: &str) -> Result<Document, QuickXMLError> {
     let mut reader = NsReader::from_str(xml);
     reader.config_mut().enable_all_checks(true);
-    let mut tags_builder = TreeBuilder::new();
+    let mut tree_builder = TreeBuilder::new();
     let mut text_builder = TextBuilder::new();
-    tags_builder.open(NodeType::Document);
+    tree_builder.open(NodeType::Document);
     loop {
         match reader.read_event() {
             Err(e) => return Err(e),
@@ -26,10 +26,10 @@ pub fn parse_document(xml: &str) -> Result<Document, QuickXMLError> {
                     let qname = start.name();
                     let name = node_name(reader.resolve_element(qname))?;
                     let node_type = NodeType::Element(name);
-                    tags_builder.open(node_type);
+                    tree_builder.open(node_type);
                     build_element_attributes(
                         &reader,
-                        &mut tags_builder,
+                        &mut tree_builder,
                         &mut text_builder,
                         start.attributes(),
                     )?;
@@ -38,41 +38,41 @@ pub fn parse_document(xml: &str) -> Result<Document, QuickXMLError> {
                     let qname = end.name();
                     let name = node_name(reader.resolve_element(qname))?;
                     let node_type = NodeType::Element(name);
-                    tags_builder.close(node_type);
+                    tree_builder.close(node_type);
                 }
                 Event::Empty(empty) => {
                     let qname = empty.name();
                     let name = node_name(reader.resolve_element(qname))?;
                     let node_type = NodeType::Element(name);
-                    tags_builder.open(node_type.clone());
+                    tree_builder.open(node_type.clone());
                     build_element_attributes(
                         &reader,
-                        &mut tags_builder,
+                        &mut tree_builder,
                         &mut text_builder,
                         empty.attributes(),
                     )?;
-                    tags_builder.close(node_type);
+                    tree_builder.close(node_type);
                 }
                 Event::Text(text) => {
-                    tags_builder.open(NodeType::Text);
+                    tree_builder.open(NodeType::Text);
                     text_builder.text_node(&text.unescape()?);
-                    tags_builder.close(NodeType::Text);
+                    tree_builder.close(NodeType::Text);
                 }
                 Event::CData(text) => {
-                    tags_builder.open(NodeType::Text);
+                    tree_builder.open(NodeType::Text);
                     text_builder.text_node(&text.minimal_escape()?.unescape()?);
-                    tags_builder.close(NodeType::Text);
+                    tree_builder.close(NodeType::Text);
                 }
                 Event::Comment(comment) => {
-                    tags_builder.open(NodeType::Comment);
+                    tree_builder.open(NodeType::Comment);
                     text_builder.text_node(&comment.unescape()?);
-                    tags_builder.close(NodeType::Comment);
+                    tree_builder.close(NodeType::Comment);
                 }
                 Event::PI(pi) => {
-                    tags_builder.open(NodeType::ProcessingInstruction);
+                    tree_builder.open(NodeType::ProcessingInstruction);
                     let pi = std::str::from_utf8(&pi).expect("PI is not utf8");
                     text_builder.text_node(pi);
-                    tags_builder.close(NodeType::ProcessingInstruction);
+                    tree_builder.close(NodeType::ProcessingInstruction);
                 }
                 Event::Decl(_decl) => {}
                 Event::DocType(doctype) => {
@@ -85,9 +85,9 @@ pub fn parse_document(xml: &str) -> Result<Document, QuickXMLError> {
             },
         }
     }
-    tags_builder.close(NodeType::Document);
+    tree_builder.close(NodeType::Document);
     // TODO: an unwrap here is not great
-    let structure = Structure::new(tags_builder, |tags_builder| {
+    let structure = Structure::new(tree_builder, |tags_builder| {
         SArrayMatrix::new(tags_builder.usage(), tags_builder.tags_amount())
     })
     .unwrap();
