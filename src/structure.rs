@@ -7,7 +7,7 @@ use vers_vecs::{
 
 use crate::{
     error::Error,
-    tag::NodeInfo,
+    node::NodeInfo,
     tags_builder::{TagsBuilder, TagsLookup},
     tagvec::{TagId, TagVec},
     text::TextId,
@@ -134,7 +134,7 @@ impl<T: TagVec> Structure<T> {
 #[cfg(test)]
 mod tests {
     use crate::{
-        tag::{NodeName, NodeType},
+        node::{NodeName, NodeType},
         tagvec::SArrayMatrix,
     };
 

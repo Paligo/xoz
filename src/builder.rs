@@ -2,7 +2,7 @@ use crate::{
     document::Document,
     error::Error,
     structure::Structure,
-    tag::{NodeName, NodeType},
+    node::{NodeName, NodeType},
     tags_builder::TagsBuilder,
     tagvec::SArrayMatrix,
     text::TextBuilder,

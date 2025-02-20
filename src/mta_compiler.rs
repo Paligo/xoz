@@ -1,6 +1,6 @@
 use crate::{
     mta::{Automaton, Formula, FormulaId, Guard, State},
-    tag::NodeName,
+    node::NodeName,
     NodeType,
 };
 

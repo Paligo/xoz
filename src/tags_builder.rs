@@ -2,7 +2,7 @@ use ahash::{HashMap, HashMapExt};
 use vers_vecs::BitVec;
 
 use crate::{
-    tag::{NodeInfo, NodeType},
+    node::{NodeInfo, NodeType},
     tagvec::{TagId, ATTRIBUTES_TAG_ID, NAMESPACES_TAG_ID},
 };
 
@@ -117,7 +117,7 @@ impl TagsBuilder {
 
 #[cfg(test)]
 mod tests {
-    use crate::tag::NodeName;
+    use crate::node::NodeName;
 
     use super::*;
 

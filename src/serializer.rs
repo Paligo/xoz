@@ -7,7 +7,7 @@ use quick_xml::{
     Writer,
 };
 
-use crate::{document::Document, tag::NodeType, NodeName, TagState};
+use crate::{document::Document, node::NodeType, NodeName, TagState};
 
 struct Serializer<'a, W: io::Write> {
     doc: &'a Document,

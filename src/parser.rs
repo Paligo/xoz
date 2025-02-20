@@ -6,7 +6,7 @@ use quick_xml::reader::NsReader;
 
 use crate::document::Document;
 use crate::structure::Structure;
-use crate::tag::NodeName;
+use crate::node::NodeName;
 use crate::tags_builder::TagsBuilder;
 use crate::tagvec::SArrayMatrix;
 use crate::text::TextBuilder;
