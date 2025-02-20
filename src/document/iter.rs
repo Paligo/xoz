@@ -193,4 +193,14 @@ impl Document {
     pub fn axis_attribute(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
         self.attributes(node)
     }
+
+    /// Iterator representing the XPath parent axis
+    pub fn axis_parent(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
+        self.parent(node).into_iter()
+    }
+
+    /// Iterator representing the XPath self axis
+    pub fn axis_self(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
+        std::iter::once(node)
+    }
 }

@@ -137,18 +137,6 @@ impl Document {
         })
     }
 
-    pub fn axis_attribute(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
-        self.attributes(node)
-    }
-
-    pub fn axis_parent(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
-        self.parent(node).into_iter()
-    }
-
-    pub fn axis_self(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
-        std::iter::once(node)
-    }
-
     pub fn tagged_descendants(
         &self,
         node: Node,
