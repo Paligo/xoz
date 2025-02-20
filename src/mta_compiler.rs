@@ -1,7 +1,7 @@
 use crate::{
     mta::{Automaton, Formula, FormulaId, Guard, State},
-    tag::TagName,
-    TagType,
+    tag::NodeName,
+    NodeType,
 };
 
 enum Axis {
@@ -52,12 +52,12 @@ impl Core {
         match self {
             Core::Absolute(location_path) => {
                 if in_main && location_path.steps.is_empty() {
-                    automaton.add(state, Guard::include(TagType::Document), Formula::Mark);
+                    automaton.add(state, Guard::include(NodeType::Document), Formula::Mark);
                 } else {
                     let downleft_state = State::new();
                     automaton.add(
                         state,
-                        Guard::include(TagType::Document),
+                        Guard::include(NodeType::Document),
                         Formula::DownLeft(downleft_state),
                     );
                     location_path.translate(automaton, downleft_state, in_main);
@@ -123,7 +123,7 @@ impl LocationStep {
             } => {
                 // TODO: namespace and wildcard handling
                 // we construct the matching tag type
-                let tag_type = TagType::Element(TagName::new(
+                let tag_type = NodeType::Element(NodeName::new(
                     "",
                     local_name.as_ref().expect("local name is not wildcard"),
                 ));
@@ -163,7 +163,7 @@ mod tests {
         let q2 = State::new();
         let q3 = State::new();
 
-        automaton.add(q0, Guard::include(TagType::Document), Formula::DownLeft(q1));
+        automaton.add(q0, Guard::include(NodeType::Document), Formula::DownLeft(q1));
         // down left q1 and down left q2 and down right q1
         let formula = Formula::and(
             Formula::and(Formula::DownLeft(q1), Formula::DownLeft(q2)),
@@ -171,7 +171,7 @@ mod tests {
         );
         automaton.add(
             q1,
-            Guard::include(TagType::Element(TagName::new("", "listitem"))),
+            Guard::include(NodeType::Element(NodeName::new("", "listitem"))),
             formula,
         );
         automaton.add(
@@ -186,7 +186,7 @@ mod tests {
         );
         automaton.add(
             q2,
-            Guard::include(TagType::Element(TagName::new("", "keyword"))),
+            Guard::include(NodeType::Element(NodeName::new("", "keyword"))),
             formula,
         );
         automaton.add(
@@ -196,7 +196,7 @@ mod tests {
         );
         automaton.add(
             q3,
-            Guard::include(TagType::Element(TagName::new("", "emph"))),
+            Guard::include(NodeType::Element(NodeName::new("", "emph"))),
             Formula::True,
         );
         automaton.add(q3, Guard::all(), Formula::DownRight(q3));
@@ -227,7 +227,7 @@ mod tests {
         let q1 = State::new();
         let q2 = State::new();
 
-        automaton.add(q0, Guard::include(TagType::Document), Formula::DownLeft(q1));
+        automaton.add(q0, Guard::include(NodeType::Document), Formula::DownLeft(q1));
         // down left q1 and down left q2 and down right q1
         let formula = Formula::and(
             Formula::and(Formula::DownLeft(q1), Formula::DownLeft(q2)),
@@ -235,7 +235,7 @@ mod tests {
         );
         automaton.add(
             q1,
-            Guard::include(TagType::Element(TagName::new("", "listitem"))),
+            Guard::include(NodeType::Element(NodeName::new("", "listitem"))),
             formula,
         );
         automaton.add(
@@ -249,7 +249,7 @@ mod tests {
         );
         automaton.add(
             q2,
-            Guard::include(TagType::Element(TagName::new("", "keyword"))),
+            Guard::include(NodeType::Element(NodeName::new("", "keyword"))),
             formula,
         );
         automaton.add(

@@ -9,11 +9,11 @@ use crate::{
     },
     parser::parse_document,
     structure::Structure,
-    tag::{TagInfo, TagType},
+    tag::{NodeInfo, NodeType},
     tagvec::{SArrayMatrix, TagId},
     text::TextUsage,
     traverse::{TagState, TraverseIter},
-    QuickXMLError, TagName,
+    NodeName, QuickXMLError,
 };
 
 pub struct Document {
@@ -40,7 +40,7 @@ impl Document {
     }
 
     /// Given a tag info, return the tag id, if it exists.
-    pub fn tag(&self, tag_info: &TagInfo) -> Option<TagId> {
+    pub fn tag(&self, tag_info: &NodeInfo) -> Option<TagId> {
         self.structure.lookup_tag_id(tag_info)
     }
 
@@ -54,15 +54,15 @@ impl Document {
         self.structure.tree().node_index(node.0)
     }
 
-    pub fn tag_name(&self, node: Node) -> Option<&TagName> {
-        match self.tag_type(node) {
-            TagType::Element(tag_name) => Some(tag_name),
-            TagType::Attribute(tag_name) => Some(tag_name),
+    pub fn node_name(&self, node: Node) -> Option<&NodeName> {
+        match self.node_type(node) {
+            NodeType::Element(tag_name) => Some(tag_name),
+            NodeType::Attribute(tag_name) => Some(tag_name),
             _ => None,
         }
     }
 
-    pub fn tag_type(&self, node: Node) -> &TagType {
+    pub fn node_type(&self, node: Node) -> &NodeType {
         let tag_info = self.structure.get_tag(node.0);
         debug_assert!(tag_info.is_open_tag());
         tag_info.tag_type()
@@ -73,31 +73,31 @@ impl Document {
     }
 
     pub fn is_document(&self, node: Node) -> bool {
-        matches!(self.tag_type(node), TagType::Document)
+        matches!(self.node_type(node), NodeType::Document)
     }
 
     pub fn is_element(&self, node: Node) -> bool {
-        matches!(self.tag_type(node), TagType::Element { .. })
+        matches!(self.node_type(node), NodeType::Element { .. })
     }
 
     pub fn is_text(&self, node: Node) -> bool {
-        matches!(self.tag_type(node), TagType::Text)
+        matches!(self.node_type(node), NodeType::Text)
     }
 
     pub fn is_comment(&self, node: Node) -> bool {
-        matches!(self.tag_type(node), TagType::Comment)
+        matches!(self.node_type(node), NodeType::Comment)
     }
 
     pub fn is_processing_instruction(&self, node: Node) -> bool {
-        matches!(self.tag_type(node), TagType::ProcessingInstruction)
+        matches!(self.node_type(node), NodeType::ProcessingInstruction)
     }
 
     pub fn is_attribute(&self, node: Node) -> bool {
-        matches!(self.tag_type(node), TagType::Attribute { .. })
+        matches!(self.node_type(node), NodeType::Attribute { .. })
     }
 
     pub fn is_namespace(&self, node: Node) -> bool {
-        matches!(self.tag_type(node), TagType::Namespace { .. })
+        matches!(self.node_type(node), NodeType::Namespace { .. })
     }
 
     pub fn is_ancestor(&self, node: Node, descendant: Node) -> bool {
@@ -181,12 +181,12 @@ impl Document {
     pub fn attribute_entries(
         &self,
         node: Node,
-    ) -> impl Iterator<Item = (&TagName, &str)> + use<'_> {
+    ) -> impl Iterator<Item = (&NodeName, &str)> + use<'_> {
         AttributesIter::new(self, node).map(move |n| {
             let text_id = self.structure.text_id(n.0);
             let value = self.text_usage.text_value(text_id);
-            let tag_name = match self.tag_type(n) {
-                TagType::Attribute(tag_name) => tag_name,
+            let tag_name = match self.node_type(n) {
+                NodeType::Attribute(tag_name) => tag_name,
                 _ => unreachable!(),
             };
             (tag_name, value)
@@ -194,8 +194,8 @@ impl Document {
     }
 
     pub fn namespace_entries(&self, node: Node) -> impl Iterator<Item = (&[u8], &[u8])> + use<'_> {
-        NamespacesIter::new(self, node).map(move |n| match self.tag_type(n) {
-            TagType::Namespace(namespace) => (namespace.prefix(), namespace.uri()),
+        NamespacesIter::new(self, node).map(move |n| match self.node_type(n) {
+            NodeType::Namespace(namespace) => (namespace.prefix(), namespace.uri()),
             _ => unreachable!(),
         })
     }
@@ -249,12 +249,12 @@ impl Document {
     pub fn traverse(
         &self,
         node: Node,
-    ) -> impl Iterator<Item = (&TagType, TagState, Node)> + use<'_> {
+    ) -> impl Iterator<Item = (&NodeType, TagState, Node)> + use<'_> {
         TraverseIter::new(self, node)
     }
 
     pub fn text_str(&self, node: Node) -> Option<&str> {
-        if matches!(self.tag_type(node), TagType::Text) {
+        if matches!(self.node_type(node), NodeType::Text) {
             self.node_str(node)
         } else {
             None
@@ -262,7 +262,7 @@ impl Document {
     }
 
     pub fn comment_str(&self, node: Node) -> Option<&str> {
-        if matches!(self.tag_type(node), TagType::Comment) {
+        if matches!(self.node_type(node), NodeType::Comment) {
             self.node_str(node)
         } else {
             None
@@ -270,7 +270,7 @@ impl Document {
     }
 
     pub fn processing_instruction_str(&self, node: Node) -> Option<&str> {
-        if matches!(self.tag_type(node), TagType::ProcessingInstruction) {
+        if matches!(self.node_type(node), NodeType::ProcessingInstruction) {
             self.node_str(node)
         } else {
             None
@@ -278,7 +278,7 @@ impl Document {
     }
 
     pub fn processing_instruction(&self, node: Node) -> Option<ProcessingInstruction> {
-        if matches!(self.tag_type(node), TagType::ProcessingInstruction) {
+        if matches!(self.node_type(node), NodeType::ProcessingInstruction) {
             let s = self.node_str(node).expect("Missing PI data");
             Some(ProcessingInstruction { data: s })
         } else {
@@ -287,17 +287,17 @@ impl Document {
     }
 
     pub fn string_value(&self, node: Node) -> String {
-        match self.tag_type(node) {
-            TagType::Document | TagType::Element(_) => self.descendants_to_string(node),
-            TagType::Text | TagType::Comment | TagType::Attribute(_) => {
+        match self.node_type(node) {
+            NodeType::Document | NodeType::Element(_) => self.descendants_to_string(node),
+            NodeType::Text | NodeType::Comment | NodeType::Attribute(_) => {
                 self.node_str(node).unwrap().to_string()
             }
-            TagType::ProcessingInstruction => self.processing_instruction(node).unwrap().content(),
-            TagType::Namespace(namespace) => {
+            NodeType::ProcessingInstruction => self.processing_instruction(node).unwrap().content(),
+            NodeType::Namespace(namespace) => {
                 let uri = namespace.uri();
                 String::from_utf8(uri.to_vec()).expect("Namespace URI is not utf8")
             }
-            TagType::Namespaces | TagType::Attributes => {
+            NodeType::Namespaces | NodeType::Attributes => {
                 panic!("Cannot use this with namespaces or attribute node")
             }
         }

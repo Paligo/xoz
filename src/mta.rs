@@ -4,7 +4,7 @@ use ahash::{HashMap, HashMapExt, HashSet, HashSetExt};
 
 use crate::{
     document::{Document, Node},
-    TagType,
+    NodeType,
 };
 
 pub(crate) type States = HashSet<State>;
@@ -78,7 +78,9 @@ impl Automaton {
         states: States,
     ) -> Mapping {
         if let Some(node) = node {
-            let trans = self.state_lookup.matching(&states, document.tag_type(node));
+            let trans = self
+                .state_lookup
+                .matching(&states, document.node_type(node));
             let mut left_states = States::new();
             let mut right_states = States::new();
             for (_q, formula_id) in &trans {
@@ -373,7 +375,7 @@ impl<T: Copy> StateLookup<T> {
         self.states.get_mut(&state)
     }
 
-    fn matching(&self, states: &States, tag: &TagType) -> Vec<(State, T)> {
+    fn matching(&self, states: &States, tag: &NodeType) -> Vec<(State, T)> {
         let mut results = Vec::new();
 
         for state in states {
@@ -394,9 +396,9 @@ pub(crate) type TagLookupFormula = TagLookup<FormulaId>;
 
 pub(crate) struct TagLookup<T: Copy> {
     // Direct mapping for includes
-    includes: HashMap<TagType<'static>, Vec<T>>,
+    includes: HashMap<NodeType<'static>, Vec<T>>,
     // For excludes, we store (excluded_tags, payload) pairs
-    excludes: Vec<(HashSet<TagType<'static>>, T)>,
+    excludes: Vec<(HashSet<NodeType<'static>>, T)>,
 }
 
 impl<T: Copy> TagLookup<T> {
@@ -422,7 +424,7 @@ impl<T: Copy> TagLookup<T> {
         }
     }
 
-    fn matching(&self, tag: &TagType) -> Vec<T> {
+    fn matching(&self, tag: &NodeType) -> Vec<T> {
         let mut results = Vec::new();
 
         // Add all direct matches from includes
@@ -444,23 +446,23 @@ impl<T: Copy> TagLookup<T> {
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub(crate) enum Guard {
-    Includes(HashSet<TagType<'static>>),
-    Excludes(HashSet<TagType<'static>>),
+    Includes(HashSet<NodeType<'static>>),
+    Excludes(HashSet<NodeType<'static>>),
 }
 
 impl Guard {
-    pub(crate) fn includes(tags: Vec<TagType>) -> Self {
+    pub(crate) fn includes(tags: Vec<NodeType>) -> Self {
         Guard::Includes(tags.into_iter().map(|t| t.into_owned()).collect())
     }
-    pub(crate) fn excludes(tags: Vec<TagType>) -> Self {
+    pub(crate) fn excludes(tags: Vec<NodeType>) -> Self {
         Guard::Excludes(tags.into_iter().map(|t| t.into_owned()).collect())
     }
 
-    pub(crate) fn include(tag: TagType) -> Self {
+    pub(crate) fn include(tag: NodeType) -> Self {
         Guard::Includes([tag].into_iter().map(|t| t.into_owned()).collect())
     }
 
-    pub(crate) fn exclude(tag: TagType) -> Self {
+    pub(crate) fn exclude(tag: NodeType) -> Self {
         Guard::Excludes([tag].into_iter().map(|t| t.into_owned()).collect())
     }
 
@@ -472,7 +474,7 @@ impl Guard {
 #[cfg(test)]
 mod tests {
 
-    use crate::tag::TagName;
+    use crate::tag::NodeName;
 
     use super::*;
 
@@ -482,7 +484,7 @@ mod tests {
 
         // Test includes
         let guard = Guard::Includes(
-            [TagType::Element(TagName::new("", "foo"))]
+            [NodeType::Element(NodeName::new("", "foo"))]
                 .into_iter()
                 .collect(),
         );
@@ -491,9 +493,9 @@ mod tests {
         // Add another payload for the same tag
         lookup.add(guard, "value2");
 
-        let foo_tag = TagType::Element(TagName::new("", "foo"));
+        let foo_tag = NodeType::Element(NodeName::new("", "foo"));
 
-        let bar_tag = TagType::Element(TagName::new("", "bar"));
+        let bar_tag = NodeType::Element(NodeName::new("", "bar"));
 
         assert_eq!(lookup.matching(&foo_tag), vec!["value1", "value2"]);
 
@@ -504,9 +506,9 @@ mod tests {
     fn test_tag_lookup_excludes() {
         let mut lookup = TagLookup::new();
 
-        let foo_tag = TagType::Element(TagName::new("", "foo"));
+        let foo_tag = NodeType::Element(NodeName::new("", "foo"));
 
-        let bar_tag = TagType::Element(TagName::new("", "bar"));
+        let bar_tag = NodeType::Element(NodeName::new("", "bar"));
 
         // Test excludes
         let exclude_guard =
@@ -518,7 +520,7 @@ mod tests {
         assert_eq!(lookup.matching(&bar_tag), Vec::<&str>::new());
 
         // Non-excluded tag should match
-        let baz_tag = TagType::Element(TagName::new("", "baz"));
+        let baz_tag = NodeType::Element(NodeName::new("", "baz"));
         assert_eq!(lookup.matching(&baz_tag), vec!["excluded"]);
 
         // Test combination of includes and excludes
@@ -540,8 +542,8 @@ mod tests {
         let state2 = State(2);
         let mut tag_lookup1 = TagLookup::new();
         let mut tag_lookup2 = TagLookup::new();
-        let foo_tag = TagType::Element(TagName::new("", "foo"));
-        let bar_tag = TagType::Element(TagName::new("", "bar"));
+        let foo_tag = NodeType::Element(NodeName::new("", "foo"));
+        let bar_tag = NodeType::Element(NodeName::new("", "bar"));
         tag_lookup1.add(
             Guard::Includes([foo_tag.clone()].into_iter().collect()),
             "value1",

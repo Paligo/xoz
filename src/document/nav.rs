@@ -1,6 +1,6 @@
 use vers_vecs::trees::Tree;
 
-use crate::{TagName, TagType};
+use crate::{NodeName, NodeType};
 
 use super::{Document, Node};
 
@@ -28,7 +28,7 @@ impl Document {
     /// ```
     pub fn document_element(&self) -> Node {
         for child in self.children(self.root()) {
-            if let TagType::Element { .. } = self.tag_type(child) {
+            if let NodeType::Element { .. } = self.node_type(child) {
                 return child;
             }
         }

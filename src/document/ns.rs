@@ -1,6 +1,6 @@
 use vers_vecs::trees::Tree;
 
-use crate::{TagName, TagType};
+use crate::{NodeName, NodeType};
 
 use super::{Document, Node};
 

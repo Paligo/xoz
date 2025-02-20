@@ -1,6 +1,6 @@
 use vers_vecs::trees::Tree;
 
-use crate::{TagName, TagType};
+use crate::{NodeName, NodeType};
 
 use super::{Document, Node};
 
@@ -44,11 +44,11 @@ impl Document {
     /// let value = doc.string_value(a);
     /// assert_eq!(value, "1");
     /// ```
-    pub fn attribute_node<'a>(&self, node: Node, name: impl Into<TagName<'a>>) -> Option<Node> {
+    pub fn attribute_node<'a>(&self, node: Node, name: impl Into<NodeName<'a>>) -> Option<Node> {
         let attributes = self.attributes_child(node)?;
         let name = name.into();
         for child in self.primitive_children(attributes) {
-            if let TagType::Attribute(tag_name) = self.tag_type(child) {
+            if let NodeType::Attribute(tag_name) = self.node_type(child) {
                 if tag_name == &name {
                     return Some(child);
                 }
@@ -68,7 +68,7 @@ impl Document {
     /// let value = doc.attribute_value(p, "a").unwrap();
     /// assert_eq!(value, "1");
     /// ```
-    pub fn attribute_value<'a>(&self, node: Node, name: impl Into<TagName<'a>>) -> Option<&str> {
+    pub fn attribute_value<'a>(&self, node: Node, name: impl Into<NodeName<'a>>) -> Option<&str> {
         let attribute_node = self.attribute_node(node, name)?;
         let text_id = self.structure.text_id(attribute_node.get());
         Some(self.text_usage.text_value(text_id))

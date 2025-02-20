@@ -2,13 +2,13 @@ use ahash::{HashMap, HashMapExt};
 use vers_vecs::BitVec;
 
 use crate::{
-    tag::{TagInfo, TagType},
+    tag::{NodeInfo, NodeType},
     tagvec::{TagId, ATTRIBUTES_TAG_ID, NAMESPACES_TAG_ID},
 };
 
 pub(crate) struct TagsLookup {
-    pub(crate) tags: Vec<TagInfo<'static>>,
-    pub(crate) tag_lookup: HashMap<TagInfo<'static>, TagId>,
+    pub(crate) tags: Vec<NodeInfo<'static>>,
+    pub(crate) tag_lookup: HashMap<NodeInfo<'static>, TagId>,
 }
 
 impl TagsLookup {
@@ -19,7 +19,7 @@ impl TagsLookup {
         }
     }
 
-    fn register(&mut self, tag_info: TagInfo) -> TagId {
+    fn register(&mut self, tag_info: NodeInfo) -> TagId {
         if let Some(&idx) = self.tag_lookup.get(&tag_info) {
             return idx;
         }
@@ -30,11 +30,11 @@ impl TagsLookup {
         idx
     }
 
-    pub(crate) fn by_tag_info(&self, tag_info: &TagInfo) -> Option<TagId> {
+    pub(crate) fn by_tag_info(&self, tag_info: &NodeInfo) -> Option<TagId> {
         self.tag_lookup.get(tag_info).copied()
     }
 
-    pub(crate) fn by_tag_id(&self, tag_id: TagId) -> &TagInfo {
+    pub(crate) fn by_tag_id(&self, tag_id: TagId) -> &NodeInfo {
         self.tags
             .get(tag_id.id() as usize)
             .expect("Tag id does not exist in this document")
@@ -61,8 +61,8 @@ impl TagsBuilder {
     pub(crate) fn new() -> Self {
         let mut tags_lookup = TagsLookup::new();
         // we ensure these always exist, so that we quickly compare with tag id
-        let namespaces_tag_id = tags_lookup.register(TagInfo::open(TagType::Namespaces));
-        let attributes_tag_id = tags_lookup.register(TagInfo::open(TagType::Attributes));
+        let namespaces_tag_id = tags_lookup.register(NodeInfo::open(NodeType::Namespaces));
+        let attributes_tag_id = tags_lookup.register(NodeInfo::open(NodeType::Attributes));
         debug_assert_eq!(namespaces_tag_id.id(), NAMESPACES_TAG_ID.id());
         debug_assert_eq!(attributes_tag_id.id(), ATTRIBUTES_TAG_ID.id());
         Self {
@@ -74,7 +74,7 @@ impl TagsBuilder {
         }
     }
 
-    fn register_tag(&mut self, tag_info: TagInfo) -> TagId {
+    fn register_tag(&mut self, tag_info: NodeInfo) -> TagId {
         self.tags_lookup.register(tag_info)
     }
 
@@ -90,26 +90,26 @@ impl TagsBuilder {
         &self.usage
     }
 
-    pub(crate) fn open(&mut self, tag_type: TagType) {
+    pub(crate) fn open(&mut self, tag_type: NodeType) {
         self.parentheses.append(true);
 
         match tag_type {
-            TagType::Attribute { .. } | TagType::Text => {
+            NodeType::Attribute { .. } | NodeType::Text => {
                 self.text_opening_parens.append(true);
             }
             _ => {
                 self.text_opening_parens.append(false);
             }
         }
-        let tag_info = TagInfo::open(tag_type);
+        let tag_info = NodeInfo::open(tag_type);
         let tag_id = self.register_tag(tag_info);
         self.usage.push(tag_id.id())
     }
 
-    pub(crate) fn close(&mut self, tag_type: TagType) {
+    pub(crate) fn close(&mut self, tag_type: NodeType) {
         self.parentheses.append(false);
         self.text_opening_parens.append(false);
-        let tag_info = TagInfo::close(tag_type);
+        let tag_info = NodeInfo::close(tag_type);
         let tag_id = self.register_tag(tag_info);
         self.usage.push(tag_id.id())
     }
@@ -117,7 +117,7 @@ impl TagsBuilder {
 
 #[cfg(test)]
 mod tests {
-    use crate::tag::TagName;
+    use crate::tag::NodeName;
 
     use super::*;
 
@@ -125,12 +125,12 @@ mod tests {
     fn test_tags_builder() {
         let mut builder = TagsBuilder::new();
         // <doc><a/><b/></doc>
-        builder.open(TagType::Element(TagName::new("", "doc")));
-        builder.open(TagType::Element(TagName::new("", "a")));
-        builder.close(TagType::Element(TagName::new("", "a")));
-        builder.open(TagType::Element(TagName::new("", "b")));
-        builder.close(TagType::Element(TagName::new("", "b")));
-        builder.close(TagType::Element(TagName::new("", "doc")));
+        builder.open(NodeType::Element(NodeName::new("", "doc")));
+        builder.open(NodeType::Element(NodeName::new("", "a")));
+        builder.close(NodeType::Element(NodeName::new("", "a")));
+        builder.open(NodeType::Element(NodeName::new("", "b")));
+        builder.close(NodeType::Element(NodeName::new("", "b")));
+        builder.close(NodeType::Element(NodeName::new("", "doc")));
 
         let usage = builder.usage();
         // starts at 2 because of the namespaces and attributes tags
@@ -141,12 +141,12 @@ mod tests {
     fn test_tags_builder_multiple_a() {
         let mut builder = TagsBuilder::new();
         // <doc><a/><a/></doc>
-        builder.open(TagType::Element(TagName::new("", "doc")));
-        builder.open(TagType::Element(TagName::new("", "a")));
-        builder.close(TagType::Element(TagName::new("", "a")));
-        builder.open(TagType::Element(TagName::new("", "a")));
-        builder.close(TagType::Element(TagName::new("", "a")));
-        builder.close(TagType::Element(TagName::new("", "doc")));
+        builder.open(NodeType::Element(NodeName::new("", "doc")));
+        builder.open(NodeType::Element(NodeName::new("", "a")));
+        builder.close(NodeType::Element(NodeName::new("", "a")));
+        builder.open(NodeType::Element(NodeName::new("", "a")));
+        builder.close(NodeType::Element(NodeName::new("", "a")));
+        builder.close(NodeType::Element(NodeName::new("", "doc")));
 
         let usage = builder.usage();
         assert_eq!(usage, &[2, 3, 4, 3, 4, 5]);

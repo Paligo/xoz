@@ -1,6 +1,6 @@
 use crate::{
     document::{Document, Node},
-    TagType,
+    NodeType,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -27,7 +27,7 @@ impl<'a> TraverseIter<'a> {
 }
 
 impl<'a> Iterator for TraverseIter<'a> {
-    type Item = (&'a TagType<'a>, TagState, Node);
+    type Item = (&'a NodeType<'a>, TagState, Node);
     fn next(&mut self) -> Option<Self::Item> {
         // we traverse down the tree, taking the first child when we can,
         // putting the parent on the stack when we do so. This is an open tag.
@@ -38,7 +38,7 @@ impl<'a> Iterator for TraverseIter<'a> {
             None => {
                 if let Some(node) = self.stack.pop() {
                     self.node = self.doc.next_sibling(node);
-                    Some((self.doc.tag_type(node), TagState::Close, node))
+                    Some((self.doc.node_type(node), TagState::Close, node))
                 } else {
                     None
                 }
@@ -52,7 +52,7 @@ impl<'a> Iterator for TraverseIter<'a> {
                     self.node = self.doc.next_sibling(node);
                     TagState::Empty
                 };
-                Some((self.doc.tag_type(node), open_close, node))
+                Some((self.doc.node_type(node), open_close, node))
             }
         }
     }
@@ -60,7 +60,7 @@ impl<'a> Iterator for TraverseIter<'a> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{parser::parse_document, TagName};
+    use crate::{parser::parse_document, NodeName};
 
     use super::*;
 
@@ -71,7 +71,11 @@ mod tests {
         let mut traverse = TraverseIter::new(&doc, a);
         assert_eq!(
             traverse.next(),
-            Some((&TagType::Element(TagName::new("", "a")), TagState::Empty, a))
+            Some((
+                &NodeType::Element(NodeName::new("", "a")),
+                TagState::Empty,
+                a
+            ))
         );
         assert_eq!(traverse.next(), None);
     }
@@ -84,15 +88,27 @@ mod tests {
         let mut traverse = TraverseIter::new(&doc, a);
         assert_eq!(
             traverse.next(),
-            Some((&TagType::Element(TagName::new("", "a")), TagState::Open, a))
+            Some((
+                &NodeType::Element(NodeName::new("", "a")),
+                TagState::Open,
+                a
+            ))
         );
         assert_eq!(
             traverse.next(),
-            Some((&TagType::Element(TagName::new("", "b")), TagState::Empty, b))
+            Some((
+                &NodeType::Element(NodeName::new("", "b")),
+                TagState::Empty,
+                b
+            ))
         );
         assert_eq!(
             traverse.next(),
-            Some((&TagType::Element(TagName::new("", "a")), TagState::Close, a))
+            Some((
+                &NodeType::Element(NodeName::new("", "a")),
+                TagState::Close,
+                a
+            ))
         );
         assert_eq!(traverse.next(), None);
     }
@@ -108,23 +124,43 @@ mod tests {
         let mut traverse = TraverseIter::new(&doc, a);
         assert_eq!(
             traverse.next(),
-            Some((&TagType::Element(TagName::new("", "a")), TagState::Open, a))
+            Some((
+                &NodeType::Element(NodeName::new("", "a")),
+                TagState::Open,
+                a
+            ))
         );
         assert_eq!(
             traverse.next(),
-            Some((&TagType::Element(TagName::new("", "b")), TagState::Empty, b))
+            Some((
+                &NodeType::Element(NodeName::new("", "b")),
+                TagState::Empty,
+                b
+            ))
         );
         assert_eq!(
             traverse.next(),
-            Some((&TagType::Element(TagName::new("", "c")), TagState::Empty, c))
+            Some((
+                &NodeType::Element(NodeName::new("", "c")),
+                TagState::Empty,
+                c
+            ))
         );
         assert_eq!(
             traverse.next(),
-            Some((&TagType::Element(TagName::new("", "d")), TagState::Empty, d))
+            Some((
+                &NodeType::Element(NodeName::new("", "d")),
+                TagState::Empty,
+                d
+            ))
         );
         assert_eq!(
             traverse.next(),
-            Some((&TagType::Element(TagName::new("", "a")), TagState::Close, a))
+            Some((
+                &NodeType::Element(NodeName::new("", "a")),
+                TagState::Close,
+                a
+            ))
         );
         assert_eq!(traverse.next(), None);
     }
@@ -141,11 +177,31 @@ mod tests {
         assert_eq!(
             traverse,
             vec![
-                (&TagType::Element(TagName::new("", "a")), TagState::Open, a),
-                (&TagType::Element(TagName::new("", "b")), TagState::Empty, b),
-                (&TagType::Element(TagName::new("", "c")), TagState::Empty, c),
-                (&TagType::Element(TagName::new("", "d")), TagState::Empty, d),
-                (&TagType::Element(TagName::new("", "a")), TagState::Close, a),
+                (
+                    &NodeType::Element(NodeName::new("", "a")),
+                    TagState::Open,
+                    a
+                ),
+                (
+                    &NodeType::Element(NodeName::new("", "b")),
+                    TagState::Empty,
+                    b
+                ),
+                (
+                    &NodeType::Element(NodeName::new("", "c")),
+                    TagState::Empty,
+                    c
+                ),
+                (
+                    &NodeType::Element(NodeName::new("", "d")),
+                    TagState::Empty,
+                    d
+                ),
+                (
+                    &NodeType::Element(NodeName::new("", "a")),
+                    TagState::Close,
+                    a
+                ),
             ]
         )
     }
@@ -161,11 +217,31 @@ mod tests {
         assert_eq!(
             traverse,
             vec![
-                (&TagType::Element(TagName::new("", "a")), TagState::Open, a),
-                (&TagType::Element(TagName::new("", "b")), TagState::Open, b),
-                (&TagType::Element(TagName::new("", "c")), TagState::Empty, c),
-                (&TagType::Element(TagName::new("", "b")), TagState::Close, b),
-                (&TagType::Element(TagName::new("", "a")), TagState::Close, a),
+                (
+                    &NodeType::Element(NodeName::new("", "a")),
+                    TagState::Open,
+                    a
+                ),
+                (
+                    &NodeType::Element(NodeName::new("", "b")),
+                    TagState::Open,
+                    b
+                ),
+                (
+                    &NodeType::Element(NodeName::new("", "c")),
+                    TagState::Empty,
+                    c
+                ),
+                (
+                    &NodeType::Element(NodeName::new("", "b")),
+                    TagState::Close,
+                    b
+                ),
+                (
+                    &NodeType::Element(NodeName::new("", "a")),
+                    TagState::Close,
+                    a
+                ),
             ]
         )
     }
@@ -183,13 +259,41 @@ mod tests {
         assert_eq!(
             traverse,
             vec![
-                (&TagType::Element(TagName::new("", "a")), TagState::Open, a),
-                (&TagType::Element(TagName::new("", "b")), TagState::Open, b),
-                (&TagType::Element(TagName::new("", "c")), TagState::Empty, c),
-                (&TagType::Element(TagName::new("", "d")), TagState::Empty, d),
-                (&TagType::Element(TagName::new("", "b")), TagState::Close, b),
-                (&TagType::Element(TagName::new("", "e")), TagState::Empty, e),
-                (&TagType::Element(TagName::new("", "a")), TagState::Close, a),
+                (
+                    &NodeType::Element(NodeName::new("", "a")),
+                    TagState::Open,
+                    a
+                ),
+                (
+                    &NodeType::Element(NodeName::new("", "b")),
+                    TagState::Open,
+                    b
+                ),
+                (
+                    &NodeType::Element(NodeName::new("", "c")),
+                    TagState::Empty,
+                    c
+                ),
+                (
+                    &NodeType::Element(NodeName::new("", "d")),
+                    TagState::Empty,
+                    d
+                ),
+                (
+                    &NodeType::Element(NodeName::new("", "b")),
+                    TagState::Close,
+                    b
+                ),
+                (
+                    &NodeType::Element(NodeName::new("", "e")),
+                    TagState::Empty,
+                    e
+                ),
+                (
+                    &NodeType::Element(NodeName::new("", "a")),
+                    TagState::Close,
+                    a
+                ),
             ]
         )
     }
@@ -204,9 +308,17 @@ mod tests {
         assert_eq!(
             traverse,
             vec![
-                (&TagType::Element(TagName::new("", "a")), TagState::Open, a),
-                (&TagType::Text, TagState::Empty, text),
-                (&TagType::Element(TagName::new("", "a")), TagState::Close, a),
+                (
+                    &NodeType::Element(NodeName::new("", "a")),
+                    TagState::Open,
+                    a
+                ),
+                (&NodeType::Text, TagState::Empty, text),
+                (
+                    &NodeType::Element(NodeName::new("", "a")),
+                    TagState::Close,
+                    a
+                ),
             ]
         )
     }
@@ -219,7 +331,11 @@ mod tests {
         let traverse = TraverseIter::new(&doc, a).collect::<Vec<_>>();
         assert_eq!(
             traverse,
-            vec![(&TagType::Element(TagName::new("", "a")), TagState::Empty, a),]
+            vec![(
+                &NodeType::Element(NodeName::new("", "a")),
+                TagState::Empty,
+                a
+            ),]
         )
     }
 }

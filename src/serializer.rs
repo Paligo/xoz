@@ -7,7 +7,7 @@ use quick_xml::{
     Writer,
 };
 
-use crate::{document::Document, tag::TagType, TagName, TagState};
+use crate::{document::Document, tag::NodeType, NodeName, TagState};
 
 struct Serializer<'a, W: io::Write> {
     doc: &'a Document,
@@ -31,10 +31,10 @@ impl<'a, W: io::Write> Serializer<'a, W> {
 
         for (tag_type, tag_state, node) in self.doc.traverse(self.doc.root()) {
             match tag_type {
-                TagType::Document => {
+                NodeType::Document => {
                     // TODO serialize declaration if needed on opening
                 }
-                TagType::Element(name) => {
+                NodeType::Element(name) => {
                     if matches!(tag_state, TagState::Open | TagState::Empty) {
                         self.ns.push_scope();
                         for (prefix, uri) in self.doc.namespace_entries(node) {
@@ -70,26 +70,26 @@ impl<'a, W: io::Write> Serializer<'a, W> {
                         }
                     }
                 }
-                TagType::Comment => {
+                NodeType::Comment => {
                     let text = self.doc.comment_str(node).expect("Must be comment node");
                     self.writer
                         .write_event(Event::Comment(BytesText::new(text)))?;
                 }
-                TagType::ProcessingInstruction => {
+                NodeType::ProcessingInstruction => {
                     let text = self
                         .doc
                         .processing_instruction_str(node)
                         .expect("Must be PI node");
                     self.writer.write_event(Event::PI(BytesPI::new(text)))?;
                 }
-                TagType::Text => {
+                NodeType::Text => {
                     let text = self.doc.text_str(node).expect("Must be text node");
                     self.writer.write_event(Event::Text(BytesText::new(text)))?;
                 }
-                TagType::Attributes
-                | TagType::Namespaces
-                | TagType::Attribute(_)
-                | TagType::Namespace(_) => {
+                NodeType::Attributes
+                | NodeType::Namespaces
+                | NodeType::Attribute(_)
+                | NodeType::Namespace(_) => {
                     unreachable!("We cannot reach these tag types during traverse");
                 }
             }
@@ -199,7 +199,7 @@ impl<'a> NamespaceTracker<'a> {
         unreachable!()
     }
 
-    fn qname(&self, name: &'a TagName<'a>, scratch_buf: &'a mut Vec<u8>) -> QName<'a> {
+    fn qname(&self, name: &'a NodeName<'a>, scratch_buf: &'a mut Vec<u8>) -> QName<'a> {
         if name.namespace().is_empty() {
             QName(name.local_name())
         } else {

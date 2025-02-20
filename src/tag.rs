@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub enum TagType<'a> {
+pub enum NodeType<'a> {
     // contains namespaces, elements, other nodes
     Document,
     // holds namespace nodes
@@ -11,9 +11,9 @@ pub enum TagType<'a> {
     // under namespaces
     Namespace(Namespace),
     // under attributes. has associated text
-    Attribute(TagName<'a>),
+    Attribute(NodeName<'a>),
     // under document. contains namespaces, attributes, children
-    Element(TagName<'a>),
+    Element(NodeName<'a>),
     // child node, has associated text
     Text,
     // child node, has associated text
@@ -22,18 +22,18 @@ pub enum TagType<'a> {
     ProcessingInstruction,
 }
 
-impl TagType<'_> {
-    pub(crate) fn into_owned(self) -> TagType<'static> {
+impl NodeType<'_> {
+    pub(crate) fn into_owned(self) -> NodeType<'static> {
         match self {
-            TagType::Document => TagType::Document,
-            TagType::Namespaces => TagType::Namespaces,
-            TagType::Attributes => TagType::Attributes,
-            TagType::Namespace(namespace) => TagType::Namespace(namespace.clone()),
-            TagType::Attribute(tag_name) => TagType::Attribute(tag_name.into_owned()),
-            TagType::Element(tag_name) => TagType::Element(tag_name.into_owned()),
-            TagType::Text => TagType::Text,
-            TagType::Comment => TagType::Comment,
-            TagType::ProcessingInstruction => TagType::ProcessingInstruction,
+            NodeType::Document => NodeType::Document,
+            NodeType::Namespaces => NodeType::Namespaces,
+            NodeType::Attributes => NodeType::Attributes,
+            NodeType::Namespace(namespace) => NodeType::Namespace(namespace.clone()),
+            NodeType::Attribute(tag_name) => NodeType::Attribute(tag_name.into_owned()),
+            NodeType::Element(tag_name) => NodeType::Element(tag_name.into_owned()),
+            NodeType::Text => NodeType::Text,
+            NodeType::Comment => NodeType::Comment,
+            NodeType::ProcessingInstruction => NodeType::ProcessingInstruction,
         }
     }
 }
@@ -63,12 +63,12 @@ impl Namespace {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct TagName<'a> {
+pub struct NodeName<'a> {
     namespace: Cow<'a, [u8]>,
     local_name: Cow<'a, [u8]>,
 }
 
-impl<'a> From<&'a str> for TagName<'a> {
+impl<'a> From<&'a str> for NodeName<'a> {
     fn from(s: &'a str) -> Self {
         Self {
             namespace: Cow::Borrowed(&[]),
@@ -77,7 +77,7 @@ impl<'a> From<&'a str> for TagName<'a> {
     }
 }
 
-impl<'a> TagName<'a> {
+impl<'a> NodeName<'a> {
     pub fn new(namespace: &'a str, local_name: &'a str) -> Self {
         Self {
             namespace: Cow::Borrowed(namespace.as_bytes()),
@@ -92,8 +92,8 @@ impl<'a> TagName<'a> {
         }
     }
 
-    pub(crate) fn into_owned(self) -> TagName<'static> {
-        TagName {
+    pub(crate) fn into_owned(self) -> NodeName<'static> {
+        NodeName {
             namespace: Cow::Owned(self.namespace.into_owned()),
             local_name: Cow::Owned(self.local_name.into_owned()),
         }
@@ -109,8 +109,8 @@ impl<'a> TagName<'a> {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct TagInfo<'a> {
-    tag_type: TagType<'a>,
+pub struct NodeInfo<'a> {
+    tag_type: NodeType<'a>,
     // this would seem to be redundant as we already store it in the
     // balanced parentheses structure, but we want to be able to
     // look quickly for specifically opening tags, so we need it
@@ -118,29 +118,29 @@ pub struct TagInfo<'a> {
     open_close: bool,
 }
 
-impl<'a> TagInfo<'a> {
-    pub fn open(tag_type: TagType<'a>) -> Self {
+impl<'a> NodeInfo<'a> {
+    pub fn open(tag_type: NodeType<'a>) -> Self {
         Self {
             tag_type,
             open_close: true,
         }
     }
 
-    pub fn close(tag_type: TagType<'a>) -> Self {
+    pub fn close(tag_type: NodeType<'a>) -> Self {
         Self {
             tag_type,
             open_close: false,
         }
     }
 
-    pub(crate) fn into_owned(self) -> TagInfo<'static> {
-        TagInfo {
+    pub(crate) fn into_owned(self) -> NodeInfo<'static> {
+        NodeInfo {
             tag_type: self.tag_type.into_owned(),
             open_close: self.open_close,
         }
     }
 
-    pub(crate) fn tag_type(&self) -> &TagType {
+    pub(crate) fn tag_type(&self) -> &NodeType {
         &self.tag_type
     }
 

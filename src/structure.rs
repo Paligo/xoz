@@ -7,7 +7,7 @@ use vers_vecs::{
 
 use crate::{
     error::Error,
-    tag::TagInfo,
+    tag::NodeInfo,
     tags_builder::{TagsBuilder, TagsLookup},
     tagvec::{TagId, TagVec},
     text::TextId,
@@ -35,14 +35,14 @@ impl<T: TagVec> Structure<T> {
     }
 
     /// Given a tag info, return the tag id if it exists
-    pub(crate) fn lookup_tag_id(&self, tag_info: &TagInfo) -> Option<TagId> {
+    pub(crate) fn lookup_tag_id(&self, tag_info: &NodeInfo) -> Option<TagId> {
         self.tags_lookup.by_tag_info(tag_info)
     }
 
     /// Given a tag id, return the tag info.
     ///
     /// Should always succeed given a valid tag info.
-    pub(crate) fn lookup_tag_info(&self, tag_id: TagId) -> &TagInfo {
+    pub(crate) fn lookup_tag_info(&self, tag_id: TagId) -> &NodeInfo {
         self.tags_lookup.by_tag_id(tag_id)
     }
 
@@ -50,7 +50,7 @@ impl<T: TagVec> Structure<T> {
         &self.tree
     }
 
-    pub(crate) fn get_tag(&self, i: usize) -> &TagInfo {
+    pub(crate) fn get_tag(&self, i: usize) -> &NodeInfo {
         let id = self.tag_id(i);
         self.lookup_tag_info(id)
     }
@@ -134,7 +134,7 @@ impl<T: TagVec> Structure<T> {
 #[cfg(test)]
 mod tests {
     use crate::{
-        tag::{TagName, TagType},
+        tag::{NodeName, NodeType},
         tagvec::SArrayMatrix,
     };
 
@@ -145,12 +145,12 @@ mod tests {
         let mut builder = TagsBuilder::new();
 
         // <doc><a/><b/></doc>
-        builder.open(TagType::Element(TagName::new("", "doc")));
-        builder.open(TagType::Element(TagName::new("", "a")));
-        builder.close(TagType::Element(TagName::new("", "a")));
-        builder.open(TagType::Element(TagName::new("", "b")));
-        builder.close(TagType::Element(TagName::new("", "b")));
-        builder.close(TagType::Element(TagName::new("", "doc")));
+        builder.open(NodeType::Element(NodeName::new("", "doc")));
+        builder.open(NodeType::Element(NodeName::new("", "a")));
+        builder.close(NodeType::Element(NodeName::new("", "a")));
+        builder.open(NodeType::Element(NodeName::new("", "b")));
+        builder.close(NodeType::Element(NodeName::new("", "b")));
+        builder.close(NodeType::Element(NodeName::new("", "doc")));
 
         let structure = Structure::new(builder, |builder| {
             SArrayMatrix::new(builder.usage(), builder.tags_amount())
@@ -159,27 +159,27 @@ mod tests {
 
         assert_eq!(
             structure.get_tag(0),
-            &TagInfo::open(TagType::Element(TagName::new("", "doc")))
+            &NodeInfo::open(NodeType::Element(NodeName::new("", "doc")))
         );
         assert_eq!(
             structure.get_tag(1),
-            &TagInfo::open(TagType::Element(TagName::new("", "a")))
+            &NodeInfo::open(NodeType::Element(NodeName::new("", "a")))
         );
         assert_eq!(
             structure.get_tag(2),
-            &TagInfo::close(TagType::Element(TagName::new("", "a")))
+            &NodeInfo::close(NodeType::Element(NodeName::new("", "a")))
         );
         assert_eq!(
             structure.get_tag(3),
-            &TagInfo::open(TagType::Element(TagName::new("", "b")))
+            &NodeInfo::open(NodeType::Element(NodeName::new("", "b")))
         );
         assert_eq!(
             structure.get_tag(4),
-            &TagInfo::close(TagType::Element(TagName::new("", "b")))
+            &NodeInfo::close(NodeType::Element(NodeName::new("", "b")))
         );
         assert_eq!(
             structure.get_tag(5),
-            &TagInfo::close(TagType::Element(TagName::new("", "doc")))
+            &NodeInfo::close(NodeType::Element(NodeName::new("", "doc")))
         );
     }
 
@@ -187,12 +187,12 @@ mod tests {
     fn test_structure_multiple_a() {
         let mut builder = TagsBuilder::new();
         // <doc><a/><a/></doc>
-        builder.open(TagType::Element(TagName::new("", "doc")));
-        builder.open(TagType::Element(TagName::new("", "a")));
-        builder.close(TagType::Element(TagName::new("", "a")));
-        builder.open(TagType::Element(TagName::new("", "a")));
-        builder.close(TagType::Element(TagName::new("", "a")));
-        builder.close(TagType::Element(TagName::new("", "doc")));
+        builder.open(NodeType::Element(NodeName::new("", "doc")));
+        builder.open(NodeType::Element(NodeName::new("", "a")));
+        builder.close(NodeType::Element(NodeName::new("", "a")));
+        builder.open(NodeType::Element(NodeName::new("", "a")));
+        builder.close(NodeType::Element(NodeName::new("", "a")));
+        builder.close(NodeType::Element(NodeName::new("", "doc")));
 
         let structure = Structure::new(builder, |builder| {
             SArrayMatrix::new(builder.usage(), builder.tags_amount())
@@ -201,27 +201,27 @@ mod tests {
 
         assert_eq!(
             structure.get_tag(0),
-            &TagInfo::open(TagType::Element(TagName::new("", "doc")))
+            &NodeInfo::open(NodeType::Element(NodeName::new("", "doc")))
         );
         assert_eq!(
             structure.get_tag(1),
-            &TagInfo::open(TagType::Element(TagName::new("", "a")))
+            &NodeInfo::open(NodeType::Element(NodeName::new("", "a")))
         );
         assert_eq!(
             structure.get_tag(2),
-            &TagInfo::close(TagType::Element(TagName::new("", "a")))
+            &NodeInfo::close(NodeType::Element(NodeName::new("", "a")))
         );
         assert_eq!(
             structure.get_tag(3),
-            &TagInfo::open(TagType::Element(TagName::new("", "a")))
+            &NodeInfo::open(NodeType::Element(NodeName::new("", "a")))
         );
         assert_eq!(
             structure.get_tag(4),
-            &TagInfo::close(TagType::Element(TagName::new("", "a")))
+            &NodeInfo::close(NodeType::Element(NodeName::new("", "a")))
         );
         assert_eq!(
             structure.get_tag(5),
-            &TagInfo::close(TagType::Element(TagName::new("", "doc")))
+            &NodeInfo::close(NodeType::Element(NodeName::new("", "doc")))
         );
     }
 
@@ -230,25 +230,25 @@ mod tests {
         // <doc><a>A</a><b>B</b>/doc>
         let mut builder = TagsBuilder::new();
         // 0
-        builder.open(TagType::Element(TagName::new("", "doc")));
+        builder.open(NodeType::Element(NodeName::new("", "doc")));
         // 1
-        builder.open(TagType::Element(TagName::new("", "a")));
+        builder.open(NodeType::Element(NodeName::new("", "a")));
         // 2
-        builder.open(TagType::Text);
+        builder.open(NodeType::Text);
         // 3
-        builder.close(TagType::Text);
+        builder.close(NodeType::Text);
         // 4
-        builder.close(TagType::Element(TagName::new("", "a")));
+        builder.close(NodeType::Element(NodeName::new("", "a")));
         // 5
-        builder.open(TagType::Element(TagName::new("", "b")));
+        builder.open(NodeType::Element(NodeName::new("", "b")));
         // 6
-        builder.open(TagType::Text);
+        builder.open(NodeType::Text);
         // 7
-        builder.close(TagType::Text);
+        builder.close(NodeType::Text);
         // 8
-        builder.close(TagType::Element(TagName::new("", "b")));
+        builder.close(NodeType::Element(NodeName::new("", "b")));
         // 9
-        builder.close(TagType::Element(TagName::new("", "doc")));
+        builder.close(NodeType::Element(NodeName::new("", "doc")));
 
         let structure = Structure::new(builder, |builder| {
             SArrayMatrix::new(builder.usage(), builder.tags_amount())
