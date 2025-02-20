@@ -215,17 +215,22 @@ impl Document {
     pub fn tagged_descendants(
         &self,
         node: Node,
-        tag_id: NodeInfoId,
+        node_info_id: NodeInfoId,
     ) -> impl Iterator<Item = Node> + use<'_> {
-        DescendantsIter::new(node, TaggedTreeOps::new(self, tag_id))
+        DescendantsIter::new(node, TaggedTreeOps::new(self, node_info_id))
     }
 
     pub fn tagged_descendants_or_self(
         &self,
         node: Node,
-        tag_id: NodeInfoId,
+        node_info_id: NodeInfoId,
     ) -> impl Iterator<Item = Node> + use<'_> {
-        WithTaggedSelfIter::new(self, node, self.tagged_descendants(node, tag_id), tag_id)
+        WithTaggedSelfIter::new(
+            self,
+            node,
+            self.tagged_descendants(node, node_info_id),
+            node_info_id,
+        )
     }
 
     pub fn following(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
@@ -241,9 +246,9 @@ impl Document {
     pub fn tagged_following(
         &self,
         node: Node,
-        tag_id: NodeInfoId,
+        node_info_id: NodeInfoId,
     ) -> impl Iterator<Item = Node> + use<'_> {
-        FollowingIter::new(node, TaggedTreeOps::new(self, tag_id))
+        FollowingIter::new(node, TaggedTreeOps::new(self, node_info_id))
     }
 
     pub fn traverse(
@@ -318,16 +323,22 @@ impl Document {
         r
     }
 
-    pub fn subtree_tags(&self, node: Node, tag_id: NodeInfoId) -> usize {
-        self.structure.subtree_tags(node.0, tag_id).unwrap_or(0)
+    pub fn subtree_tags(&self, node: Node, node_info_id: NodeInfoId) -> usize {
+        self.structure
+            .subtree_tags(node.0, node_info_id)
+            .unwrap_or(0)
     }
 
-    pub fn tagged_descendant(&self, node: Node, tag_id: NodeInfoId) -> Option<Node> {
-        self.structure.tagged_descendant(node.0, tag_id).map(Node)
+    pub fn tagged_descendant(&self, node: Node, node_info_id: NodeInfoId) -> Option<Node> {
+        self.structure
+            .tagged_descendant(node.0, node_info_id)
+            .map(Node)
     }
 
-    pub fn tagged_foll(&self, node: Node, tag_id: NodeInfoId) -> Option<Node> {
-        self.structure.tagged_following(node.0, tag_id).map(Node)
+    pub fn tagged_foll(&self, node: Node, node_info_id: NodeInfoId) -> Option<Node> {
+        self.structure
+            .tagged_following(node.0, node_info_id)
+            .map(Node)
     }
 
     pub(crate) fn primitive_parent(&self, node: Node) -> Option<Node> {

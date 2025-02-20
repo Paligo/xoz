@@ -56,7 +56,9 @@ impl<T: TagVec> Structure<T> {
     }
 
     pub(crate) fn node_info_id(&self, i: usize) -> NodeInfoId {
-        self.tag_vec.get_tag(i).expect("Tag information to exist")
+        self.tag_vec
+            .get_node_info_id(i)
+            .expect("Tag information to exist")
     }
 
     // get text id based on location, given we already know this location has text
@@ -86,11 +88,11 @@ impl<T: TagVec> Structure<T> {
     }
 
     pub(crate) fn rank_tag(&self, i: usize, node_info_id: NodeInfoId) -> Option<usize> {
-        self.tag_vec.rank_tag(i, node_info_id)
+        self.tag_vec.rank_node_info_id(i, node_info_id)
     }
 
     pub(crate) fn select_tag(&self, rank: usize, node_info_id: NodeInfoId) -> Option<usize> {
-        self.tag_vec.select_tag(rank, node_info_id)
+        self.tag_vec.select_node_info_id(rank, node_info_id)
     }
 
     // the number of occurrences of tag within the subtree rooted at i

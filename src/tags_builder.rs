@@ -106,16 +106,16 @@ impl TagsBuilder {
             }
         }
         let node_info = NodeInfo::open(node_type);
-        let tag_id = self.register_node_info(node_info);
-        self.usage.push(tag_id.id())
+        let node_info_id = self.register_node_info(node_info);
+        self.usage.push(node_info_id.id())
     }
 
     pub(crate) fn close(&mut self, tag_type: NodeType) {
         self.parentheses.append(false);
         self.text_opening_parens.append(false);
         let tag_info = NodeInfo::close(tag_type);
-        let tag_id = self.register_node_info(tag_info);
-        self.usage.push(tag_id.id())
+        let node_info_id = self.register_node_info(tag_info);
+        self.usage.push(node_info_id.id())
     }
 }
 

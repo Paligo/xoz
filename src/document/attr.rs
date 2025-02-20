@@ -13,11 +13,11 @@ impl Document {
     pub(crate) fn attributes_child(&self, node: Node) -> Option<Node> {
         let node = self.primitive_first_child(node);
         if let Some(node) = node {
-            let tag_id = self.node_info_id(node);
-            if tag_id.is_attributes() {
+            let node_info_id = self.node_info_id(node);
+            if node_info_id.is_attributes() {
                 // the first child is the attributes node
                 Some(node)
-            } else if tag_id.is_namespaces() {
+            } else if node_info_id.is_namespaces() {
                 // the first child is the namespaces node, check for attributes node
                 let next = self.next_sibling(node);
                 next.filter(|next| self.node_info_id(*next).is_attributes())

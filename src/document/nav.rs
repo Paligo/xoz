@@ -83,11 +83,11 @@ impl Document {
     /// ```
     pub fn first_child(&self, node: Node) -> Option<Node> {
         let node = self.primitive_first_child(node)?;
-        let tag_id = self.node_info_id(node);
-        if tag_id.is_attributes() {
+        let node_info_id = self.node_info_id(node);
+        if node_info_id.is_attributes() {
             // the first child is the attributes node, skip it
             self.next_sibling(node)
-        } else if tag_id.is_namespaces() {
+        } else if node_info_id.is_namespaces() {
             // the first child is the namespaces node
             // check if the next sibling is the attributes node
             let next = self.next_sibling(node)?;
