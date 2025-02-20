@@ -10,7 +10,7 @@ use crate::{
     node::{NodeInfo, NodeType},
     parser::parse_document,
     structure::Structure,
-    tagvec::{SArrayMatrix, TagId},
+    tagvec::{NodeInfoId, SArrayMatrix},
     text::TextUsage,
     traverse::{TagState, TraverseIter},
     NodeName, QuickXMLError,
@@ -40,8 +40,8 @@ impl Document {
     }
 
     /// Given a tag info, return the tag id, if it exists.
-    pub fn tag(&self, tag_info: &NodeInfo) -> Option<TagId> {
-        self.structure.lookup_tag_id(tag_info)
+    pub fn tag(&self, tag_info: &NodeInfo) -> Option<NodeInfoId> {
+        self.structure.lookup_node_info_id(tag_info)
     }
 
     /// Preorder number of node
@@ -63,13 +63,13 @@ impl Document {
     }
 
     pub fn node_type(&self, node: Node) -> &NodeType {
-        let tag_info = self.structure.get_tag(node.0);
+        let tag_info = self.structure.get_node_info(node.0);
         debug_assert!(tag_info.is_open_tag());
         tag_info.node_type()
     }
 
-    pub fn tag_id(&self, node: Node) -> TagId {
-        self.structure.tag_id(node.0)
+    pub fn node_info_id(&self, node: Node) -> NodeInfoId {
+        self.structure.node_info_id(node.0)
     }
 
     pub fn is_document(&self, node: Node) -> bool {
@@ -215,7 +215,7 @@ impl Document {
     pub fn tagged_descendants(
         &self,
         node: Node,
-        tag_id: TagId,
+        tag_id: NodeInfoId,
     ) -> impl Iterator<Item = Node> + use<'_> {
         DescendantsIter::new(node, TaggedTreeOps::new(self, tag_id))
     }
@@ -223,7 +223,7 @@ impl Document {
     pub fn tagged_descendants_or_self(
         &self,
         node: Node,
-        tag_id: TagId,
+        tag_id: NodeInfoId,
     ) -> impl Iterator<Item = Node> + use<'_> {
         WithTaggedSelfIter::new(self, node, self.tagged_descendants(node, tag_id), tag_id)
     }
@@ -241,7 +241,7 @@ impl Document {
     pub fn tagged_following(
         &self,
         node: Node,
-        tag_id: TagId,
+        tag_id: NodeInfoId,
     ) -> impl Iterator<Item = Node> + use<'_> {
         FollowingIter::new(node, TaggedTreeOps::new(self, tag_id))
     }
@@ -318,15 +318,15 @@ impl Document {
         r
     }
 
-    pub fn subtree_tags(&self, node: Node, tag_id: TagId) -> usize {
+    pub fn subtree_tags(&self, node: Node, tag_id: NodeInfoId) -> usize {
         self.structure.subtree_tags(node.0, tag_id).unwrap_or(0)
     }
 
-    pub fn tagged_descendant(&self, node: Node, tag_id: TagId) -> Option<Node> {
+    pub fn tagged_descendant(&self, node: Node, tag_id: NodeInfoId) -> Option<Node> {
         self.structure.tagged_descendant(node.0, tag_id).map(Node)
     }
 
-    pub fn tagged_foll(&self, node: Node, tag_id: TagId) -> Option<Node> {
+    pub fn tagged_foll(&self, node: Node, tag_id: NodeInfoId) -> Option<Node> {
         self.structure.tagged_following(node.0, tag_id).map(Node)
     }
 

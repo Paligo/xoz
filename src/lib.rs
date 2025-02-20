@@ -20,5 +20,5 @@ pub use document::{Document, Node};
 pub use parser::{parse_document, QuickXMLError};
 // pub use builder::parse_document;
 pub use node::{Namespace, NodeInfo, NodeName, NodeType};
-pub use tagvec::TagId;
+pub use tagvec::NodeInfoId;
 pub use traverse::TagState;

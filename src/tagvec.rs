@@ -7,27 +7,27 @@ use vers_vecs::{BitVec, WaveletMatrix};
 use crate::error::Error;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TagId(u64);
+pub struct NodeInfoId(u64);
 
 // we ensure we always register these first in any document
-pub(crate) const NAMESPACES_TAG_ID: TagId = TagId(0);
-pub(crate) const ATTRIBUTES_TAG_ID: TagId = TagId(1);
+pub(crate) const NAMESPACES_NODE_INFO_ID: NodeInfoId = NodeInfoId(0);
+pub(crate) const ATTRIBUTES_NODE_INFO_ID: NodeInfoId = NodeInfoId(1);
 
-impl TagId {
+impl NodeInfoId {
     pub(crate) fn is_special(&self) -> bool {
-        *self == NAMESPACES_TAG_ID || *self == ATTRIBUTES_TAG_ID
+        *self == NAMESPACES_NODE_INFO_ID || *self == ATTRIBUTES_NODE_INFO_ID
     }
 
     pub(crate) fn is_namespaces(&self) -> bool {
-        *self == NAMESPACES_TAG_ID
+        *self == NAMESPACES_NODE_INFO_ID
     }
 
     pub(crate) fn is_attributes(&self) -> bool {
-        *self == ATTRIBUTES_TAG_ID
+        *self == ATTRIBUTES_NODE_INFO_ID
     }
 }
 
-impl TagId {
+impl NodeInfoId {
     pub(crate) fn new(id: u64) -> Self {
         Self(id)
     }
@@ -40,31 +40,31 @@ pub(crate) trait TagVec {
     /// Returns the tag at position `i`.
     ///
     /// Returns `None` if `i` is out of bounds.
-    fn get_tag(&self, i: usize) -> Option<TagId>;
+    fn get_tag(&self, i: usize) -> Option<NodeInfoId>;
 
     /// Returns the number of occurrences of `tag_id` up to position `i`.
     ///
     /// If `i` is out of bounds, it returns `None`.
-    fn rank_tag(&self, i: usize, tag_id: TagId) -> Option<usize>;
+    fn rank_tag(&self, i: usize, node_info_id: NodeInfoId) -> Option<usize>;
 
     /// Returns the position of the `rank`-th occurrence of `tag_id`.
     ///
     /// Of the rankth occurrence of `tag_id` does not exist, it returns `None`
-    fn select_tag(&self, rank: usize, tag_id: TagId) -> Option<usize>;
+    fn select_tag(&self, rank: usize, node_info_id: NodeInfoId) -> Option<usize>;
 }
 
 // A wavelet matrix implementation, based on Vers' wavelet matrix
 impl TagVec for WaveletMatrix {
-    fn get_tag(&self, i: usize) -> Option<TagId> {
-        self.get_u64(i).map(TagId::new)
+    fn get_tag(&self, i: usize) -> Option<NodeInfoId> {
+        self.get_u64(i).map(NodeInfoId::new)
     }
 
-    fn rank_tag(&self, i: usize, tag_id: TagId) -> Option<usize> {
-        self.rank_u64(i, tag_id.id())
+    fn rank_tag(&self, i: usize, node_info_id: NodeInfoId) -> Option<usize> {
+        self.rank_u64(i, node_info_id.id())
     }
 
-    fn select_tag(&self, rank: usize, tag_id: TagId) -> Option<usize> {
-        self.select_u64(rank, tag_id.id())
+    fn select_tag(&self, rank: usize, node_info_id: NodeInfoId) -> Option<usize> {
+        self.select_u64(rank, node_info_id.id())
     }
 }
 
@@ -110,15 +110,15 @@ impl SArrayMatrix {
 }
 
 impl TagVec for SArrayMatrix {
-    fn get_tag(&self, i: usize) -> Option<TagId> {
-        self.tags.get_int(i).map(|i| TagId::new(i as u64))
+    fn get_tag(&self, i: usize) -> Option<NodeInfoId> {
+        self.tags.get_int(i).map(|i| NodeInfoId::new(i as u64))
     }
 
-    fn rank_tag(&self, i: usize, tag_id: TagId) -> Option<usize> {
+    fn rank_tag(&self, i: usize, tag_id: NodeInfoId) -> Option<usize> {
         self.sarrays[tag_id.id() as usize].rank1(i)
     }
 
-    fn select_tag(&self, rank: usize, tag_id: TagId) -> Option<usize> {
+    fn select_tag(&self, rank: usize, tag_id: NodeInfoId) -> Option<usize> {
         self.sarrays[tag_id.id() as usize].select1(rank)
     }
 }
@@ -149,62 +149,62 @@ mod tests {
     #[test]
     fn test_wm_get_tag() {
         let wm = make_wavelet_matrix_tag_vec(&[0, 1, 2, 3], 4).unwrap();
-        assert_eq!(wm.get_tag(0), Some(TagId::new(0)));
-        assert_eq!(wm.get_tag(1), Some(TagId::new(1)));
-        assert_eq!(wm.get_tag(2), Some(TagId::new(2)));
+        assert_eq!(wm.get_tag(0), Some(NodeInfoId::new(0)));
+        assert_eq!(wm.get_tag(1), Some(NodeInfoId::new(1)));
+        assert_eq!(wm.get_tag(2), Some(NodeInfoId::new(2)));
         assert_eq!(wm.get_tag(10), None);
     }
 
     #[test]
     fn test_wm_rank_tag() {
         let wm = make_wavelet_matrix_tag_vec(&[0, 1, 1, 3, 2, 3], 4).unwrap();
-        assert_eq!(wm.rank_tag(0, TagId::new(0)), Some(0));
-        assert_eq!(wm.rank_tag(1, TagId::new(0)), Some(1));
-        assert_eq!(wm.rank_tag(2, TagId::new(1)), Some(1));
-        assert_eq!(wm.rank_tag(3, TagId::new(1)), Some(2));
-        assert_eq!(wm.rank_tag(6, TagId::new(3)), Some(2));
-        assert_eq!(wm.rank_tag(10, TagId::new(3)), None);
+        assert_eq!(wm.rank_tag(0, NodeInfoId::new(0)), Some(0));
+        assert_eq!(wm.rank_tag(1, NodeInfoId::new(0)), Some(1));
+        assert_eq!(wm.rank_tag(2, NodeInfoId::new(1)), Some(1));
+        assert_eq!(wm.rank_tag(3, NodeInfoId::new(1)), Some(2));
+        assert_eq!(wm.rank_tag(6, NodeInfoId::new(3)), Some(2));
+        assert_eq!(wm.rank_tag(10, NodeInfoId::new(3)), None);
     }
 
     #[test]
     fn test_wm_select_tag() {
         let wm = make_wavelet_matrix_tag_vec(&[0, 1, 1, 3, 2, 3], 4).unwrap();
-        assert_eq!(wm.select_tag(0, TagId::new(0)), Some(0));
-        assert_eq!(wm.select_tag(0, TagId::new(1)), Some(1));
-        assert_eq!(wm.select_tag(1, TagId::new(1)), Some(2));
-        assert_eq!(wm.select_tag(0, TagId::new(3)), Some(3));
-        assert_eq!(wm.select_tag(1, TagId::new(3)), Some(5));
-        assert_eq!(wm.select_tag(2, TagId::new(3)), None);
+        assert_eq!(wm.select_tag(0, NodeInfoId::new(0)), Some(0));
+        assert_eq!(wm.select_tag(0, NodeInfoId::new(1)), Some(1));
+        assert_eq!(wm.select_tag(1, NodeInfoId::new(1)), Some(2));
+        assert_eq!(wm.select_tag(0, NodeInfoId::new(3)), Some(3));
+        assert_eq!(wm.select_tag(1, NodeInfoId::new(3)), Some(5));
+        assert_eq!(wm.select_tag(2, NodeInfoId::new(3)), None);
     }
 
     #[test]
     fn test_sa_get_tag() {
         let wm = SArrayMatrix::new(&[0, 1, 2, 3], 4).unwrap();
-        assert_eq!(wm.get_tag(0), Some(TagId::new(0)));
-        assert_eq!(wm.get_tag(1), Some(TagId::new(1)));
-        assert_eq!(wm.get_tag(2), Some(TagId::new(2)));
+        assert_eq!(wm.get_tag(0), Some(NodeInfoId::new(0)));
+        assert_eq!(wm.get_tag(1), Some(NodeInfoId::new(1)));
+        assert_eq!(wm.get_tag(2), Some(NodeInfoId::new(2)));
         assert_eq!(wm.get_tag(10), None);
     }
 
     #[test]
     fn test_sa_rank_tag() {
         let wm = SArrayMatrix::new(&[0, 1, 1, 3, 2, 3], 4).unwrap();
-        assert_eq!(wm.rank_tag(0, TagId::new(0)), Some(0));
-        assert_eq!(wm.rank_tag(1, TagId::new(0)), Some(1));
-        assert_eq!(wm.rank_tag(2, TagId::new(1)), Some(1));
-        assert_eq!(wm.rank_tag(3, TagId::new(1)), Some(2));
-        assert_eq!(wm.rank_tag(6, TagId::new(3)), Some(2));
-        assert_eq!(wm.rank_tag(10, TagId::new(3)), None);
+        assert_eq!(wm.rank_tag(0, NodeInfoId::new(0)), Some(0));
+        assert_eq!(wm.rank_tag(1, NodeInfoId::new(0)), Some(1));
+        assert_eq!(wm.rank_tag(2, NodeInfoId::new(1)), Some(1));
+        assert_eq!(wm.rank_tag(3, NodeInfoId::new(1)), Some(2));
+        assert_eq!(wm.rank_tag(6, NodeInfoId::new(3)), Some(2));
+        assert_eq!(wm.rank_tag(10, NodeInfoId::new(3)), None);
     }
 
     #[test]
     fn test_sa_select_tag() {
         let wm = SArrayMatrix::new(&[0, 1, 1, 3, 2, 3], 4).unwrap();
-        assert_eq!(wm.select_tag(0, TagId::new(0)), Some(0));
-        assert_eq!(wm.select_tag(0, TagId::new(1)), Some(1));
-        assert_eq!(wm.select_tag(1, TagId::new(1)), Some(2));
-        assert_eq!(wm.select_tag(0, TagId::new(3)), Some(3));
-        assert_eq!(wm.select_tag(1, TagId::new(3)), Some(5));
-        assert_eq!(wm.select_tag(2, TagId::new(3)), None);
+        assert_eq!(wm.select_tag(0, NodeInfoId::new(0)), Some(0));
+        assert_eq!(wm.select_tag(0, NodeInfoId::new(1)), Some(1));
+        assert_eq!(wm.select_tag(1, NodeInfoId::new(1)), Some(2));
+        assert_eq!(wm.select_tag(0, NodeInfoId::new(3)), Some(3));
+        assert_eq!(wm.select_tag(1, NodeInfoId::new(3)), Some(5));
+        assert_eq!(wm.select_tag(2, NodeInfoId::new(3)), None);
     }
 }

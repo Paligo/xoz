@@ -9,12 +9,12 @@ use crate::{
     error::Error,
     node::NodeInfo,
     tags_builder::{NodeInfoLookup, TagsBuilder},
-    tagvec::{TagId, TagVec},
+    tagvec::{NodeInfoId, TagVec},
     text::TextId,
 };
 
 pub(crate) struct Structure<T: TagVec> {
-    tags_lookup: NodeInfoLookup,
+    node_info_lookup: NodeInfoLookup,
     text_opening_parens: RsVec,
     tree: BpTree,
     tag_vec: T,
@@ -27,7 +27,7 @@ impl<T: TagVec> Structure<T> {
     ) -> Result<Self, Error> {
         let tag_vec = make_tag_vec(&tags_builder)?;
         Ok(Self {
-            tags_lookup: tags_builder.node_info_lookup,
+            node_info_lookup: tags_builder.node_info_lookup,
             text_opening_parens: RsVec::from_bit_vec(tags_builder.text_opening_parens),
             tree: BpTree::from_bit_vector(tags_builder.parentheses),
             tag_vec,
@@ -35,27 +35,27 @@ impl<T: TagVec> Structure<T> {
     }
 
     /// Given a tag info, return the tag id if it exists
-    pub(crate) fn lookup_tag_id(&self, tag_info: &NodeInfo) -> Option<TagId> {
-        self.tags_lookup.by_node_info(tag_info)
+    pub(crate) fn lookup_node_info_id(&self, node_info: &NodeInfo) -> Option<NodeInfoId> {
+        self.node_info_lookup.by_node_info(node_info)
     }
 
     /// Given a tag id, return the tag info.
     ///
     /// Should always succeed given a valid tag info.
-    pub(crate) fn lookup_tag_info(&self, tag_id: TagId) -> &NodeInfo {
-        self.tags_lookup.by_tag_id(tag_id)
+    pub(crate) fn lookup_node_info(&self, node_info_id: NodeInfoId) -> &NodeInfo {
+        self.node_info_lookup.by_node_info_id(node_info_id)
     }
 
     pub(crate) fn tree(&self) -> &BpTree {
         &self.tree
     }
 
-    pub(crate) fn get_tag(&self, i: usize) -> &NodeInfo {
-        let id = self.tag_id(i);
-        self.lookup_tag_info(id)
+    pub(crate) fn get_node_info(&self, i: usize) -> &NodeInfo {
+        let id = self.node_info_id(i);
+        self.lookup_node_info(id)
     }
 
-    pub(crate) fn tag_id(&self, i: usize) -> TagId {
+    pub(crate) fn node_info_id(&self, i: usize) -> NodeInfoId {
         self.tag_vec.get_tag(i).expect("Tag information to exist")
     }
 
@@ -85,30 +85,33 @@ impl<T: TagVec> Structure<T> {
         start..end
     }
 
-    pub(crate) fn rank_tag(&self, i: usize, tag_id: TagId) -> Option<usize> {
-        self.tag_vec.rank_tag(i, tag_id)
+    pub(crate) fn rank_tag(&self, i: usize, node_info_id: NodeInfoId) -> Option<usize> {
+        self.tag_vec.rank_tag(i, node_info_id)
     }
 
-    pub(crate) fn select_tag(&self, rank: usize, tag_id: TagId) -> Option<usize> {
-        self.tag_vec.select_tag(rank, tag_id)
+    pub(crate) fn select_tag(&self, rank: usize, node_info_id: NodeInfoId) -> Option<usize> {
+        self.tag_vec.select_tag(rank, node_info_id)
     }
 
     // the number of occurrences of tag within the subtree rooted at i
-    pub(crate) fn subtree_tags(&self, i: usize, tag_id: TagId) -> Option<usize> {
+    pub(crate) fn subtree_tags(&self, i: usize, node_info_id: NodeInfoId) -> Option<usize> {
         if i == 0 {
             // root node has no parent
-            Some(self.rank_tag(self.tree.close(i)?, tag_id)?)
+            Some(self.rank_tag(self.tree.close(i)?, node_info_id)?)
         } else {
-            Some(self.rank_tag(self.tree.close(i)?, tag_id)? - (self.rank_tag(i - 1, tag_id)?))
+            Some(
+                self.rank_tag(self.tree.close(i)?, node_info_id)?
+                    - (self.rank_tag(i - 1, node_info_id)?),
+            )
         }
     }
 
     // The first node (in preorder) labeled tag strictly within the subtree
     // rooted at i. If there is no such node the function returns None.
-    pub(crate) fn tagged_descendant(&self, i: usize, tag_id: TagId) -> Option<usize> {
+    pub(crate) fn tagged_descendant(&self, i: usize, node_info_id: NodeInfoId) -> Option<usize> {
         // Note: the "Fast in-memory XPath search using compressed trees" contains
         // a bug where the i is added to the result of rank, but that doesn't work.
-        let d = self.select_tag(self.rank_tag(i + 1, tag_id)?, tag_id)?;
+        let d = self.select_tag(self.rank_tag(i + 1, node_info_id)?, node_info_id)?;
         if d <= self.tree.close(i)? {
             Some(d)
         } else {
@@ -119,15 +122,18 @@ impl<T: TagVec> Structure<T> {
 
     // The last node labeled tag with preorder smaller than that of node i, and
     // not an ancestor of i. Returns None if no such node exists.
-    pub(crate) fn tagged_preceding(&self, i: usize, tag_id: TagId) -> Option<usize> {
+    pub(crate) fn tagged_preceding(&self, i: usize, node_info_id: NodeInfoId) -> Option<usize> {
         todo!()
     }
 
     // The first node labeled tag with preorder larger than that of node i,
     // and not in the subtree of i. Returns None if there is no such node
-    pub(crate) fn tagged_following(&self, i: usize, tag_id: TagId) -> Option<usize> {
+    pub(crate) fn tagged_following(&self, i: usize, node_info_id: NodeInfoId) -> Option<usize> {
         // TODO: no tests yet
-        self.select_tag(self.rank_tag(self.tree.close(i)?, tag_id)? + 1, tag_id)
+        self.select_tag(
+            self.rank_tag(self.tree.close(i)?, node_info_id)? + 1,
+            node_info_id,
+        )
     }
 }
 
@@ -158,27 +164,27 @@ mod tests {
         .unwrap();
 
         assert_eq!(
-            structure.get_tag(0),
+            structure.get_node_info(0),
             &NodeInfo::open(NodeType::Element(NodeName::new("", "doc")))
         );
         assert_eq!(
-            structure.get_tag(1),
+            structure.get_node_info(1),
             &NodeInfo::open(NodeType::Element(NodeName::new("", "a")))
         );
         assert_eq!(
-            structure.get_tag(2),
+            structure.get_node_info(2),
             &NodeInfo::close(NodeType::Element(NodeName::new("", "a")))
         );
         assert_eq!(
-            structure.get_tag(3),
+            structure.get_node_info(3),
             &NodeInfo::open(NodeType::Element(NodeName::new("", "b")))
         );
         assert_eq!(
-            structure.get_tag(4),
+            structure.get_node_info(4),
             &NodeInfo::close(NodeType::Element(NodeName::new("", "b")))
         );
         assert_eq!(
-            structure.get_tag(5),
+            structure.get_node_info(5),
             &NodeInfo::close(NodeType::Element(NodeName::new("", "doc")))
         );
     }
@@ -200,27 +206,27 @@ mod tests {
         .unwrap();
 
         assert_eq!(
-            structure.get_tag(0),
+            structure.get_node_info(0),
             &NodeInfo::open(NodeType::Element(NodeName::new("", "doc")))
         );
         assert_eq!(
-            structure.get_tag(1),
+            structure.get_node_info(1),
             &NodeInfo::open(NodeType::Element(NodeName::new("", "a")))
         );
         assert_eq!(
-            structure.get_tag(2),
+            structure.get_node_info(2),
             &NodeInfo::close(NodeType::Element(NodeName::new("", "a")))
         );
         assert_eq!(
-            structure.get_tag(3),
+            structure.get_node_info(3),
             &NodeInfo::open(NodeType::Element(NodeName::new("", "a")))
         );
         assert_eq!(
-            structure.get_tag(4),
+            structure.get_node_info(4),
             &NodeInfo::close(NodeType::Element(NodeName::new("", "a")))
         );
         assert_eq!(
-            structure.get_tag(5),
+            structure.get_node_info(5),
             &NodeInfo::close(NodeType::Element(NodeName::new("", "doc")))
         );
     }

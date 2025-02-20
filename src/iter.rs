@@ -1,6 +1,6 @@
 use crate::{
     document::{Document, Node},
-    TagId,
+    NodeInfoId,
 };
 
 pub(crate) struct NextSiblingIter<'a> {
@@ -358,12 +358,12 @@ impl<T: TreeOps> Iterator for FollowingIter<T> {
 
 pub(crate) struct TaggedTreeOps<'a> {
     doc: &'a Document,
-    tag_id: TagId,
+    node_info_id: NodeInfoId,
 }
 
 impl<'a> TaggedTreeOps<'a> {
-    pub(crate) fn new(doc: &'a Document, tag_id: TagId) -> Self {
-        Self { doc, tag_id }
+    pub(crate) fn new(doc: &'a Document, node_info_id: NodeInfoId) -> Self {
+        Self { doc, node_info_id }
     }
 }
 
@@ -377,11 +377,11 @@ impl TreeOps for TaggedTreeOps<'_> {
     }
 
     fn matching_descendant(&self, node: Node) -> Option<Node> {
-        self.doc.tagged_descendant(node, self.tag_id)
+        self.doc.tagged_descendant(node, self.node_info_id)
     }
 
     fn matching_descendant_or_self(&self, node: Node) -> Option<Node> {
-        if self.doc.tag_id(node) == self.tag_id {
+        if self.doc.node_info_id(node) == self.node_info_id {
             Some(node)
         } else {
             self.matching_descendant(node)
@@ -393,19 +393,19 @@ pub(crate) struct WithTaggedSelfIter<'a, I: Iterator<Item = Node>> {
     doc: &'a Document,
     node: Option<Node>,
     iter: I,
-    tag_id: TagId,
+    node_info_id: NodeInfoId,
 }
 
 impl<'a, I> WithTaggedSelfIter<'a, I>
 where
     I: Iterator<Item = Node>,
 {
-    pub(crate) fn new(doc: &'a Document, node: Node, iter: I, tag_id: TagId) -> Self {
+    pub(crate) fn new(doc: &'a Document, node: Node, iter: I, node_info_id: NodeInfoId) -> Self {
         Self {
             doc,
             node: Some(node),
             iter,
-            tag_id,
+            node_info_id,
         }
     }
 }
@@ -418,7 +418,7 @@ where
 
     fn next(&mut self) -> Option<Self::Item> {
         if let Some(node) = self.node.take() {
-            if self.doc.tag_id(node) == self.tag_id {
+            if self.doc.node_info_id(node) == self.node_info_id {
                 Some(node)
             } else {
                 self.next()

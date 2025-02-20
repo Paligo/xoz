@@ -3,12 +3,12 @@ use vers_vecs::BitVec;
 
 use crate::{
     node::{NodeInfo, NodeType},
-    tagvec::{TagId, ATTRIBUTES_TAG_ID, NAMESPACES_TAG_ID},
+    tagvec::{NodeInfoId, ATTRIBUTES_NODE_INFO_ID, NAMESPACES_NODE_INFO_ID},
 };
 
 pub(crate) struct NodeInfoLookup {
     pub(crate) node_infos: Vec<NodeInfo<'static>>,
-    pub(crate) node_info_lookup: HashMap<NodeInfo<'static>, TagId>,
+    pub(crate) node_info_lookup: HashMap<NodeInfo<'static>, NodeInfoId>,
 }
 
 impl NodeInfoLookup {
@@ -19,24 +19,24 @@ impl NodeInfoLookup {
         }
     }
 
-    fn register(&mut self, node_info: NodeInfo) -> TagId {
+    fn register(&mut self, node_info: NodeInfo) -> NodeInfoId {
         if let Some(&idx) = self.node_info_lookup.get(&node_info) {
             return idx;
         }
-        let idx = TagId::new(self.node_infos.len() as u64);
+        let idx = NodeInfoId::new(self.node_infos.len() as u64);
         let owned_node_info = node_info.into_owned();
         self.node_infos.push(owned_node_info.clone());
         self.node_info_lookup.insert(owned_node_info, idx);
         idx
     }
 
-    pub(crate) fn by_node_info(&self, node_info: &NodeInfo) -> Option<TagId> {
+    pub(crate) fn by_node_info(&self, node_info: &NodeInfo) -> Option<NodeInfoId> {
         self.node_info_lookup.get(node_info).copied()
     }
 
-    pub(crate) fn by_tag_id(&self, tag_id: TagId) -> &NodeInfo {
+    pub(crate) fn by_node_info_id(&self, node_info_id: NodeInfoId) -> &NodeInfo {
         self.node_infos
-            .get(tag_id.id() as usize)
+            .get(node_info_id.id() as usize)
             .expect("Tag id does not exist in this document")
     }
 
@@ -61,10 +61,12 @@ impl TagsBuilder {
     pub(crate) fn new() -> Self {
         let mut node_info_lookup = NodeInfoLookup::new();
         // we ensure these always exist, so that we quickly compare with tag id
-        let namespaces_tag_id = node_info_lookup.register(NodeInfo::open(NodeType::Namespaces));
-        let attributes_tag_id = node_info_lookup.register(NodeInfo::open(NodeType::Attributes));
-        debug_assert_eq!(namespaces_tag_id.id(), NAMESPACES_TAG_ID.id());
-        debug_assert_eq!(attributes_tag_id.id(), ATTRIBUTES_TAG_ID.id());
+        let namespaces_node_info_id =
+            node_info_lookup.register(NodeInfo::open(NodeType::Namespaces));
+        let attributes_node_info_id =
+            node_info_lookup.register(NodeInfo::open(NodeType::Attributes));
+        debug_assert_eq!(namespaces_node_info_id.id(), NAMESPACES_NODE_INFO_ID.id());
+        debug_assert_eq!(attributes_node_info_id.id(), ATTRIBUTES_NODE_INFO_ID.id());
         Self {
             node_info_lookup,
             parentheses: BitVec::new(),
@@ -73,7 +75,7 @@ impl TagsBuilder {
         }
     }
 
-    fn register_node_info(&mut self, node_info: NodeInfo) -> TagId {
+    fn register_node_info(&mut self, node_info: NodeInfo) -> NodeInfoId {
         self.node_info_lookup.register(node_info)
     }
 
