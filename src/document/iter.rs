@@ -261,13 +261,8 @@ impl Document {
         &self,
         node: Node,
         node_type: NodeType,
-    ) -> Box<dyn Iterator<Item = Node> + '_> {
-        let node_info_id = self.node_info_id(node_type);
-        if let Some(node_info_id) = node_info_id {
-            Box::new(TypedDescendantsIter::new(self, node, node_info_id))
-        } else {
-            Box::new(std::iter::empty())
-        }
+    ) -> impl Iterator<Item = Node> + use<'_> {
+        TypedDescendantsIter::new(self, node, node_type)
     }
 
     pub fn typed_descendants_or_self(

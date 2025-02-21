@@ -1,6 +1,7 @@
 use crate::{
     document::{Document, Node},
     node_info_vec::NodeInfoId,
+    NodeType,
 };
 
 pub(crate) struct NextSiblingIter<'a> {
@@ -438,12 +439,24 @@ pub(crate) struct TypedDescendantsIter<'a> {
 }
 
 impl<'a> TypedDescendantsIter<'a> {
-    pub(crate) fn new(doc: &'a Document, parent: Node, node_info_id: NodeInfoId) -> Self {
-        Self {
-            doc,
-            parent,
-            node: doc.typed_descendant_by_node_info_id(parent, node_info_id),
-            node_info_id,
+    pub(crate) fn new(doc: &'a Document, parent: Node, node_type: NodeType) -> Self {
+        if let Some(node_info_id) = doc.node_info_id(node_type) {
+            Self {
+                doc,
+                parent,
+                node: doc.typed_descendant_by_node_info_id(parent, node_info_id),
+                node_info_id,
+            }
+        } else {
+            // if this node type doesn't even exist,
+            // we return an iterator doing nothing
+            Self {
+                doc,
+                parent,
+                node: None,
+                // some dummy node info id
+                node_info_id: NodeInfoId::new(0),
+            }
         }
     }
 }
