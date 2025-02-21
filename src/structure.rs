@@ -150,6 +150,20 @@ impl<T: NodeInfoVec> Structure<T> {
         )
     }
 
+    pub(crate) fn typed_following_sibling(
+        &self,
+        i: usize,
+        node_info_id: NodeInfoId,
+    ) -> Option<usize> {
+        // TODO: is there a smarter way?
+        let sibling = self.typed_following(i, node_info_id)?;
+        if self.tree.parent(i)? == self.tree.parent(sibling)? {
+            Some(sibling)
+        } else {
+            None
+        }
+    }
+
     // The last node labeled tag with preorder smaller than that of node i, and
     // not an ancestor of i. Returns None if no such node exists.
     pub(crate) fn typed_preceding(&self, i: usize, node_info_id: NodeInfoId) -> Option<usize> {
