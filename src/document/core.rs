@@ -1,4 +1,3 @@
-use quick_xml::events::BytesPI;
 use vers_vecs::trees::{IsAncestor, Tree};
 
 use crate::{
@@ -56,8 +55,8 @@ impl Document {
 
     pub fn node_name(&self, node: Node) -> Option<&NodeName> {
         match self.node_type(node) {
-            NodeType::Element(tag_name) => Some(tag_name),
-            NodeType::Attribute(tag_name) => Some(tag_name),
+            NodeType::Element(node_name) => Some(node_name),
+            NodeType::Attribute(node_name) => Some(node_name),
             _ => None,
         }
     }
