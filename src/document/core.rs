@@ -114,16 +114,6 @@ impl Document {
             .expect("Illegal tree structure or node not in tree")
     }
 
-    pub fn child_index(&self, node: Node) -> Option<usize> {
-        let parent = self.parent(node)?;
-        for (i, child) in self.children(parent).enumerate() {
-            if child == node {
-                return Some(i);
-            }
-        }
-        None
-    }
-
     pub fn attribute_entries(
         &self,
         node: Node,

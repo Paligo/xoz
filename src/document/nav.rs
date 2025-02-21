@@ -151,7 +151,33 @@ impl Document {
             Some(prev)
         }
     }
+    /// Get index of child.
+    ///
+    /// Returns [`None`] if the node is not a child of this node.
+    ///
+    /// Namespace and attribute nodes aren't considered children.
+    ///
+    /// ```rust
+    /// let doc = xoz::Document::parse_str("<p><a/><b/></p>").unwrap();
+    /// let p = doc.document_element();
+    /// let a = doc.first_child(p).unwrap();
+    /// let b = doc.next_sibling(a).unwrap();
+    /// assert_eq!(doc.child_index(p, a), Some(0));
+    /// assert_eq!(doc.child_index(p, b), Some(1));
+    /// assert_eq!(doc.child_index(a, b), None);
+    /// ```
+    pub fn child_index(&self, parent: Node, node: Node) -> Option<usize> {
+        for (i, child) in self.children(parent).enumerate() {
+            if child == node {
+                return Some(i);
+            }
+        }
+        None
+    }
 
+    /// Descendant of node type
+    ///
+    /// Look for the first descendant of node in document order that has NodeType.
     pub fn typed_descendant(&self, node: Node, node_type: NodeType) -> Option<Node> {
         let node_info_id = self.node_info_id(node_type)?;
         self.typed_descendant_by_node_info_id(node, node_info_id)
@@ -167,6 +193,10 @@ impl Document {
             .map(Node::new)
     }
 
+    /// Following node of node type.
+    ///
+    /// Look for the first following node (after node) in document order that
+    /// has node type.
     pub fn typed_foll(&self, node: Node, node_type: NodeType) -> Option<Node> {
         let node_info_id = self.node_info_id(node_type)?;
         self.typed_foll_by_node_info_id(node, node_info_id)

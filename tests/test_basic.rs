@@ -347,10 +347,10 @@ fn test_child_index() {
     let a = doc.first_child(doc_el).unwrap();
     let b = doc.next_sibling(a).unwrap();
     let c = doc.next_sibling(b).unwrap();
-    assert_eq!(doc.child_index(a), Some(0));
-    assert_eq!(doc.child_index(b), Some(1));
-    assert_eq!(doc.child_index(c), Some(2));
-    assert_eq!(doc.child_index(root), None);
+    assert_eq!(doc.child_index(doc_el, a), Some(0));
+    assert_eq!(doc.child_index(doc_el, b), Some(1));
+    assert_eq!(doc.child_index(doc_el, c), Some(2));
+    assert_eq!(doc.child_index(root, root), None);
 }
 
 #[test]
