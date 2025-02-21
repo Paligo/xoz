@@ -1,8 +1,8 @@
 use crate::{
     iter::{
         AncestorIter, AttributesIter, ChildrenIter, DescendantsIter, FollowingIter,
-        NextSiblingIter, NodeTreeOps, PreviousSiblingIter, TypedDescendantsIter, TypedTreeOps,
-        WithSelfIter, WithTypedSelfIter,
+        NextSiblingIter, NodeTreeOps, PreviousSiblingIter, TypedDescendantsIter,
+        TypedFollowingIter, TypedTreeOps, WithSelfIter, WithTypedSelfIter,
     },
     traverse::TraverseIter,
     NodeType, TagState,
@@ -289,16 +289,8 @@ impl Document {
         &self,
         node: Node,
         node_type: NodeType,
-    ) -> Box<dyn Iterator<Item = Node> + '_> {
-        let node_info_id = self.node_info_id(node_type);
-        if let Some(node_info_id) = node_info_id {
-            Box::new(FollowingIter::new(
-                node,
-                TypedTreeOps::new(self, node_info_id),
-            ))
-        } else {
-            Box::new(std::iter::empty())
-        }
+    ) -> impl Iterator<Item = Node> + use<'_> {
+        TypedFollowingIter::new(self, node, node_type)
     }
 
     /// Iterate over the nodes in the tree.

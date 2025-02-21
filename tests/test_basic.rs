@@ -631,6 +631,23 @@ fn test_typed_following1() {
 }
 
 #[test]
+fn test_typed_following2() {
+    let doc = parse_document(r#"<doc><f/><a><b><c/></b><d><e/><f/></d></a><f/></doc>"#).unwrap();
+    let doc_el = doc.document_element();
+    let f1 = doc.first_child(doc_el).unwrap();
+    let a = doc.next_sibling(f1).unwrap();
+    let b = doc.first_child(a).unwrap();
+    let c = doc.first_child(b).unwrap();
+    let d = doc.next_sibling(b).unwrap();
+    let e = doc.first_child(d).unwrap();
+    let f2 = doc.next_sibling(e).unwrap();
+    let f3 = doc.next_sibling(a).unwrap();
+
+    let following: Vec<_> = doc.typed_following(c, NodeType::element("f")).collect();
+    assert_eq!(following, vec![f2, f3]);
+}
+
+#[test]
 fn test_attributes_axis() {
     let doc = parse_document(r#"<doc a="A" b="B" c="C" />"#).unwrap();
     let doc_el = doc.document_element();

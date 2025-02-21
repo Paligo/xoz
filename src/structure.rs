@@ -141,7 +141,6 @@ impl<T: NodeInfoVec> Structure<T> {
 
     // The first node labeled tag with preorder larger than that of node i,
     // and not in the subtree of i. Returns None if there is no such node
-    // NOTE: the starting node has to be an open tag of node info
     // NOTE: the "Fast in-memory XPath search using compressed trees" has a different
     // algorithm where 1 is added to the rank, but that doesn't work for me.
     pub(crate) fn typed_following(&self, i: usize, node_info_id: NodeInfoId) -> Option<usize> {

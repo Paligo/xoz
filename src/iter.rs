@@ -495,6 +495,46 @@ impl Iterator for TypedDescendantsIter<'_> {
     }
 }
 
+pub(crate) struct TypedFollowingIter<'a> {
+    doc: &'a Document,
+    parent: Node,
+    node: Option<Node>,
+    node_info_id: NodeInfoId,
+}
+
+impl<'a> TypedFollowingIter<'a> {
+    pub(crate) fn new(doc: &'a Document, parent: Node, node_type: NodeType) -> Self {
+        if let Some(node_info_id) = doc.node_info_id(node_type) {
+            Self {
+                doc,
+                parent,
+                node: doc.typed_foll_by_node_info_id(parent, node_info_id),
+                node_info_id,
+            }
+        } else {
+            // if this node type doesn't even exist,
+            // we return an iterator doing nothing
+            Self {
+                doc,
+                parent,
+                node: None,
+                // some dummy node info id
+                node_info_id: NodeInfoId::new(0),
+            }
+        }
+    }
+}
+
+impl Iterator for TypedFollowingIter<'_> {
+    type Item = Node;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let node = self.node?;
+        self.node = self.doc.typed_foll_by_node_info_id(node, self.node_info_id);
+        Some(node)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
