@@ -1,8 +1,8 @@
 use crate::{
     iter::{
         AncestorIter, AttributesIter, ChildrenIter, DescendantsIter, FollowingIter,
-        NextSiblingIter, NodeTreeOps, PreviousSiblingIter, TypedTreeOps, WithSelfIter,
-        WithTypedSelfIter,
+        NextSiblingIter, NodeTreeOps, PreviousSiblingIter, TypedDescendantsIter, TypedTreeOps,
+        WithSelfIter, WithTypedSelfIter,
     },
     traverse::TraverseIter,
     NodeType, TagState,
@@ -264,10 +264,7 @@ impl Document {
     ) -> Box<dyn Iterator<Item = Node> + '_> {
         let node_info_id = self.node_info_id(node_type);
         if let Some(node_info_id) = node_info_id {
-            Box::new(DescendantsIter::new(
-                node,
-                TypedTreeOps::new(self, node_info_id),
-            ))
+            Box::new(TypedDescendantsIter::new(self, node, node_info_id))
         } else {
             Box::new(std::iter::empty())
         }

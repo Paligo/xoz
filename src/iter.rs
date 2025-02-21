@@ -430,6 +430,58 @@ where
     }
 }
 
+pub(crate) struct TypedDescendantsIter<'a> {
+    doc: &'a Document,
+    parent: Node,
+    node: Option<Node>,
+    node_info_id: NodeInfoId,
+}
+
+impl<'a> TypedDescendantsIter<'a> {
+    pub(crate) fn new(doc: &'a Document, parent: Node, node_info_id: NodeInfoId) -> Self {
+        Self {
+            doc,
+            parent,
+            node: doc.typed_descendant_by_node_info_id(parent, node_info_id),
+            node_info_id,
+        }
+    }
+}
+
+impl Iterator for TypedDescendantsIter<'_> {
+    type Item = Node;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let node = self.node?;
+        // look for the next typed descendant
+        if let Some(node) = self
+            .doc
+            .typed_descendant_by_node_info_id(node, self.node_info_id)
+        {
+            // if it's there, we have a next node
+            self.node = Some(node);
+        } else {
+            // otherwise look for a typed following node from node onward
+            let node = self.doc.typed_foll_by_node_info_id(node, self.node_info_id);
+            if let Some(node) = node {
+                // if we have a following node, we need to check whether parent
+                // is still an ancestor of it, or if we've escaped out of the subtree
+                if self.doc.is_ancestor(self.parent, node) {
+                    // if we're still in the subtree, we're done
+                    self.node = Some(node);
+                } else {
+                    // if we're out of the subtree, we're done
+                    self.node = None;
+                };
+            } else {
+                // if we don't have a following node, we're done
+                self.node = None;
+            }
+        }
+        Some(node)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

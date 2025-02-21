@@ -1,5 +1,5 @@
 use quick_xml::events::BytesPI;
-use vers_vecs::trees::Tree;
+use vers_vecs::trees::{IsAncestor, Tree};
 
 use crate::{
     iter::{AttributesIter, NamespacesIter, NextSiblingIter},
@@ -96,9 +96,22 @@ impl Document {
         matches!(self.node_type(node), NodeType::Namespace { .. })
     }
 
-    pub fn is_ancestor(&self, node: Node, descendant: Node) -> bool {
-        // TODO: replace with bp tree is_ancestor once that exists
-        self.ancestors(descendant).any(|n| n == node)
+    /// If ancestor is an ancestor of descendant, return true.
+    /// The ancestor node is not considered a descendant of itself.
+    pub fn is_ancestor(&self, ancestor: Node, descendant: Node) -> bool {
+        if ancestor == descendant {
+            return false;
+        }
+        self.is_ancestor_or_self(ancestor, descendant)
+    }
+
+    /// If ancestor is an ancestor of descendant, return true.
+    /// Node that a node is considered a descendant of itself.
+    pub fn is_ancestor_or_self(&self, ancestor: Node, descendant: Node) -> bool {
+        self.structure
+            .tree()
+            .is_ancestor(ancestor.0, descendant.0)
+            .expect("Illegal tree structure or node not in tree")
     }
 
     pub fn child_index(&self, node: Node) -> Option<usize> {

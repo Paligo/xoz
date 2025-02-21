@@ -139,20 +139,22 @@ impl<T: NodeInfoVec> Structure<T> {
         }
     }
 
+    // The first node labeled tag with preorder larger than that of node i,
+    // and not in the subtree of i. Returns None if there is no such node
+    // NOTE: the starting node has to be an open tag of node info
+    // NOTE: the "Fast in-memory XPath search using compressed trees" has a different
+    // algorithm where 1 is added to the rank, but that doesn't work for me.
+    pub(crate) fn typed_following(&self, i: usize, node_info_id: NodeInfoId) -> Option<usize> {
+        self.select_node_info_id(
+            self.rank_node_info_id(self.tree.close(i)?, node_info_id)?,
+            node_info_id,
+        )
+    }
+
     // The last node labeled tag with preorder smaller than that of node i, and
     // not an ancestor of i. Returns None if no such node exists.
     pub(crate) fn typed_preceding(&self, i: usize, node_info_id: NodeInfoId) -> Option<usize> {
         todo!()
-    }
-
-    // The first node labeled tag with preorder larger than that of node i,
-    // and not in the subtree of i. Returns None if there is no such node
-    pub(crate) fn typed_following(&self, i: usize, node_info_id: NodeInfoId) -> Option<usize> {
-        // TODO: no tests yet
-        self.select_node_info_id(
-            self.rank_node_info_id(self.tree.close(i)?, node_info_id)? + 1,
-            node_info_id,
-        )
     }
 }
 

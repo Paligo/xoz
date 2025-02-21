@@ -482,10 +482,14 @@ fn test_preceding_two() {
 fn test_tagged_descendants() {
     let doc = parse_document(r#"<doc><a><b/><b/></a></doc>"#).unwrap();
     let doc_el = doc.document_element();
+    let a = doc.first_child(doc_el).unwrap();
+    let b1 = doc.first_child(a).unwrap();
+    let b2 = doc.next_sibling(b1).unwrap();
+
     let tagged_descendants: Vec<_> = doc
         .typed_descendants(doc_el, NodeType::element("b"))
         .collect();
-    assert_eq!(tagged_descendants.len(), 2);
+    assert_eq!(tagged_descendants, vec![b1, b2]);
 }
 
 #[test]
@@ -562,29 +566,57 @@ fn test_tagged_descendants_or_self_including_self2() {
     assert_eq!(tagged_descendants.len(), 1);
 }
 
-// #[test]
-// fn test_typed_descendants_bug() {
-//     let doc = xoz::Document::parse_str("<d><p>foo<a/>bar</p><p>baz<a/></p></d>").unwrap();
-//     let d = doc.document_element();
-//     let p = doc.first_child(d).unwrap();
-//     let text = doc.first_child(p).unwrap();
-//     let a1 = doc.next_sibling(text).unwrap();
-//     let p2 = doc.next_sibling(p).unwrap();
-//     let text = doc.first_child(p2).unwrap();
-//     let a2 = doc.next_sibling(text).unwrap();
+#[test]
+fn test_typed_descendants_bug() {
+    let doc = xoz::Document::parse_str("<d><p>foo<a/>bar</p><p>baz<a/></p></d>").unwrap();
+    let d = doc.document_element();
+    let p = doc.first_child(d).unwrap();
+    let text = doc.first_child(p).unwrap();
+    let a1 = doc.next_sibling(text).unwrap();
+    let p2 = doc.next_sibling(p).unwrap();
+    let text = doc.first_child(p2).unwrap();
+    let a2 = doc.next_sibling(text).unwrap();
 
-//     let p_nodes = doc
-//         .typed_descendants(d, &xoz::NodeType::Element("p".into()))
-//         .collect::<Vec<_>>();
-//     assert_eq!(p_nodes, vec![p, p2]);
-//     let a_nodes = doc
-//         .typed_descendants(d, &xoz::NodeType::Element("a".into()))
-//         .collect::<Vec<_>>();
-//     assert_eq!(a_nodes, vec![a1, a2]);
-// }
+    let p_nodes = doc
+        .typed_descendants(d, xoz::NodeType::Element("p".into()))
+        .collect::<Vec<_>>();
+    assert_eq!(p_nodes, vec![p, p2]);
+    let a_nodes = doc
+        .typed_descendants(d, xoz::NodeType::Element("a".into()))
+        .collect::<Vec<_>>();
+    assert_eq!(a_nodes, vec![a1, a2]);
+}
 
 #[test]
-fn test_tagged_following() {
+fn test_typed_foll1() {
+    let doc = parse_document(r#"<doc><a><b/><b/></a></doc>"#).unwrap();
+    let doc_el = doc.document_element();
+    let a = doc.first_child(doc_el).unwrap();
+    let b1 = doc.first_child(a).unwrap();
+    let b2 = doc.next_sibling(b1).unwrap();
+
+    let found = doc.typed_foll(b1, NodeType::element("b"));
+    assert_eq!(found, Some(b2));
+}
+
+#[test]
+fn test_typed_foll2() {
+    let doc = parse_document(r#"<doc><f/><a><b><c/></b><d><e/><f/></d></a></doc>"#).unwrap();
+    let doc_el = doc.document_element();
+    let f1 = doc.first_child(doc_el).unwrap();
+    let a = doc.next_sibling(f1).unwrap();
+    let b = doc.first_child(a).unwrap();
+    let c = doc.first_child(b).unwrap();
+    let d = doc.next_sibling(b).unwrap();
+    let e = doc.first_child(d).unwrap();
+    let f2 = doc.next_sibling(e).unwrap();
+
+    let found = doc.typed_foll(f1, NodeType::element("f"));
+    assert_eq!(found, Some(f2));
+}
+
+#[test]
+fn test_typed_following1() {
     let doc = parse_document(r#"<doc><a><b><c/></b><d><e/><f/></d></a></doc>"#).unwrap();
     let doc_el = doc.document_element();
     let a = doc.first_child(doc_el).unwrap();
