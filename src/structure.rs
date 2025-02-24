@@ -23,14 +23,14 @@ pub(crate) struct Structure<T: NodeInfoVec> {
 
 impl<T: NodeInfoVec> Structure<T> {
     pub(crate) fn new(
-        tags_builder: TreeBuilder,
+        tree_builder: TreeBuilder,
         make_tag_vec: impl Fn(&TreeBuilder) -> Result<T, Error>,
     ) -> Result<Self, Error> {
-        let tag_vec = make_tag_vec(&tags_builder)?;
+        let tag_vec = make_tag_vec(&tree_builder)?;
         Ok(Self {
-            node_info_lookup: tags_builder.node_info_lookup,
-            text_opening_parens: RsVec::from_bit_vec(tags_builder.text_opening_parens),
-            tree: BpTree::from_bit_vector(tags_builder.parentheses),
+            node_info_lookup: tree_builder.node_info_lookup,
+            text_opening_parens: RsVec::from_bit_vec(tree_builder.text_opening_parens),
+            tree: BpTree::from_bit_vector(tree_builder.parentheses),
             tag_vec,
         })
     }
