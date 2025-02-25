@@ -1,4 +1,4 @@
-use vers_vecs::{trees::Tree, IsAncestor};
+use vers_vecs::trees::Tree;
 
 use crate::{node_info_vec::NodeInfoId, NodeName, NodeType};
 
@@ -102,5 +102,17 @@ impl Document {
     /// Check whether this node is a namespace node.
     pub fn is_namespace(&self, node: Node) -> bool {
         matches!(self.node_type(node), NodeType::Namespace { .. })
+    }
+
+    /// Count how many nodes of a certain type are in the subtree of this node.
+    pub fn subtree_count(&self, node: Node, node_type: NodeType) -> usize {
+        let node_info_id = self.node_info_id(node_type);
+        if let Some(node_info_id) = node_info_id {
+            self.structure
+                .subtree_tags(node.get(), node_info_id)
+                .unwrap_or(0)
+        } else {
+            0
+        }
     }
 }
