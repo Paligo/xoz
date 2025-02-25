@@ -77,4 +77,24 @@ impl Document {
         let name = self.node_name(node)?;
         self.prefix_for_namespace(node, name.namespace())
     }
+
+    /// Full name for a node.
+    ///
+    /// This is the prefix and local name concatenated with a colon, if a prefix
+    /// exists.
+    ///
+    /// If the node is not an element or attribute node, this returns `None`.
+    pub fn node_full_name(&self, node: Node) -> Option<String> {
+        let name = self.node_name(node)?;
+        let prefix = self.prefix_for_namespace(node, name.namespace())?;
+        if prefix.is_empty() {
+            Some(std::str::from_utf8(name.local_name()).unwrap().to_string())
+        } else {
+            Some(format!(
+                "{}:{}",
+                std::str::from_utf8(prefix).unwrap(),
+                std::str::from_utf8(name.local_name()).unwrap()
+            ))
+        }
+    }
 }

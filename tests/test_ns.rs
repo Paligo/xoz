@@ -184,3 +184,48 @@ fn test_node_prefix_attribute_explicit() {
     let prefix = doc.node_prefix(a).unwrap();
     assert_eq!(prefix, b"ns");
 }
+
+#[test]
+fn test_node_full_name_no_ns() {
+    let doc = xoz::Document::parse_str(r#"<doc />"#).unwrap();
+    let doc_el = doc.document_element();
+    let full_name = doc.node_full_name(doc_el).unwrap();
+    assert_eq!(full_name, "doc");
+}
+
+#[test]
+fn test_node_full_name_default() {
+    let doc = xoz::Document::parse_str(r#"<doc xmlns="http://example.com" />"#).unwrap();
+    let doc_el = doc.document_element();
+    let full_name = doc.node_full_name(doc_el).unwrap();
+    assert_eq!(full_name, "doc");
+}
+
+#[test]
+fn test_node_full_name_explicit() {
+    let doc = xoz::Document::parse_str(r#"<ns:doc xmlns:ns="http://example.com" />"#).unwrap();
+    let doc_el = doc.document_element();
+    let full_name = doc.node_full_name(doc_el).unwrap();
+    assert_eq!(full_name, "ns:doc");
+}
+
+#[test]
+fn test_node_full_name_attribute_empty() {
+    let doc = xoz::Document::parse_str(r#"<doc a="A" />"#).unwrap();
+    let doc_el = doc.document_element();
+    let a = doc.attribute_node(doc_el, "a").unwrap();
+    let full_name = doc.node_full_name(a).unwrap();
+    assert_eq!(full_name, "a");
+}
+
+#[test]
+fn test_node_full_name_attribute_explicit() {
+    let doc =
+        xoz::Document::parse_str(r#"<doc xmlns:ns="http://example.com" ns:a="A" />"#).unwrap();
+    let doc_el = doc.document_element();
+    let a = doc
+        .attribute_node(doc_el, NodeName::new("http://example.com", "a"))
+        .unwrap();
+    let full_name = doc.node_full_name(a).unwrap();
+    assert_eq!(full_name, "ns:a");
+}
