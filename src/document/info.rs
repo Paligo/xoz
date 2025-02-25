@@ -62,55 +62,45 @@ impl Document {
         }
     }
 
+    /// Get the [`NodeType`] for a node.
     pub fn node_type(&self, node: Node) -> &NodeType {
         let node_info = self.structure.get_node_info(node.get());
         debug_assert!(node_info.is_open_tag());
         node_info.node_type()
     }
 
+    /// Check whether this node is a document node.
     pub fn is_document(&self, node: Node) -> bool {
         matches!(self.node_type(node), NodeType::Document)
     }
 
+    /// Check whether this node is an element node.
     pub fn is_element(&self, node: Node) -> bool {
         matches!(self.node_type(node), NodeType::Element { .. })
     }
 
+    /// Check whether this node is a text node.
     pub fn is_text(&self, node: Node) -> bool {
         matches!(self.node_type(node), NodeType::Text)
     }
 
+    /// Check whether this node is a comment node.
     pub fn is_comment(&self, node: Node) -> bool {
         matches!(self.node_type(node), NodeType::Comment)
     }
 
+    /// Check whether this node is a processing instruction node.
     pub fn is_processing_instruction(&self, node: Node) -> bool {
         matches!(self.node_type(node), NodeType::ProcessingInstruction)
     }
 
+    /// Check whether this node is an attribute node.
     pub fn is_attribute(&self, node: Node) -> bool {
         matches!(self.node_type(node), NodeType::Attribute { .. })
     }
 
+    /// Check whether this node is a namespace node.
     pub fn is_namespace(&self, node: Node) -> bool {
         matches!(self.node_type(node), NodeType::Namespace { .. })
-    }
-
-    /// If ancestor is an ancestor of descendant, return true.
-    /// The ancestor node is not considered a descendant of itself.
-    pub fn is_ancestor(&self, ancestor: Node, descendant: Node) -> bool {
-        if ancestor == descendant {
-            return false;
-        }
-        self.is_ancestor_or_self(ancestor, descendant)
-    }
-
-    /// If ancestor is an ancestor of descendant, return true.
-    /// Node that a node is considered a descendant of itself.
-    pub fn is_ancestor_or_self(&self, ancestor: Node, descendant: Node) -> bool {
-        self.structure
-            .tree()
-            .is_ancestor(ancestor.get(), descendant.get())
-            .expect("Illegal tree structure or node not in tree")
     }
 }

@@ -1,4 +1,4 @@
-use vers_vecs::trees::Tree;
+use vers_vecs::{trees::Tree, IsAncestor};
 
 use crate::{node_info_vec::NodeInfoId, NodeType};
 
@@ -151,6 +151,25 @@ impl Document {
             Some(prev)
         }
     }
+
+    /// If ancestor is an ancestor of descendant, return true.
+    /// The ancestor node is not considered a descendant of itself.
+    pub fn is_ancestor(&self, ancestor: Node, descendant: Node) -> bool {
+        if ancestor == descendant {
+            return false;
+        }
+        self.is_ancestor_or_self(ancestor, descendant)
+    }
+
+    /// If ancestor is an ancestor of descendant, return true.
+    /// A node is considered a descendant of itself.
+    pub fn is_ancestor_or_self(&self, ancestor: Node, descendant: Node) -> bool {
+        self.structure
+            .tree()
+            .is_ancestor(ancestor.get(), descendant.get())
+            .expect("Illegal tree structure or node not in tree")
+    }
+
     /// Get index of child.
     ///
     /// Returns [`None`] if the node is not a child of this node.
