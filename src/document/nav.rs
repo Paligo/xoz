@@ -186,6 +186,29 @@ impl Document {
         top
     }
 
+    /// Return true if node is directly under the document node.
+    ///
+    /// This means it's either the document element or a comment or processing
+    /// instruction.
+    ///
+    /// ```rust
+    /// let doc = xoz::Document::parse_str("<!--foo--><p>Example</p><?bar?>").unwrap();
+    ///
+    /// let root = doc.root();
+    /// let comment = doc.first_child(root).unwrap();
+    /// let p = doc.next_sibling(comment).unwrap();
+    /// let pi = doc.next_sibling(p).unwrap();
+    /// let text = doc.first_child(p).unwrap();
+    ///
+    /// assert!(doc.is_directly_under_document(comment));
+    /// assert!(doc.is_directly_under_document(pi));
+    /// assert!(doc.is_directly_under_document(p));
+    /// assert!(!doc.is_directly_under_document(text));
+    /// ```
+    pub fn is_directly_under_document(&self, node: Node) -> bool {
+        self.parent(node) == Some(self.root())
+    }
+
     /// Get index of child.
     ///
     /// Returns [`None`] if the node is not a child of this node.
