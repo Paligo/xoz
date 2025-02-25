@@ -42,7 +42,13 @@ impl Document {
     /// This walks up the tree to find the first namespace declaration
     /// that has the given URI. If an element declares multiple prefixes for the
     /// same URI then an empty prefix is preferred over non-empty prefix.
+    ///
+    /// The `xml` prefix always exists. The prefix for the empty namespace is
+    /// always empty.
     pub fn prefix_for_namespace(&self, node: Node, uri: &[u8]) -> Option<&[u8]> {
+        if uri.is_empty() {
+            return Some(b"");
+        }
         for ancestor in self.ancestors_or_self(node) {
             let mut found_prefix = None;
             for (prefix, namespace_uri) in self.namespace_entries(ancestor) {
@@ -62,5 +68,13 @@ impl Document {
         } else {
             None
         }
+    }
+
+    /// Prefix for a node
+    ///
+    /// Only element and attributes can have prefixes.
+    pub fn node_prefix(&self, node: Node) -> Option<&[u8]> {
+        let name = self.node_name(node)?;
+        self.prefix_for_namespace(node, name.namespace())
     }
 }
