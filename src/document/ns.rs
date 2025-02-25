@@ -1,8 +1,8 @@
-use vers_vecs::trees::Tree;
-
-use crate::{iter::NamespacesIter, NodeName, NodeType};
+use crate::{iter::NamespacesIter, NodeType};
 
 use super::{Document, Node};
+
+const XML_NAMESPACE: &[u8] = b"http://www.w3.org/XML/1998/namespace";
 
 impl Document {
     /// Get a node which contains the namespace declarations ("xmlns") children of
@@ -35,5 +35,32 @@ impl Document {
             NodeType::Namespace(namespace) => (namespace.prefix(), namespace.uri()),
             _ => unreachable!(),
         })
+    }
+
+    /// Given a namespace URI, return the prefix for this node
+    ///
+    /// This walks up the tree to find the first namespace declaration
+    /// that has the given URI. If an element declares multiple prefixes for the
+    /// same URI then an empty prefix is preferred over non-empty prefix.
+    pub fn prefix_for_namespace(&self, node: Node, uri: &[u8]) -> Option<&[u8]> {
+        for ancestor in self.ancestors_or_self(node) {
+            let mut found_prefix = None;
+            for (prefix, namespace_uri) in self.namespace_entries(ancestor) {
+                if namespace_uri == uri {
+                    if prefix.is_empty() {
+                        return Some(prefix);
+                    }
+                    found_prefix = Some(prefix);
+                }
+            }
+            if let Some(prefix) = found_prefix {
+                return Some(prefix);
+            }
+        }
+        if uri == XML_NAMESPACE {
+            Some(b"xml")
+        } else {
+            None
+        }
     }
 }
