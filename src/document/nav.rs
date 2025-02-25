@@ -209,6 +209,24 @@ impl Document {
         self.parent(node) == Some(self.root())
     }
 
+    /// Returns true if the node is the document element
+    ///
+    /// ```rust
+    /// let doc = xoz::Document::parse_str("<!--foo--><p>Example<em>Em</em></p>").unwrap();
+    /// let root = doc.root();
+    /// let comment = doc.first_child(root).unwrap();
+    /// let p = doc.next_sibling(comment).unwrap();
+    /// let text = doc.first_child(p).unwrap();
+    /// let em = doc.next_sibling(text).unwrap();
+    /// assert!(!doc.is_document_element(comment));
+    /// assert!(doc.is_document_element(p));
+    /// assert!(!doc.is_document_element(text));
+    /// assert!(!doc.is_document_element(em));
+    /// ```
+    pub fn is_document_element(&self, node: Node) -> bool {
+        self.is_element(node) && self.is_directly_under_document(node)
+    }
+
     /// Get index of child.
     ///
     /// Returns [`None`] if the node is not a child of this node.
