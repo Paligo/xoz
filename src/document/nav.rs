@@ -170,6 +170,22 @@ impl Document {
             .expect("Illegal tree structure or node not in tree")
     }
 
+    /// Obtain top node, given node anywhere in a tree
+    ///
+    /// In an XML document this is the document element.
+    pub fn top_element(&self, node: Node) -> Node {
+        if self.is_document(node) {
+            return self.document_element();
+        }
+        let mut top = node;
+        for ancestor in self.ancestors_or_self(node) {
+            if self.is_element(ancestor) {
+                top = ancestor;
+            }
+        }
+        top
+    }
+
     /// Get index of child.
     ///
     /// Returns [`None`] if the node is not a child of this node.
