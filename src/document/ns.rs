@@ -1,6 +1,6 @@
 use vers_vecs::trees::Tree;
 
-use crate::{NodeName, NodeType};
+use crate::{iter::NamespacesIter, NodeName, NodeType};
 
 use super::{Document, Node};
 
@@ -25,5 +25,15 @@ impl Document {
         } else {
             None
         }
+    }
+
+    /// Get an iterator over the namespace declarations of this node.
+    ///
+    /// This iterates over prefix, uri tuples.
+    pub fn namespace_entries(&self, node: Node) -> impl Iterator<Item = (&[u8], &[u8])> + use<'_> {
+        NamespacesIter::new(self, node).map(move |n| match self.node_type(n) {
+            NodeType::Namespace(namespace) => (namespace.prefix(), namespace.uri()),
+            _ => unreachable!(),
+        })
     }
 }

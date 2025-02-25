@@ -1,6 +1,6 @@
 use vers_vecs::trees::Tree;
 
-use crate::{NodeName, NodeType};
+use crate::{iter::AttributesIter, NodeName, NodeType};
 
 use super::{Document, Node};
 
@@ -72,5 +72,23 @@ impl Document {
         let attribute_node = self.attribute_node(node, name)?;
         let text_id = self.structure.text_id(attribute_node.get());
         Some(self.text_usage.text_value(text_id))
+    }
+
+    /// Get an iterator over the name and value of all attributes of this node.
+    ///
+    /// If this is not an element node, it returns an empty iterator.
+    pub fn attribute_entries(
+        &self,
+        node: Node,
+    ) -> impl Iterator<Item = (&NodeName, &str)> + use<'_> {
+        AttributesIter::new(self, node).map(move |n| {
+            let text_id = self.structure.text_id(n.get());
+            let value = self.text_usage.text_value(text_id);
+            let tag_name = match self.node_type(n) {
+                NodeType::Attribute(tag_name) => tag_name,
+                _ => unreachable!(),
+            };
+            (tag_name, value)
+        })
     }
 }

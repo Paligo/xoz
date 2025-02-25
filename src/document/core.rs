@@ -1,13 +1,8 @@
 use vers_vecs::trees::Tree;
 
 use crate::{
-    iter::{AttributesIter, NamespacesIter, NextSiblingIter},
-    node::NodeType,
-    node_info_vec::SArrayMatrix,
-    parser::parse_document,
-    structure::Structure,
-    text::TextUsage,
-    NodeName, QuickXMLError,
+    iter::NextSiblingIter, node::NodeType, node_info_vec::SArrayMatrix, parser::parse_document,
+    structure::Structure, text::TextUsage, QuickXMLError,
 };
 
 pub struct Document {
@@ -31,28 +26,6 @@ impl Node {
 impl Document {
     pub fn parse_str(xml: &str) -> Result<Self, QuickXMLError> {
         parse_document(xml)
-    }
-
-    pub fn attribute_entries(
-        &self,
-        node: Node,
-    ) -> impl Iterator<Item = (&NodeName, &str)> + use<'_> {
-        AttributesIter::new(self, node).map(move |n| {
-            let text_id = self.structure.text_id(n.0);
-            let value = self.text_usage.text_value(text_id);
-            let tag_name = match self.node_type(n) {
-                NodeType::Attribute(tag_name) => tag_name,
-                _ => unreachable!(),
-            };
-            (tag_name, value)
-        })
-    }
-
-    pub fn namespace_entries(&self, node: Node) -> impl Iterator<Item = (&[u8], &[u8])> + use<'_> {
-        NamespacesIter::new(self, node).map(move |n| match self.node_type(n) {
-            NodeType::Namespace(namespace) => (namespace.prefix(), namespace.uri()),
-            _ => unreachable!(),
-        })
     }
 
     pub fn subtree_tags(&self, node: Node, node_type: NodeType) -> usize {
