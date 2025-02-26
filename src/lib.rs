@@ -19,6 +19,12 @@
 //! iteration of nodes of a certain type: [`Xoz::typed_descendants`],
 //! [`Xoz::typed_descendants_or_self`], [`Xoz::typed_following`].
 //!
+//! ## API
+//!
+//! The main API is exposed through the [`Xoz`] struct. The struct is used to
+//! parse documents and has a large number of methods in order to navigate and
+//! access the parsed documents.
+//!
 //! ## Example
 //!
 //! Here we parse a document, navigate to some of its node, and use

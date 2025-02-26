@@ -12,7 +12,7 @@ pub struct Node {
     pub(crate) document_node: DocumentNode,
 }
 
-/// The Xoz structure is a pool of multiple XML documents in your application.
+/// The Xoz structure holds all XML documents and is used for accessing them.
 ///
 /// All operations on nodes are done through this structure. Combining nodes
 /// from different Xoz structures is not supported and will result in undefined
