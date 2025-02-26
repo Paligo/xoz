@@ -1,8 +1,8 @@
 use crate::{
     iter::{
         AncestorIter, AttributesIter, ChildrenIter, DescendantsIter, FollowingIter,
-        NextSiblingIter, NodeTreeOps, PreviousSiblingIter, TypedDescendantsIter,
-        TypedFollowingIter, WithSelfIter, WithTypedSelfIter,
+        NextSiblingIter, PreviousSiblingIter, TypedDescendantsIter, TypedFollowingIter,
+        WithSelfIter, WithTypedSelfIter,
     },
     traverse::TraverseIter,
     NodeType, TraverseState,
@@ -59,7 +59,7 @@ impl Document {
     }
 
     pub fn following(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
-        FollowingIter::new(node, NodeTreeOps::new(self))
+        FollowingIter::new(self, node)
     }
 
     // TODO: non-xpath preceding

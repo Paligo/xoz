@@ -208,90 +208,6 @@ where
     }
 }
 
-pub(crate) trait TreeOps {
-    // the parent of a node
-    fn parent(&self, node: Node) -> Option<Node>;
-
-    // the first sibling, matching or not
-    fn sibling(&self, node: Node) -> Option<Node>;
-
-    // the first matching descendant (in document order)
-    fn matching_descendant(&self, node: Node) -> Option<Node>;
-
-    // matching self or the first matching descendant (in document order)
-    fn matching_descendant_or_self(&self, node: Node) -> Option<Node>;
-
-    fn matching_sibling_up(&self, node: Node) -> Option<Node> {
-        let sibling = self.sibling_up(node)?;
-        // if we have one, go for this node if it matches, or a matching descendant
-        self.matching_descendant_or_self(sibling)
-    }
-
-    fn sibling_up(&self, node: Node) -> Option<Node> {
-        let mut current = node;
-        loop {
-            if let Some(sibling) = self.sibling(current) {
-                return Some(sibling);
-            } else if let Some(parent) = self.parent(current) {
-                current = parent;
-            } else {
-                return None;
-            }
-        }
-    }
-
-    fn matching_rooted_sibling_up(&self, node: Node, root: Node) -> Option<Node> {
-        let sibling = self.rooted_sibling_up(node, root)?;
-        // if we have one, go for this node if it matches, or a matching descendant
-        self.matching_descendant_or_self(sibling)
-    }
-
-    fn rooted_sibling_up(&self, node: Node, root: Node) -> Option<Node> {
-        let mut current = node;
-        loop {
-            if current == root {
-                // we're done
-                return None;
-            }
-            if let Some(sibling) = self.sibling(current) {
-                return Some(sibling);
-            } else {
-                current = self
-                    .parent(current)
-                    .expect("We should have a parent for a descendant");
-            }
-        }
-    }
-}
-
-pub(crate) struct NodeTreeOps<'a> {
-    doc: &'a Document,
-}
-
-impl<'a> NodeTreeOps<'a> {
-    pub(crate) fn new(doc: &'a Document) -> Self {
-        Self { doc }
-    }
-}
-
-impl TreeOps for NodeTreeOps<'_> {
-    fn parent(&self, node: Node) -> Option<Node> {
-        self.doc.parent(node)
-    }
-
-    fn sibling(&self, node: Node) -> Option<Node> {
-        self.doc.next_sibling(node)
-    }
-
-    fn matching_descendant(&self, node: Node) -> Option<Node> {
-        self.doc.first_child(node)
-    }
-
-    fn matching_descendant_or_self(&self, node: Node) -> Option<Node> {
-        Some(node)
-    }
-}
-
 pub(crate) struct DescendantsIter<'a> {
     doc: &'a Document,
     root: Node,
@@ -313,8 +229,8 @@ impl Iterator for DescendantsIter<'_> {
 
     fn next(&mut self) -> Option<Node> {
         let node = self.node?;
-        self.node = if let Some(descendant) = self.doc.first_child(node) {
-            Some(descendant)
+        self.node = if let Some(first_child) = self.doc.first_child(node) {
+            Some(first_child)
         } else if let Some(sibling) = self.doc.next_sibling(node) {
             Some(sibling)
         } else {
@@ -331,34 +247,50 @@ impl Iterator for DescendantsIter<'_> {
     }
 }
 
-pub(crate) struct FollowingIter<T: TreeOps> {
+pub(crate) struct FollowingIter<'a> {
+    doc: &'a Document,
     node: Option<Node>,
-    ops: T,
 }
 
-impl<T> FollowingIter<T>
-where
-    T: TreeOps,
-{
-    pub(crate) fn new(node: Node, tree_ops: T) -> Self {
+impl<'a> FollowingIter<'a> {
+    pub(crate) fn new(doc: &'a Document, node: Node) -> Self {
         Self {
-            node: tree_ops.matching_sibling_up(node),
-            ops: tree_ops,
+            node: Self::following(doc, node),
+            doc,
+        }
+    }
+
+    fn following(doc: &Document, node: Node) -> Option<Node> {
+        if let Some(next_sibling) = doc.next_sibling(node) {
+            // if we have a next sibling, go there
+            Some(next_sibling)
+        } else {
+            // otherwise, go up parent chain until we find a next sibling
+            let mut current = node;
+            while let Some(parent) = doc.parent(current) {
+                let sibling = doc.next_sibling(parent);
+                if let Some(sibling) = sibling {
+                    return Some(sibling);
+                }
+                current = parent;
+            }
+            None
         }
     }
 }
 
-impl<T: TreeOps> Iterator for FollowingIter<T> {
+impl Iterator for FollowingIter<'_> {
     type Item = Node;
 
     fn next(&mut self) -> Option<Self::Item> {
         let node = self.node?;
 
-        self.node = if let Some(descendant) = self.ops.matching_descendant(node) {
-            Some(descendant)
+        self.node = if let Some(first_child) = self.doc.first_child(node) {
+            Some(first_child)
         } else {
-            self.ops.matching_sibling_up(node)
+            Self::following(self.doc, node)
         };
+
         Some(node)
     }
 }
