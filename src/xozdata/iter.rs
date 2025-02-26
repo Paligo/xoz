@@ -341,7 +341,7 @@ impl Xoz {
     pub fn traverse(
         &self,
         node: Node,
-    ) -> impl Iterator<Item = (&NodeType, crate::TagState, Node)> + '_ {
+    ) -> impl Iterator<Item = (&NodeType, crate::TraverseState, Node)> + '_ {
         let document = self.document(node.document_id);
         document
             .traverse(node.document_node)

@@ -12,11 +12,11 @@ use crate::text::TextBuilder;
 use crate::tree_builder::TreeBuilder;
 use crate::{Namespace, NodeType};
 
-pub fn parse_document(xml: &str) -> Result<Document, QuickXMLError> {
+pub(crate) fn parse_document(xml: &str) -> Result<Document, QuickXMLError> {
     parse_document_with_id(DocumentId::new(0), xml)
 }
 
-pub fn parse_document_with_id(id: DocumentId, xml: &str) -> Result<Document, QuickXMLError> {
+pub(crate) fn parse_document_with_id(id: DocumentId, xml: &str) -> Result<Document, QuickXMLError> {
     let mut reader = NsReader::from_str(xml);
     reader.config_mut().enable_all_checks(true);
     let mut tree_builder = TreeBuilder::new();

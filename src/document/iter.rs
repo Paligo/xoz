@@ -5,7 +5,7 @@ use crate::{
         TypedFollowingIter, TypedTreeOps, WithSelfIter, WithTypedSelfIter,
     },
     traverse::TraverseIter,
-    NodeType, TagState,
+    NodeType, TraverseState,
 };
 
 use super::{Document, Node};
@@ -141,7 +141,7 @@ impl Document {
     pub fn traverse(
         &self,
         node: Node,
-    ) -> impl Iterator<Item = (&NodeType, TagState, Node)> + use<'_> {
+    ) -> impl Iterator<Item = (&NodeType, TraverseState, Node)> + use<'_> {
         TraverseIter::new(self, node)
     }
 }

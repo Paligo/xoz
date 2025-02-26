@@ -21,6 +21,6 @@ mod xozdata;
 pub use document::ProcessingInstruction;
 pub use name::{Namespace, NodeName};
 pub use node::NodeType;
-pub use parser::{parse_document, QuickXMLError};
-pub use traverse::TagState;
+pub use parser::QuickXMLError;
+pub use traverse::TraverseState;
 pub use xozdata::{Node, Xoz};

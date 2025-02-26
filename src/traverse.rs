@@ -3,10 +3,17 @@ use crate::{
     NodeType,
 };
 
+/// The state of a node when we traverse through it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum TagState {
+pub enum TraverseState {
+    /// Open [`NodeType::Document`] or [`NodeType::Element`], when those have children.
+    /// Example: `<a>`
     Open,
+    /// Close [`NodeType::Document`] or [`NodeType::Element`], when those have children.
+    /// Example: `</a>`
     Close,
+    /// A node without children. Any other node type that can be traversed, as well
+    /// as empty elements like `<a/>`.
     Empty,
 }
 
@@ -27,7 +34,7 @@ impl<'a> TraverseIter<'a> {
 }
 
 impl<'a> Iterator for TraverseIter<'a> {
-    type Item = (&'a NodeType<'a>, TagState, Node);
+    type Item = (&'a NodeType<'a>, TraverseState, Node);
     fn next(&mut self) -> Option<Self::Item> {
         // we traverse down the tree, taking the first child when we can,
         // putting the parent on the stack when we do so. This is an open tag.
@@ -38,7 +45,7 @@ impl<'a> Iterator for TraverseIter<'a> {
             None => {
                 if let Some(node) = self.stack.pop() {
                     self.node = self.doc.next_sibling(node);
-                    Some((self.doc.node_type(node), TagState::Close, node))
+                    Some((self.doc.node_type(node), TraverseState::Close, node))
                 } else {
                     None
                 }
@@ -47,10 +54,10 @@ impl<'a> Iterator for TraverseIter<'a> {
                 let open_close = if let Some(child) = self.doc.first_child(node) {
                     self.stack.push(node);
                     self.node = Some(child);
-                    TagState::Open
+                    TraverseState::Open
                 } else {
                     self.node = self.doc.next_sibling(node);
-                    TagState::Empty
+                    TraverseState::Empty
                 };
                 Some((self.doc.node_type(node), open_close, node))
             }
@@ -73,7 +80,7 @@ mod tests {
             traverse.next(),
             Some((
                 &NodeType::Element(NodeName::new("", "a")),
-                TagState::Empty,
+                TraverseState::Empty,
                 a
             ))
         );
@@ -90,7 +97,7 @@ mod tests {
             traverse.next(),
             Some((
                 &NodeType::Element(NodeName::new("", "a")),
-                TagState::Open,
+                TraverseState::Open,
                 a
             ))
         );
@@ -98,7 +105,7 @@ mod tests {
             traverse.next(),
             Some((
                 &NodeType::Element(NodeName::new("", "b")),
-                TagState::Empty,
+                TraverseState::Empty,
                 b
             ))
         );
@@ -106,7 +113,7 @@ mod tests {
             traverse.next(),
             Some((
                 &NodeType::Element(NodeName::new("", "a")),
-                TagState::Close,
+                TraverseState::Close,
                 a
             ))
         );
@@ -126,7 +133,7 @@ mod tests {
             traverse.next(),
             Some((
                 &NodeType::Element(NodeName::new("", "a")),
-                TagState::Open,
+                TraverseState::Open,
                 a
             ))
         );
@@ -134,7 +141,7 @@ mod tests {
             traverse.next(),
             Some((
                 &NodeType::Element(NodeName::new("", "b")),
-                TagState::Empty,
+                TraverseState::Empty,
                 b
             ))
         );
@@ -142,7 +149,7 @@ mod tests {
             traverse.next(),
             Some((
                 &NodeType::Element(NodeName::new("", "c")),
-                TagState::Empty,
+                TraverseState::Empty,
                 c
             ))
         );
@@ -150,7 +157,7 @@ mod tests {
             traverse.next(),
             Some((
                 &NodeType::Element(NodeName::new("", "d")),
-                TagState::Empty,
+                TraverseState::Empty,
                 d
             ))
         );
@@ -158,7 +165,7 @@ mod tests {
             traverse.next(),
             Some((
                 &NodeType::Element(NodeName::new("", "a")),
-                TagState::Close,
+                TraverseState::Close,
                 a
             ))
         );
@@ -179,27 +186,27 @@ mod tests {
             vec![
                 (
                     &NodeType::Element(NodeName::new("", "a")),
-                    TagState::Open,
+                    TraverseState::Open,
                     a
                 ),
                 (
                     &NodeType::Element(NodeName::new("", "b")),
-                    TagState::Empty,
+                    TraverseState::Empty,
                     b
                 ),
                 (
                     &NodeType::Element(NodeName::new("", "c")),
-                    TagState::Empty,
+                    TraverseState::Empty,
                     c
                 ),
                 (
                     &NodeType::Element(NodeName::new("", "d")),
-                    TagState::Empty,
+                    TraverseState::Empty,
                     d
                 ),
                 (
                     &NodeType::Element(NodeName::new("", "a")),
-                    TagState::Close,
+                    TraverseState::Close,
                     a
                 ),
             ]
@@ -219,27 +226,27 @@ mod tests {
             vec![
                 (
                     &NodeType::Element(NodeName::new("", "a")),
-                    TagState::Open,
+                    TraverseState::Open,
                     a
                 ),
                 (
                     &NodeType::Element(NodeName::new("", "b")),
-                    TagState::Open,
+                    TraverseState::Open,
                     b
                 ),
                 (
                     &NodeType::Element(NodeName::new("", "c")),
-                    TagState::Empty,
+                    TraverseState::Empty,
                     c
                 ),
                 (
                     &NodeType::Element(NodeName::new("", "b")),
-                    TagState::Close,
+                    TraverseState::Close,
                     b
                 ),
                 (
                     &NodeType::Element(NodeName::new("", "a")),
-                    TagState::Close,
+                    TraverseState::Close,
                     a
                 ),
             ]
@@ -261,37 +268,37 @@ mod tests {
             vec![
                 (
                     &NodeType::Element(NodeName::new("", "a")),
-                    TagState::Open,
+                    TraverseState::Open,
                     a
                 ),
                 (
                     &NodeType::Element(NodeName::new("", "b")),
-                    TagState::Open,
+                    TraverseState::Open,
                     b
                 ),
                 (
                     &NodeType::Element(NodeName::new("", "c")),
-                    TagState::Empty,
+                    TraverseState::Empty,
                     c
                 ),
                 (
                     &NodeType::Element(NodeName::new("", "d")),
-                    TagState::Empty,
+                    TraverseState::Empty,
                     d
                 ),
                 (
                     &NodeType::Element(NodeName::new("", "b")),
-                    TagState::Close,
+                    TraverseState::Close,
                     b
                 ),
                 (
                     &NodeType::Element(NodeName::new("", "e")),
-                    TagState::Empty,
+                    TraverseState::Empty,
                     e
                 ),
                 (
                     &NodeType::Element(NodeName::new("", "a")),
-                    TagState::Close,
+                    TraverseState::Close,
                     a
                 ),
             ]
@@ -310,13 +317,13 @@ mod tests {
             vec![
                 (
                     &NodeType::Element(NodeName::new("", "a")),
-                    TagState::Open,
+                    TraverseState::Open,
                     a
                 ),
-                (&NodeType::Text, TagState::Empty, text),
+                (&NodeType::Text, TraverseState::Empty, text),
                 (
                     &NodeType::Element(NodeName::new("", "a")),
-                    TagState::Close,
+                    TraverseState::Close,
                     a
                 ),
             ]
@@ -333,7 +340,7 @@ mod tests {
             traverse,
             vec![(
                 &NodeType::Element(NodeName::new("", "a")),
-                TagState::Empty,
+                TraverseState::Empty,
                 a
             ),]
         )

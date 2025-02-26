@@ -7,7 +7,7 @@ use quick_xml::{
     Writer,
 };
 
-use crate::{document::Document, node::NodeType, NodeName, TagState};
+use crate::{document::Document, node::NodeType, NodeName, TraverseState};
 
 struct Serializer<'a, W: io::Write> {
     doc: &'a Document,
@@ -35,7 +35,7 @@ impl<'a, W: io::Write> Serializer<'a, W> {
                     // TODO serialize declaration if needed on opening
                 }
                 NodeType::Element(name) => {
-                    if matches!(tag_state, TagState::Open | TagState::Empty) {
+                    if matches!(tag_state, TraverseState::Open | TraverseState::Empty) {
                         self.ns.push_scope();
                         for (prefix, uri) in self.doc.namespace_entries(node) {
                             self.ns.add_namespace(prefix, uri);
@@ -44,7 +44,7 @@ impl<'a, W: io::Write> Serializer<'a, W> {
 
                     let qname = self.ns.qname(name, &mut element_name_scratch_buf);
                     match tag_state {
-                        TagState::Open => {
+                        TraverseState::Open => {
                             let elem = self.create_elem(
                                 qname,
                                 node,
@@ -53,12 +53,12 @@ impl<'a, W: io::Write> Serializer<'a, W> {
                             );
                             self.writer.write_event(Event::Start(elem))?;
                         }
-                        TagState::Close => {
+                        TraverseState::Close => {
                             let elem: BytesEnd = qname.into();
                             self.writer.write_event(Event::End(elem))?;
                             self.ns.pop_scope();
                         }
-                        TagState::Empty => {
+                        TraverseState::Empty => {
                             let elem = self.create_elem(
                                 qname,
                                 node,

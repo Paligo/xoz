@@ -140,7 +140,7 @@ mod tests {
 
     use crate::{
         mta::{Formula, Nodes, State, States},
-        parse_document,
+        parser::parse_document,
     };
 
     use super::*;

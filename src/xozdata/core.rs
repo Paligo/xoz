@@ -3,8 +3,9 @@ use quick_xml::Error as QuickXMLError;
 use crate::document::{Document, DocumentId, Node as DocumentNode};
 use crate::parser::parse_document_with_id;
 
-use crate::{NodeName, NodeType, ProcessingInstruction};
-
+/// A node in the Xoz structure.
+///
+/// A node can be in any document load into the Xoz structure.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Node {
     pub(crate) document_id: DocumentId,

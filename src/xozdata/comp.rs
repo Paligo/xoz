@@ -1,4 +1,4 @@
-use crate::{NodeType, TagState};
+use crate::{NodeType, TraverseState};
 
 use super::core::{Node, Xoz};
 
@@ -66,12 +66,13 @@ impl Xoz {
             match (a_state, b_state) {
                 // an empty is never going to be represented as separate open/close,
                 // so making sure empty is the same is safe.
-                (TagState::Open, TagState::Open) | (TagState::Empty, TagState::Empty) => {
+                (TraverseState::Open, TraverseState::Open)
+                | (TraverseState::Empty, TraverseState::Empty) => {
                     if !self.advanced_compare_node(a_node, a_type, b_node, b_type, &text_compare) {
                         return false;
                     }
                 }
-                (TagState::Close, TagState::Close) => {
+                (TraverseState::Close, TraverseState::Close) => {
                     // the structure is the same, so we can continue.
                     // if we had a different node type for close but the same node type
                     // for open, the tree would be unbalanced. XML cannot be unbalanced,
