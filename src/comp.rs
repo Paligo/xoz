@@ -1,8 +1,7 @@
+use crate::xozdata::{Node, Xoz};
 use crate::{NodeType, TagState};
 
-use super::{Document, Node};
-
-impl Document {
+impl Xoz {
     /// XPath deep equal
     /// Comparison of two nodes as defined by the XPath deep-equal function:
     ///

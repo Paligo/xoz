@@ -284,4 +284,199 @@ impl Xoz {
         let document = self.document(node.document_id);
         document.node_str(node.document_node)
     }
+
+    // ns
+    pub fn namespaces_child(&self, node: Node) -> Option<Node> {
+        let document = self.document(node.document_id);
+        document
+            .namespaces_child(node.document_node)
+            .map(|n| document.new_node(n))
+    }
+
+    pub fn namespace_entries(&self, node: Node) -> impl Iterator<Item = (&[u8], &[u8])> + '_ {
+        let document = self.document(node.document_id);
+        document.namespace_entries(node.document_node)
+    }
+
+    pub fn prefix_for_namespace(&self, node: Node, uri: &[u8]) -> Option<&[u8]> {
+        let document = self.document(node.document_id);
+        document.prefix_for_namespace(node.document_node, uri)
+    }
+
+    pub fn node_prefix(&self, node: Node) -> Option<&[u8]> {
+        let document = self.document(node.document_id);
+        document.node_prefix(node.document_node)
+    }
+
+    pub fn node_full_name(&self, node: Node) -> Option<String> {
+        let document = self.document(node.document_id);
+        document.node_full_name(node.document_node)
+    }
+
+    // iter
+    pub fn children(&self, node: Node) -> impl DoubleEndedIterator<Item = Node> + '_ {
+        let document = self.document(node.document_id);
+        document
+            .children(node.document_node)
+            .map(move |n| document.new_node(n))
+    }
+
+    pub fn axis_child(&self, node: Node) -> impl DoubleEndedIterator<Item = Node> + '_ {
+        self.children(node)
+    }
+
+    pub fn following_siblings(&self, node: Node) -> impl Iterator<Item = Node> + '_ {
+        let document = self.document(node.document_id);
+        document
+            .following_siblings(node.document_node)
+            .map(move |n| document.new_node(n))
+    }
+
+    pub fn axis_following_sibling(&self, node: Node) -> impl Iterator<Item = Node> + '_ {
+        self.following_siblings(node)
+    }
+
+    pub fn preceding_siblings(&self, node: Node) -> impl Iterator<Item = Node> + '_ {
+        let document = self.document(node.document_id);
+        document
+            .preceding_siblings(node.document_node)
+            .map(move |n| document.new_node(n))
+    }
+
+    pub fn axis_preceding_sibling(&self, node: Node) -> impl Iterator<Item = Node> + '_ {
+        let document = self.document(node.document_id);
+        document
+            .axis_preceding_sibling(node.document_node)
+            .map(move |n| document.new_node(n))
+    }
+
+    pub fn ancestors_or_self(&self, node: Node) -> impl Iterator<Item = Node> + '_ {
+        let document = self.document(node.document_id);
+        document
+            .ancestors_or_self(node.document_node)
+            .map(move |n| document.new_node(n))
+    }
+
+    pub fn axis_ancestor_or_self(&self, node: Node) -> impl Iterator<Item = Node> + '_ {
+        let document = self.document(node.document_id);
+        document
+            .axis_ancestor_or_self(node.document_node)
+            .map(move |n| document.new_node(n))
+    }
+
+    pub fn ancestors(&self, node: Node) -> impl Iterator<Item = Node> + '_ {
+        let document = self.document(node.document_id);
+        document
+            .ancestors(node.document_node)
+            .map(move |n| document.new_node(n))
+    }
+
+    pub fn axis_ancestor(&self, node: Node) -> impl Iterator<Item = Node> + '_ {
+        let document = self.document(node.document_id);
+        document
+            .axis_ancestor(node.document_node)
+            .map(move |n| document.new_node(n))
+    }
+
+    pub fn descendants(&self, node: Node) -> impl Iterator<Item = Node> + '_ {
+        let document = self.document(node.document_id);
+        document
+            .descendants(node.document_node)
+            .map(move |n| document.new_node(n))
+    }
+
+    pub fn axis_descendant(&self, node: Node) -> impl Iterator<Item = Node> + '_ {
+        self.descendants(node)
+    }
+
+    pub fn descendants_or_self(&self, node: Node) -> impl Iterator<Item = Node> + '_ {
+        let document = self.document(node.document_id);
+        document
+            .descendants_or_self(node.document_node)
+            .map(move |n| document.new_node(n))
+    }
+
+    pub fn axis_descendant_or_self(&self, node: Node) -> impl Iterator<Item = Node> + '_ {
+        self.descendants_or_self(node)
+    }
+
+    pub fn attributes(&self, node: Node) -> impl Iterator<Item = Node> + '_ {
+        let document = self.document(node.document_id);
+        document
+            .attributes(node.document_node)
+            .map(move |n| document.new_node(n))
+    }
+
+    pub fn axis_attributes(&self, node: Node) -> impl Iterator<Item = Node> + '_ {
+        self.attributes(node)
+    }
+
+    pub fn axis_parent(&self, node: Node) -> impl Iterator<Item = Node> + '_ {
+        self.parent(node).into_iter()
+    }
+
+    pub fn axis_self(&self, node: Node) -> impl Iterator<Item = Node> + '_ {
+        std::iter::once(node)
+    }
+
+    pub fn following(&self, node: Node) -> impl Iterator<Item = Node> + '_ {
+        let document = self.document(node.document_id);
+        document
+            .following(node.document_node)
+            .map(move |n| document.new_node(n))
+    }
+
+    pub fn axis_following(&self, node: Node) -> impl Iterator<Item = Node> + '_ {
+        self.following(node)
+    }
+
+    pub fn axis_preceding(&self, node: Node) -> impl Iterator<Item = Node> + '_ {
+        let document = self.document(node.document_id);
+        document
+            .axis_preceding(node.document_node)
+            .map(move |n| document.new_node(n))
+    }
+
+    pub fn typed_descendants(
+        &self,
+        node: Node,
+        node_type: NodeType,
+    ) -> impl Iterator<Item = Node> + '_ {
+        let document = self.document(node.document_id);
+        document
+            .typed_descendants(node.document_node, node_type)
+            .map(move |n| document.new_node(n))
+    }
+
+    pub fn typed_descendants_or_self(
+        &self,
+        node: Node,
+        node_type: NodeType,
+    ) -> impl Iterator<Item = Node> + '_ {
+        let document = self.document(node.document_id);
+        document
+            .typed_descendants_or_self(node.document_node, node_type)
+            .map(move |n| document.new_node(n))
+    }
+
+    pub fn typed_following(
+        &self,
+        node: Node,
+        node_type: NodeType,
+    ) -> impl Iterator<Item = Node> + '_ {
+        let document = self.document(node.document_id);
+        document
+            .typed_following(node.document_node, node_type)
+            .map(move |n| document.new_node(n))
+    }
+
+    pub fn traverse(
+        &self,
+        node: Node,
+    ) -> impl Iterator<Item = (&NodeType, crate::TagState, Node)> + '_ {
+        let document = self.document(node.document_id);
+        document
+            .traverse(node.document_node)
+            .map(move |(node_type, tag_state, n)| (node_type, tag_state, document.new_node(n)))
+    }
 }

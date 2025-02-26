@@ -1,5 +1,6 @@
 mod access;
 mod builder;
+mod comp;
 mod document;
 mod error;
 mod iter;
