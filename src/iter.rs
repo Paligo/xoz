@@ -112,7 +112,7 @@ impl<'a> AncestorIter<'a> {
     }
 }
 
-impl<'a> Iterator for AncestorIter<'a> {
+impl Iterator for AncestorIter<'_> {
     type Item = Node;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -292,34 +292,40 @@ impl TreeOps for NodeTreeOps<'_> {
     }
 }
 
-pub(crate) struct DescendantsIter<T: TreeOps> {
+pub(crate) struct DescendantsIter<'a> {
+    doc: &'a Document,
     root: Node,
     node: Option<Node>,
-    ops: T,
 }
 
-impl<T> DescendantsIter<T>
-where
-    T: TreeOps,
-{
-    pub(crate) fn new(root: Node, tree_ops: T) -> Self {
+impl<'a> DescendantsIter<'a> {
+    pub(crate) fn new(doc: &'a Document, root: Node) -> Self {
         Self {
             root,
-            node: tree_ops.matching_descendant(root),
-            ops: tree_ops,
+            node: doc.first_child(root),
+            doc,
         }
     }
 }
 
-impl<T: TreeOps> Iterator for DescendantsIter<T> {
+impl Iterator for DescendantsIter<'_> {
     type Item = Node;
 
     fn next(&mut self) -> Option<Node> {
         let node = self.node?;
-        self.node = if let Some(descendant) = self.ops.matching_descendant(node) {
+        self.node = if let Some(descendant) = self.doc.first_child(node) {
             Some(descendant)
+        } else if let Some(sibling) = self.doc.next_sibling(node) {
+            Some(sibling)
         } else {
-            self.ops.matching_rooted_sibling_up(node, self.root)
+            // go up one to the parent and take next sibling of parent
+            let parent = self.doc.parent(node)?;
+            if parent != self.root {
+                self.doc.next_sibling(parent)
+            } else {
+                // we're done
+                None
+            }
         };
         Some(node)
     }

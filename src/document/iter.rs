@@ -47,7 +47,7 @@ impl Document {
     }
 
     pub fn descendants(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
-        DescendantsIter::new(node, NodeTreeOps::new(self))
+        DescendantsIter::new(self, node)
     }
 
     pub fn descendants_or_self(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
