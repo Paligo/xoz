@@ -38,7 +38,7 @@ impl Document {
     }
 
     pub fn ancestors(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
-        AncestorIter::new(node, NodeTreeOps::new(self))
+        AncestorIter::new(self, node)
     }
 
     pub fn axis_ancestor(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {

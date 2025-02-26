@@ -98,26 +98,26 @@ impl Iterator for PreviousSiblingIter<'_> {
     }
 }
 
-pub(crate) struct AncestorIter<T: TreeOps> {
+pub(crate) struct AncestorIter<'a> {
+    doc: &'a Document,
     node: Option<Node>,
-    ops: T,
 }
 
-impl<T: TreeOps> AncestorIter<T> {
-    pub(crate) fn new(node: Node, ops: T) -> Self {
+impl<'a> AncestorIter<'a> {
+    pub(crate) fn new(doc: &'a Document, node: Node) -> Self {
         Self {
-            node: ops.parent(node),
-            ops,
+            node: doc.parent(node),
+            doc,
         }
     }
 }
 
-impl<T: TreeOps> Iterator for AncestorIter<T> {
+impl<'a> Iterator for AncestorIter<'a> {
     type Item = Node;
 
     fn next(&mut self) -> Option<Self::Item> {
         let node = self.node?;
-        self.node = self.ops.parent(node);
+        self.node = self.doc.parent(node);
         Some(node)
     }
 }
