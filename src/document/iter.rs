@@ -2,7 +2,7 @@ use crate::{
     iter::{
         AncestorIter, AttributesIter, ChildrenIter, DescendantsIter, FollowingIter,
         NextSiblingIter, NodeTreeOps, PreviousSiblingIter, TypedDescendantsIter,
-        TypedFollowingIter, TypedTreeOps, WithSelfIter, WithTypedSelfIter,
+        TypedFollowingIter, WithSelfIter, WithTypedSelfIter,
     },
     traverse::TraverseIter,
     NodeType, TraverseState,
@@ -15,16 +15,8 @@ impl Document {
         ChildrenIter::new(self, node)
     }
 
-    pub fn axis_child(&self, node: Node) -> impl DoubleEndedIterator<Item = Node> + use<'_> {
-        self.children(node)
-    }
-
     pub fn following_siblings(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
         NextSiblingIter::new(self, self.next_sibling(node))
-    }
-
-    pub fn axis_following_sibling(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
-        self.following_siblings(node)
     }
 
     pub fn preceding_siblings(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
@@ -58,40 +50,16 @@ impl Document {
         DescendantsIter::new(node, NodeTreeOps::new(self))
     }
 
-    pub fn axis_descendant(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
-        self.descendants(node)
-    }
-
     pub fn descendants_or_self(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
         WithSelfIter::new(node, self.descendants(node))
-    }
-
-    pub fn axis_descendant_or_self(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
-        self.descendants_or_self(node)
     }
 
     pub fn attributes(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
         AttributesIter::new(self, node)
     }
 
-    pub fn axis_attributes(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
-        self.attributes(node)
-    }
-
-    pub fn axis_parent(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
-        self.parent(node).into_iter()
-    }
-
-    pub fn axis_self(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
-        std::iter::once(node)
-    }
-
     pub fn following(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
         FollowingIter::new(node, NodeTreeOps::new(self))
-    }
-
-    pub fn axis_following(&self, node: Node) -> impl Iterator<Item = Node> + use<'_> {
-        self.following(node)
     }
 
     // TODO: non-xpath preceding

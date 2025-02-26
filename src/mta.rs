@@ -1,3 +1,6 @@
+// this is a WIP
+#![allow(dead_code)]
+
 use std::hash::Hash;
 
 use ahash::{HashMap, HashMapExt, HashSet, HashSetExt};
@@ -9,6 +12,8 @@ use crate::{
 
 pub(crate) type States = HashSet<State>;
 
+// this is a WIP
+#[allow(dead_code)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub(crate) struct State(usize);
 

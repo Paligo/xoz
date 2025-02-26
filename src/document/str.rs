@@ -1,7 +1,6 @@
 use quick_xml::events::BytesPI;
-use vers_vecs::trees::Tree;
 
-use crate::{node_info_vec::NodeInfoId, NodeType};
+use crate::NodeType;
 
 use super::{Document, Node};
 

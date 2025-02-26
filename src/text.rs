@@ -1,7 +1,7 @@
 use std::ops::Range;
 
 use sucds::bit_vectors::{Rank, SArray, Select};
-use vers_vecs::{BitVec, RsVec};
+use vers_vecs::BitVec;
 
 pub(crate) struct TextBuilder {
     s: String,

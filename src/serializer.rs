@@ -136,11 +136,6 @@ impl<'a, W: io::Write> Serializer<'a, W> {
     }
 }
 
-pub(crate) fn serialize_document(doc: &Document, write: &mut impl io::Write) -> io::Result<()> {
-    let mut serializer = Serializer::new(doc, write);
-    serializer.serialize_node(doc.root())
-}
-
 pub(crate) fn serialize_node(
     doc: &Document,
     node: Node,
@@ -156,6 +151,13 @@ pub(crate) fn serialize_node_to_string(doc: &Document, node: Node) -> String {
     String::from_utf8(w).unwrap()
 }
 
+#[cfg(test)]
+pub(crate) fn serialize_document(doc: &Document, write: &mut impl io::Write) -> io::Result<()> {
+    let mut serializer = Serializer::new(doc, write);
+    serializer.serialize_node(doc.root())
+}
+
+#[cfg(test)]
 pub(crate) fn serialize_document_to_string(doc: &Document) -> String {
     let mut w = Vec::new();
     serialize_document(doc, &mut w).unwrap();

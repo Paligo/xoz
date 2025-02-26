@@ -68,10 +68,12 @@ impl NodeInfoVec for WaveletMatrix {
     }
 }
 
+#[allow(dead_code)]
 fn bits_per_element(amount: usize) -> usize {
     amount.next_power_of_two().trailing_zeros() as usize
 }
 
+#[allow(dead_code)]
 pub(crate) fn make_wavelet_matrix_tag_vec(
     tags_usage: &[u64],
     tag_amount: usize,

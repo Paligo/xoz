@@ -3,8 +3,8 @@ use std::num::NonZeroI64;
 use vers_vecs::trees::Tree;
 
 use crate::{
-    iter::NextSiblingIter, node_info_vec::SArrayMatrix, parser::parse_document,
-    serializer::serialize_node_to_string, structure::Structure, text::TextUsage, QuickXMLError,
+    iter::NextSiblingIter, node_info_vec::SArrayMatrix, serializer::serialize_node_to_string,
+    structure::Structure, text::TextUsage,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -41,10 +41,6 @@ impl Node {
 }
 
 impl Document {
-    pub fn parse_str(xml: &str) -> Result<Self, QuickXMLError> {
-        parse_document(xml)
-    }
-
     /// Serializes a node to a string.
     pub fn serialize_node_to_string(&self, node: Node) -> String {
         serialize_node_to_string(self, node)

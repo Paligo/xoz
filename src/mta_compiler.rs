@@ -1,5 +1,8 @@
+// module level allow dead code for now, as this is a WIP
+#![allow(dead_code)]
+
 use crate::{
-    mta::{Automaton, Formula, FormulaId, Guard, State},
+    mta::{Automaton, Formula, Guard, State},
     name::NodeName,
     NodeType,
 };
@@ -136,10 +139,8 @@ impl LocationStep {
 
 #[cfg(test)]
 mod tests {
-    use ahash::HashSetExt;
-
     use crate::{
-        mta::{Formula, Nodes, State, States},
+        mta::{Formula, Nodes, State},
         parser::parse_document,
     };
 
@@ -155,7 +156,7 @@ mod tests {
         let listitem = d.first_child(doc).unwrap();
         let p = d.first_child(listitem).unwrap();
         let keyword = d.first_child(p).unwrap();
-        let emph = d.first_child(keyword).unwrap();
+        let _emph = d.first_child(keyword).unwrap();
 
         let mut automaton = Automaton::new();
         let q0 = automaton.start_state();

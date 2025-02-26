@@ -12,6 +12,7 @@ use crate::text::TextBuilder;
 use crate::tree_builder::TreeBuilder;
 use crate::{Namespace, NodeType};
 
+#[cfg(test)]
 pub(crate) fn parse_document(xml: &str) -> Result<Document, QuickXMLError> {
     parse_document_with_id(DocumentId::new(0), xml)
 }
@@ -79,7 +80,7 @@ pub(crate) fn parse_document_with_id(id: DocumentId, xml: &str) -> Result<Docume
                     tree_builder.close(NodeType::ProcessingInstruction);
                 }
                 Event::Decl(_decl) => {}
-                Event::DocType(doctype) => {
+                Event::DocType(_doctype) => {
                     todo!()
                 }
                 Event::Eof => {

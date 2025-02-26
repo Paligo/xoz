@@ -357,40 +357,6 @@ impl<T: TreeOps> Iterator for FollowingIter<T> {
     }
 }
 
-pub(crate) struct TypedTreeOps<'a> {
-    doc: &'a Document,
-    node_info_id: NodeInfoId,
-}
-
-impl<'a> TypedTreeOps<'a> {
-    pub(crate) fn new(doc: &'a Document, node_info_id: NodeInfoId) -> Self {
-        Self { doc, node_info_id }
-    }
-}
-
-impl TreeOps for TypedTreeOps<'_> {
-    fn parent(&self, node: Node) -> Option<Node> {
-        self.doc.parent(node)
-    }
-
-    fn sibling(&self, node: Node) -> Option<Node> {
-        self.doc.next_sibling(node)
-    }
-
-    fn matching_descendant(&self, node: Node) -> Option<Node> {
-        self.doc
-            .typed_descendant_by_node_info_id(node, self.node_info_id)
-    }
-
-    fn matching_descendant_or_self(&self, node: Node) -> Option<Node> {
-        if self.doc.node_info_id_for_node(node) == self.node_info_id {
-            Some(node)
-        } else {
-            self.matching_descendant(node)
-        }
-    }
-}
-
 pub(crate) struct WithTypedSelfIter<'a, I: Iterator<Item = Node>> {
     doc: &'a Document,
     node: Option<Node>,
@@ -497,7 +463,6 @@ impl Iterator for TypedDescendantsIter<'_> {
 
 pub(crate) struct TypedFollowingIter<'a> {
     doc: &'a Document,
-    parent: Node,
     node: Option<Node>,
     node_info_id: NodeInfoId,
 }
@@ -507,7 +472,6 @@ impl<'a> TypedFollowingIter<'a> {
         if let Some(node_info_id) = doc.node_info_id(node_type) {
             Self {
                 doc,
-                parent,
                 node: doc.typed_foll_by_node_info_id(parent, node_info_id),
                 node_info_id,
             }
@@ -516,7 +480,6 @@ impl<'a> TypedFollowingIter<'a> {
             // we return an iterator doing nothing
             Self {
                 doc,
-                parent,
                 node: None,
                 // some dummy node info id
                 node_info_id: NodeInfoId::new(0),
@@ -538,7 +501,7 @@ impl Iterator for TypedFollowingIter<'_> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{document::DocumentId, parser::parse_document};
+    use crate::parser::parse_document;
 
     #[test]
     fn test_double_ended_children() {
