@@ -110,7 +110,12 @@ impl Xoz {
             (NodeType::ProcessingInstruction, NodeType::ProcessingInstruction) => {
                 let a_pi = self.processing_instruction(a).unwrap();
                 let b_pi = self.processing_instruction(b).unwrap();
-                a_pi.target() == b_pi.target() && text_compare(&a_pi.content(), &b_pi.content())
+                // TODO: is a text compare really want we want here?
+                a_pi.target() == b_pi.target()
+                    && text_compare(
+                        std::str::from_utf8(a_pi.content()).unwrap(),
+                        std::str::from_utf8(b_pi.content()).unwrap(),
+                    )
             }
             (NodeType::Attribute(a_name), NodeType::Attribute(b_name)) => {
                 a_name == b_name

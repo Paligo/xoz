@@ -31,6 +31,6 @@ fn test_processing_instruction() {
     let p = xoz.first_child(doc_el).unwrap();
 
     let pi = xoz.processing_instruction(p).unwrap();
-    assert_eq!(pi.target(), "target".to_string());
-    assert_eq!(pi.content(), " content".to_string());
+    assert_eq!(pi.target(), b"target");
+    assert_eq!(pi.content(), b" content");
 }
