@@ -222,7 +222,7 @@ fn test_typed_foll2() {
     let f1 = xoz.first_child(doc_el).unwrap();
     let a = xoz.next_sibling(f1).unwrap();
     let b = xoz.first_child(a).unwrap();
-    let c = xoz.first_child(b).unwrap();
+    let _c = xoz.first_child(b).unwrap();
     let d = xoz.next_sibling(b).unwrap();
     let e = xoz.first_child(d).unwrap();
     let f2 = xoz.next_sibling(e).unwrap();

@@ -506,7 +506,7 @@ mod tests {
     #[test]
     fn test_double_ended_children() {
         let doc = parse_document("<doc><a/><b/><c/><d/><e/></doc>").unwrap();
-        let root = doc.root();
+        let _root = doc.root();
         let doc_elem = doc.document_element();
         let a = doc.first_child(doc_elem).unwrap();
         let b = doc.next_sibling(a).unwrap();
