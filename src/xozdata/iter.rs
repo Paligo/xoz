@@ -292,7 +292,7 @@ impl Xoz {
             .map(move |n| document.new_node(n))
     }
 
-    /// Iterate over descendants of a certain node type.
+    /// Iterate over descendants of a certain node type, using jumping.
     ///
     /// This more efficient than filtering the descendants iterator, as it
     /// only traverses the nodes that are of the given type, jumping over
@@ -308,7 +308,8 @@ impl Xoz {
             .map(move |n| document.new_node(n))
     }
 
-    /// Iterate over descendants of a certain node type, including self if it matches.
+    /// Iterate over descendants of a certain node type, including self if it
+    /// matches, using jumping.
     pub fn typed_descendants_or_self(
         &self,
         node: Node,
@@ -320,7 +321,7 @@ impl Xoz {
             .map(move |n| document.new_node(n))
     }
 
-    /// Iterate over following nodes of a certain node type.
+    /// Iterate over following nodes of a certain node type, using jumping.
     pub fn typed_following(
         &self,
         node: Node,

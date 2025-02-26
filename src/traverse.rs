@@ -1,9 +1,13 @@
+#[cfg(doc)]
+use crate::Xoz;
 use crate::{
     document::{Document, Node},
     NodeType,
 };
 
 /// The state of a node when we traverse through it.
+///
+/// Returned by the [`Xoz::traverse`] iterator.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum TraverseState {
     /// Open [`NodeType::Document`] or [`NodeType::Element`], when those have children.
