@@ -1,15 +1,16 @@
-use xoz::NodeType;
+use xoz::{NodeType, Xoz};
 
 #[test]
 fn test_elements() {
-    let doc = xoz::Document::parse_str(r#"<doc><a/><b/></doc>"#).unwrap();
-    let doc_el = doc.document_element();
-    let a = doc.first_child(doc_el).unwrap();
-    let b = doc.next_sibling(a).unwrap();
+    let mut xoz = Xoz::new();
+    let root = xoz.parse_str(r#"<doc><a/><b/></doc>"#).unwrap();
+    let doc_el = xoz.document_element(root);
+    let a = xoz.first_child(doc_el).unwrap();
+    let b = xoz.next_sibling(a).unwrap();
 
-    let doc_el_name = doc.node_name(doc_el).unwrap();
-    let a_name = doc.node_name(a).unwrap();
-    let b_name = doc.node_name(b).unwrap();
+    let doc_el_name = xoz.node_name(doc_el).unwrap();
+    let a_name = xoz.node_name(a).unwrap();
+    let b_name = xoz.node_name(b).unwrap();
 
     assert_eq!(doc_el_name.local_name(), b"doc");
     assert_eq!(a_name.local_name(), b"a");
