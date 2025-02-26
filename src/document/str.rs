@@ -6,9 +6,6 @@ use crate::{node_info_vec::NodeInfoId, NodeType};
 use super::{Document, Node};
 
 impl Document {
-    /// Text node string.
-    ///
-    /// If the node is not a text node, this returns `None`.
     pub fn text_str(&self, node: Node) -> Option<&str> {
         if matches!(self.node_type(node), NodeType::Text) {
             self.node_str(node)
@@ -17,9 +14,6 @@ impl Document {
         }
     }
 
-    /// Comment node string.
-    ///
-    /// If the node is not a comment node, this returns `None`.
     pub fn comment_str(&self, node: Node) -> Option<&str> {
         if matches!(self.node_type(node), NodeType::Comment) {
             self.node_str(node)
@@ -28,11 +22,6 @@ impl Document {
         }
     }
 
-    /// Processing instruction node string.
-    ///
-    /// This includes both target and content information.
-    ///
-    /// If the node is not a processing instruction node, this returns `None`.
     pub fn processing_instruction_str(&self, node: Node) -> Option<&str> {
         if matches!(self.node_type(node), NodeType::ProcessingInstruction) {
             self.node_str(node)
@@ -41,7 +30,6 @@ impl Document {
         }
     }
 
-    /// Get [`ProcessingInstruction`] if this is a processing instruction node.
     pub fn processing_instruction(&self, node: Node) -> Option<ProcessingInstruction> {
         if matches!(self.node_type(node), NodeType::ProcessingInstruction) {
             let s = self.node_str(node).expect("Missing PI data");
@@ -51,23 +39,6 @@ impl Document {
         }
     }
 
-    /// Given a node, give back a string representation.
-    ///
-    /// For the root node and element nodes this gives back all text node
-    /// descendant content, concatenated.
-    ///
-    /// For text nodes, it gives back the text.
-    ///
-    /// For comments, it gives back the comment text.
-    ///
-    /// For processing instructions, it gives back their content (data).
-    ///
-    /// For attribute nodes, it gives back the attribute value.
-    ///
-    /// For namespace nodes, it gives back the namespace URI.
-    ///
-    /// This is defined by the `string-value` property in
-    /// <https://www.w3.org/TR/xpath-datamodel-31>
     pub fn string_value(&self, node: Node) -> String {
         match self.node_type(node) {
             NodeType::Document | NodeType::Element(_) => self.descendants_to_string(node),

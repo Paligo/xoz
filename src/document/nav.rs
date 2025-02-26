@@ -5,7 +5,6 @@ use crate::{node_info_vec::NodeInfoId, NodeType};
 use super::{Document, Node};
 
 impl Document {
-    /// Give the document node of the XML document
     pub fn root(&self) -> Node {
         Node::new(
             self.structure
@@ -15,17 +14,6 @@ impl Document {
         )
     }
 
-    /// Obtain the document element.
-    ///
-    /// ```rust
-    /// use xoz::Document;
-    /// let doc = Document::parse_str("<p>Example</p>").unwrap();
-    ///
-    /// let doc_el = doc.document_element();
-    ///
-    /// assert!(doc.is_element(doc_el));
-    /// assert_eq!(doc.parent(doc_el), Some(doc.root()));
-    /// ```
     pub fn document_element(&self) -> Node {
         for child in self.children(self.root()) {
             if let NodeType::Element { .. } = self.node_type(child) {
@@ -35,25 +23,6 @@ impl Document {
         unreachable!()
     }
 
-    /// Get parent node.
-    ///
-    /// Returns [`None`] if this is the document node or if the node is
-    /// unattached to a document.
-    ///
-    /// Attribute and namespace nodes have a parent, even though they aren't
-    /// children of the element they are in.
-    ///
-    /// ```rust
-    /// use xoz::Document;
-    /// let doc = Document::parse_str("<p>Example</p>").unwrap();
-    /// let root = doc.root();
-    /// let p = doc.document_element();
-    /// let text = doc.first_child(p).unwrap();
-    ///
-    /// assert_eq!(doc.parent(text), Some(p));
-    /// assert_eq!(doc.parent(p), Some(root));
-    /// assert_eq!(doc.parent(root), None);
-    /// ```
     pub fn parent(&self, node: Node) -> Option<Node> {
         // two strategies are possible: skipping the attributes and namespaces nodes
         // if found, or checking whether we are an attribute or namespace node before
@@ -68,19 +37,6 @@ impl Document {
         }
     }
 
-    /// Get first child.
-    ///
-    /// Returns [`None`] if there are no children.
-    ///
-    /// ```rust
-    /// let doc = xoz::Document::parse_str("<p>Example</p>").unwrap();
-    /// let root = doc.root();
-    /// let p = doc.document_element();
-    /// let text = doc.first_child(p).unwrap();
-    /// assert_eq!(doc.first_child(root), Some(p));
-    /// assert_eq!(doc.first_child(p), Some(text));
-    /// assert_eq!(doc.first_child(text), None);
-    /// ```
     pub fn first_child(&self, node: Node) -> Option<Node> {
         let node = self.primitive_first_child(node)?;
         let node_info_id = self.node_info_id_for_node(node);
@@ -104,9 +60,6 @@ impl Document {
         }
     }
 
-    /// Get last child.
-    ///
-    /// Returns [`None`] if there are no children.
     pub fn last_child(&self, node: Node) -> Option<Node> {
         let child = self.primitive_last_child(node)?;
         if self.node_info_id_for_node(child).is_special() {
@@ -116,22 +69,6 @@ impl Document {
         }
     }
 
-    /// Get next sibling.
-    ///
-    /// Returns [`None`] if there is no next sibling.
-    ///
-    /// For normal child nodes, gives the next child.
-    ///
-    /// For namespace and attribute nodes, gives the next namespace or
-    /// attribute in definition order.
-    ///
-    /// ```rust
-    /// let doc = xoz::Document::parse_str("<p><a/><b/></p>").unwrap();
-    /// let p = doc.document_element();
-    /// let a = doc.first_child(p).unwrap();
-    /// let b = doc.next_sibling(a).unwrap();
-    /// assert_eq!(doc.next_sibling(b), None);
-    /// ```
     pub fn next_sibling(&self, node: Node) -> Option<Node> {
         self.structure
             .tree()
@@ -139,9 +76,6 @@ impl Document {
             .map(Node::new)
     }
 
-    /// Get previous sibling.
-    ///
-    /// Returns [`None`] if there is no previous sibling.
     pub fn previous_sibling(&self, node: Node) -> Option<Node> {
         let prev = self.primitive_previous_sibling(node)?;
         if self.node_info_id_for_node(prev).is_special() {
@@ -152,8 +86,6 @@ impl Document {
         }
     }
 
-    /// If ancestor is an ancestor of descendant, return true.
-    /// The ancestor node is not considered a descendant of itself.
     pub fn is_ancestor(&self, ancestor: Node, descendant: Node) -> bool {
         if ancestor == descendant {
             return false;
@@ -161,8 +93,6 @@ impl Document {
         self.is_ancestor_or_self(ancestor, descendant)
     }
 
-    /// If ancestor is an ancestor of descendant, return true.
-    /// A node is considered a descendant of itself.
     pub fn is_ancestor_or_self(&self, ancestor: Node, descendant: Node) -> bool {
         self.structure
             .tree()
@@ -170,9 +100,6 @@ impl Document {
             .expect("Illegal tree structure or node not in tree")
     }
 
-    /// Obtain top node, given node anywhere in a tree
-    ///
-    /// In an XML document this is the document element.
     pub fn top_element(&self, node: Node) -> Node {
         if self.is_document(node) {
             return self.document_element();
@@ -186,62 +113,14 @@ impl Document {
         top
     }
 
-    /// Return true if node is directly under the document node.
-    ///
-    /// This means it's either the document element or a comment or processing
-    /// instruction.
-    ///
-    /// ```rust
-    /// let doc = xoz::Document::parse_str("<!--foo--><p>Example</p><?bar?>").unwrap();
-    ///
-    /// let root = doc.root();
-    /// let comment = doc.first_child(root).unwrap();
-    /// let p = doc.next_sibling(comment).unwrap();
-    /// let pi = doc.next_sibling(p).unwrap();
-    /// let text = doc.first_child(p).unwrap();
-    ///
-    /// assert!(doc.is_directly_under_document(comment));
-    /// assert!(doc.is_directly_under_document(pi));
-    /// assert!(doc.is_directly_under_document(p));
-    /// assert!(!doc.is_directly_under_document(text));
-    /// ```
     pub fn is_directly_under_document(&self, node: Node) -> bool {
         self.parent(node) == Some(self.root())
     }
 
-    /// Returns true if the node is the document element
-    ///
-    /// ```rust
-    /// let doc = xoz::Document::parse_str("<!--foo--><p>Example<em>Em</em></p>").unwrap();
-    /// let root = doc.root();
-    /// let comment = doc.first_child(root).unwrap();
-    /// let p = doc.next_sibling(comment).unwrap();
-    /// let text = doc.first_child(p).unwrap();
-    /// let em = doc.next_sibling(text).unwrap();
-    /// assert!(!doc.is_document_element(comment));
-    /// assert!(doc.is_document_element(p));
-    /// assert!(!doc.is_document_element(text));
-    /// assert!(!doc.is_document_element(em));
-    /// ```
     pub fn is_document_element(&self, node: Node) -> bool {
         self.is_element(node) && self.is_directly_under_document(node)
     }
 
-    /// Get index of child.
-    ///
-    /// Returns [`None`] if the node is not a child of this node.
-    ///
-    /// Namespace and attribute nodes aren't considered children.
-    ///
-    /// ```rust
-    /// let doc = xoz::Document::parse_str("<p><a/><b/></p>").unwrap();
-    /// let p = doc.document_element();
-    /// let a = doc.first_child(p).unwrap();
-    /// let b = doc.next_sibling(a).unwrap();
-    /// assert_eq!(doc.child_index(p, a), Some(0));
-    /// assert_eq!(doc.child_index(p, b), Some(1));
-    /// assert_eq!(doc.child_index(a, b), None);
-    /// ```
     pub fn child_index(&self, parent: Node, node: Node) -> Option<usize> {
         for (i, child) in self.children(parent).enumerate() {
             if child == node {
@@ -251,9 +130,6 @@ impl Document {
         None
     }
 
-    /// Descendant of node type
-    ///
-    /// Look for the first descendant of node in document order that has NodeType.
     pub fn typed_descendant(&self, node: Node, node_type: NodeType) -> Option<Node> {
         let node_info_id = self.node_info_id(node_type)?;
         self.typed_descendant_by_node_info_id(node, node_info_id)
@@ -269,10 +145,6 @@ impl Document {
             .map(Node::new)
     }
 
-    /// Following node of node type.
-    ///
-    /// Look for the first following node (after node) in document order that
-    /// has node type.
     pub fn typed_foll(&self, node: Node, node_type: NodeType) -> Option<Node> {
         let node_info_id = self.node_info_id(node_type)?;
         self.typed_foll_by_node_info_id(node, node_info_id)

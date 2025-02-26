@@ -3,7 +3,7 @@ use std::num::NonZeroI64;
 use vers_vecs::trees::Tree;
 
 use crate::{
-    iter::NextSiblingIter, node::NodeType, node_info_vec::SArrayMatrix, parser::parse_document,
+    iter::NextSiblingIter, node_info_vec::SArrayMatrix, parser::parse_document,
     structure::Structure, text::TextUsage, QuickXMLError,
 };
 
@@ -21,14 +21,14 @@ impl DocumentId {
     }
 }
 
-pub struct Document {
+pub(crate) struct Document {
     pub(crate) id: DocumentId,
     pub(crate) structure: Structure<SArrayMatrix>,
     pub(crate) text_usage: TextUsage,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct Node(usize);
+pub(crate) struct Node(usize);
 
 impl Node {
     pub(crate) fn new(index: usize) -> Self {
