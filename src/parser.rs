@@ -152,9 +152,9 @@ fn build_element_attributes(
 fn node_name<'a>(r: (ResolveResult<'a>, LocalName<'a>)) -> Result<NodeName<'a>, QuickXMLError> {
     let (resolved, local_name) = r;
     Ok(match resolved {
-        ResolveResult::Unbound => NodeName::from_u8(b"", local_name.into_inner()),
+        ResolveResult::Unbound => NodeName::from_bytes(b"", local_name.into_inner()),
         ResolveResult::Bound(namespace) => {
-            NodeName::from_u8(namespace.into_inner(), local_name.into_inner())
+            NodeName::from_bytes(namespace.into_inner(), local_name.into_inner())
         }
         ResolveResult::Unknown(prefix) => {
             return Err(QuickXMLError::Namespace(NamespaceError::UnknownPrefix(
