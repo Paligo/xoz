@@ -2,9 +2,11 @@ use crate::NodeType;
 
 use super::core::{Node, Xoz};
 
+/// ## Iteration
+///
+/// Iterators over the tree structure. This also supports various axes
+/// as defined by XPath.
 impl Xoz {
-    // iter
-
     /// Iterator over the child nodes of this node.
     ///
     /// Note that the special Namespaces and Attributes nodes are not

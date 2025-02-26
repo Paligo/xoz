@@ -1,8 +1,10 @@
 use super::core::{Node, Xoz};
 
+/// ## Namespace
+///
+/// Access namespace information, including prefix information and the
+/// full name of a node including the prefix.
 impl Xoz {
-    // ns
-
     /// Get a node which contains the namespace declarations ("xmlns") children of
     /// of this node.
     ///

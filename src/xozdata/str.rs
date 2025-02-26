@@ -2,9 +2,10 @@ use crate::ProcessingInstruction;
 
 use super::core::{Node, Xoz};
 
+/// ## Text
+///
+/// These are functions to obtain text content information from the tree.
 impl Xoz {
-    // str
-
     /// Text node string.
     ///
     /// If the node is not a text node, this returns `None`.

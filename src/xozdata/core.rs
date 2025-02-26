@@ -11,12 +11,28 @@ pub struct Node {
     pub(crate) document_node: DocumentNode,
 }
 
-/// The Xoz structure is a pool of multiple documents in your application.
+/// The Xoz structure is a pool of multiple XML documents in your application.
 ///
-/// All operations on nodes are done through this structure. Behavior of
-/// nodes from different Xoz structures is undefined.
+/// All operations on nodes are done through this structure. Combining nodes
+/// from different Xoz structures is not supported and will result in undefined
+/// behavior.
 ///
-/// You can add documents to the pool but otherwise the documents are immutable.
+/// You can add documents to the pool but otherwise the documents are
+/// immutable.
+///
+/// Xoz is implemented in several sections focusing on different aspects of
+/// accessing XML data.
+///
+/// The Xoz struct documentation is divided into different sections:
+///
+/// * [Core](#core)
+/// * [Information](#information)
+/// * [Navigation](#navigation)
+/// * [Text](#text)
+/// * [Namespace](#namespace)
+/// * [Attribute](#attribute)
+/// * [Iteration](#iteration)
+/// * [Comparison](#comparison)
 pub struct Xoz {
     documents: Vec<Document>,
 }
@@ -36,7 +52,10 @@ impl Default for Xoz {
     }
 }
 
+// ## Core
+// Creation of the Xoz structure.
 impl Xoz {
+    /// Create a new empty Xoz structure.
     pub fn new() -> Self {
         Xoz {
             documents: Vec::new(),

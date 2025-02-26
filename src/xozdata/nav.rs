@@ -1,8 +1,10 @@
 use crate::NodeType;
 
-// nav
 use super::core::{Node, Xoz};
 
+/// ## Navigation
+///
+/// Core navigation functions for navigating the tree.
 impl Xoz {
     /// Obtain the document element.
     ///

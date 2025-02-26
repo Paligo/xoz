@@ -2,6 +2,10 @@ use crate::{NodeType, TagState};
 
 use super::core::{Node, Xoz};
 
+/// ## Comparison
+///
+/// Functions for comparing nodes. Comparison between different documents is
+/// supported.
 impl Xoz {
     /// XPath deep equal
     /// Comparison of two nodes as defined by the XPath deep-equal function:

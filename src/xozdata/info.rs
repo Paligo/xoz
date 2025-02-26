@@ -2,9 +2,10 @@ use crate::{NodeName, NodeType};
 
 use super::core::{Node, Xoz};
 
+/// ## Information
+///
+/// Node information such as node type, and name.
 impl Xoz {
-    // info
-
     /// Preorder number of node
     ///
     /// This can be used to sort nodes by preorder.

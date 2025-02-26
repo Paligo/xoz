@@ -2,9 +2,10 @@ use crate::NodeName;
 
 use super::core::{Node, Xoz};
 
+/// ## Attribute
+///
+/// Various functions for accessing attributes.
 impl Xoz {
-    // attr
-
     /// Get the attribute node with the given name.
     ///
     /// If this is not an element node, or there is no attribute with the given name,
