@@ -81,17 +81,20 @@ impl<T: NodeInfoVec> Structure<T> {
 
     // paper calls this xml id text
     // TODO: write a test for this inverse operation
+    #[allow(dead_code)]
     pub(crate) fn text_index(&self, text_id: TextId) -> usize {
         // TODO: is node_index really needed? don't we get the index if we simply do select?
         self.tree()
             .node_index(self.text_opening_parens.select1(text_id.id()))
     }
 
+    #[allow(dead_code)]
     pub(crate) fn leaf_number(&self, i: usize) -> usize {
         self.text_opening_parens.rank1(i)
     }
 
     // TODO: write tests
+    #[allow(dead_code)]
     pub(crate) fn text_ids(&self, i: usize) -> Range<usize> {
         // TODO: what if i is 0, the root
         let start = self.leaf_number(i - 1) + 1;
@@ -156,6 +159,8 @@ impl<T: NodeInfoVec> Structure<T> {
         )
     }
 
+    // TODO: write tests, wire up to iterator
+    #[allow(dead_code)]
     pub(crate) fn typed_following_sibling(
         &self,
         i: usize,
@@ -168,12 +173,6 @@ impl<T: NodeInfoVec> Structure<T> {
         } else {
             None
         }
-    }
-
-    // The last node labeled tag with preorder smaller than that of node i, and
-    // not an ancestor of i. Returns None if no such node exists.
-    pub(crate) fn typed_preceding(&self, i: usize, node_info_id: NodeInfoId) -> Option<usize> {
-        todo!()
     }
 }
 

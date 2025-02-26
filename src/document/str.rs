@@ -80,10 +80,10 @@ impl Document {
 
 /// Represents the text content of a processing instruction node.
 pub struct ProcessingInstruction<'a> {
-    data: BytesPI<'a>, // &'a str,
+    data: BytesPI<'a>,
 }
 
-impl<'a> ProcessingInstruction<'a> {
+impl ProcessingInstruction<'_> {
     /// The target of the processing instruction, as bytes.
     ///
     /// Given a `<?foo bar?>` processing instruction, this is

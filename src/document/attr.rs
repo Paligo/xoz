@@ -1,5 +1,3 @@
-use vers_vecs::trees::Tree;
-
 use crate::{iter::AttributesIter, NodeName, NodeType};
 
 use super::{Document, Node};

@@ -53,8 +53,8 @@ impl Default for Xoz {
     }
 }
 
-// ## Core
-// Creation of the Xoz structure.
+/// ## Core
+/// Creation of the Xoz structure.
 impl Xoz {
     /// Create a new empty Xoz structure.
     pub fn new() -> Self {
@@ -89,12 +89,18 @@ impl Xoz {
         f(document, node.document_node).map(|n| document.new_node(n))
     }
 
-    // parse
+    /// Parse a string slice into a document and return the root node.
     pub fn parse_str(&mut self, xml: &str) -> Result<Node, QuickXMLError> {
         let document = parse_document_with_id(self.new_document_id(), xml)?;
         let root = document.root();
         let root = document.new_node(root);
         self.documents.push(document);
         Ok(root)
+    }
+
+    /// Serialize node to a string.
+    pub fn serialize_to_string(&self, node: Node) -> String {
+        let document = self.document(node.document_id);
+        document.serialize_node_to_string(node.document_node)
     }
 }

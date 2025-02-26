@@ -63,10 +63,7 @@ impl Xoz {
     /// Get an iterator over the name and value of all attributes of this node.
     ///
     /// If this is not an element node, it returns an empty iterator.
-    pub fn attribute_entries<'a>(
-        &'a self,
-        node: Node,
-    ) -> impl Iterator<Item = (&'a NodeName<'a>, &'a str)> + 'a {
+    pub fn attribute_entries(&self, node: Node) -> impl Iterator<Item = (&NodeName, &str)> {
         let document = self.document(node.document_id);
         document.attribute_entries(node.document_node)
     }

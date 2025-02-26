@@ -118,7 +118,7 @@ impl LocationStep {
     fn guard(&self) -> Guard {
         match &self.node_test {
             NodeTest::TagName {
-                namespace,
+                namespace: _,
                 local_name,
             } => {
                 // TODO: namespace and wildcard handling

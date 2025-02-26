@@ -6,6 +6,7 @@ use crate::{
     node_info_vec::{NodeInfoId, ATTRIBUTES_NODE_INFO_ID, NAMESPACES_NODE_INFO_ID},
 };
 
+#[derive(Debug)]
 pub(crate) struct NodeInfoLookup {
     pub(crate) node_infos: Vec<NodeInfo<'static>>,
     pub(crate) node_info_lookup: HashMap<NodeInfo<'static>, NodeInfoId>,
@@ -77,13 +78,6 @@ impl TreeBuilder {
 
     fn register_node_info(&mut self, node_info: NodeInfo) -> NodeInfoId {
         self.node_info_lookup.register(node_info)
-    }
-
-    pub(crate) fn bits_per_element(&self) -> usize {
-        self.node_info_lookup
-            .len()
-            .next_power_of_two()
-            .trailing_zeros() as usize
     }
 
     pub(crate) fn node_info_amount(&self) -> usize {

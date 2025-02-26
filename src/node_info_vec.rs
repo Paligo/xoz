@@ -86,6 +86,7 @@ pub(crate) fn make_wavelet_matrix_tag_vec(
 
 // a sarray-based implementation
 // This uses sucds's SArray and CompactVector
+#[derive(Debug)]
 pub(crate) struct SArrayMatrix {
     tags: CompactVector,
     sarrays: Vec<SArray>,

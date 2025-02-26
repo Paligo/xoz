@@ -219,7 +219,7 @@ impl Formula {
                 //     r: Nodes::new(),
                 // }
             }
-            Formula::Pred(pred) => {
+            Formula::Pred(_pred) => {
                 todo!()
             }
             Formula::False => FormulaOutcome {

@@ -44,17 +44,19 @@ impl TextId {
         Self(id)
     }
 
-    pub fn id(&self) -> usize {
+    pub(crate) fn id(&self) -> usize {
         self.0
     }
 }
 
+#[derive(Debug)]
 pub(crate) struct TextUsage {
     text: String,
     sarray: SArray,
 }
 
 impl TextUsage {
+    #[allow(dead_code)]
     pub(crate) fn text_id(&self, index: usize) -> TextId {
         TextId(
             self.sarray

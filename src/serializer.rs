@@ -7,7 +7,11 @@ use quick_xml::{
     Writer,
 };
 
-use crate::{document::Document, node::NodeType, NodeName, TraverseState};
+use crate::{
+    document::{Document, Node},
+    node::NodeType,
+    NodeName, TraverseState,
+};
 
 struct Serializer<'a, W: io::Write> {
     doc: &'a Document,
@@ -16,7 +20,7 @@ struct Serializer<'a, W: io::Write> {
 }
 
 impl<'a, W: io::Write> Serializer<'a, W> {
-    fn new(doc: &'a Document, write: W) -> Self {
+    pub fn new(doc: &'a Document, write: W) -> Self {
         Self {
             doc,
             writer: Writer::new(write),
@@ -24,12 +28,12 @@ impl<'a, W: io::Write> Serializer<'a, W> {
         }
     }
 
-    fn serialize_document(&mut self) -> io::Result<()> {
+    pub fn serialize_node(&mut self, node: Node) -> io::Result<()> {
         let mut element_name_scratch_buf = Vec::with_capacity(64);
         let mut xmlns_scratch_buf = Vec::with_capacity(64);
         let mut attribute_name_scratch_buf = Vec::with_capacity(64);
 
-        for (node_type, tag_state, node) in self.doc.traverse(self.doc.root()) {
+        for (node_type, tag_state, node) in self.doc.traverse(node) {
             match node_type {
                 NodeType::Document => {
                     // TODO serialize declaration if needed on opening
@@ -134,7 +138,22 @@ impl<'a, W: io::Write> Serializer<'a, W> {
 
 pub(crate) fn serialize_document(doc: &Document, write: &mut impl io::Write) -> io::Result<()> {
     let mut serializer = Serializer::new(doc, write);
-    serializer.serialize_document()
+    serializer.serialize_node(doc.root())
+}
+
+pub(crate) fn serialize_node(
+    doc: &Document,
+    node: Node,
+    write: &mut impl io::Write,
+) -> io::Result<()> {
+    let mut serializer = Serializer::new(doc, write);
+    serializer.serialize_node(node)
+}
+
+pub(crate) fn serialize_node_to_string(doc: &Document, node: Node) -> String {
+    let mut w = Vec::new();
+    serialize_node(doc, node, &mut w).unwrap();
+    String::from_utf8(w).unwrap()
 }
 
 pub(crate) fn serialize_document_to_string(doc: &Document) -> String {
