@@ -4,7 +4,7 @@ use quick_xml::events::Event;
 use quick_xml::name::{LocalName, NamespaceError, PrefixDeclaration, ResolveResult};
 use quick_xml::reader::NsReader;
 
-use crate::document::Document;
+use crate::document::{Document, DocumentId};
 use crate::name::NodeName;
 use crate::node_info_vec::SArrayMatrix;
 use crate::structure::Structure;
@@ -13,6 +13,10 @@ use crate::tree_builder::TreeBuilder;
 use crate::{Namespace, NodeType};
 
 pub fn parse_document(xml: &str) -> Result<Document, QuickXMLError> {
+    parse_document_with_id(DocumentId::new(0), xml)
+}
+
+pub fn parse_document_with_id(id: DocumentId, xml: &str) -> Result<Document, QuickXMLError> {
     let mut reader = NsReader::from_str(xml);
     reader.config_mut().enable_all_checks(true);
     let mut tree_builder = TreeBuilder::new();
@@ -93,6 +97,7 @@ pub fn parse_document(xml: &str) -> Result<Document, QuickXMLError> {
     .unwrap();
     let text_usage = text_builder.build();
     Ok(Document {
+        id,
         structure,
         text_usage,
     })

@@ -135,7 +135,9 @@ fn test_tagged_descendant_node_itself() {
 #[test]
 fn test_tagged_descendant2() {
     let mut xoz = Xoz::new();
-    let root = xoz.parse_str(r#"<doc><a><b><a><b/></a></b></a></doc>"#).unwrap();
+    let root = xoz
+        .parse_str(r#"<doc><a><b><a><b/></a></b></a></doc>"#)
+        .unwrap();
     let doc_el = xoz.document_element(root);
     let a = xoz.first_child(doc_el).unwrap();
     let first_b = xoz.first_child(a).unwrap();
@@ -213,7 +215,9 @@ fn test_typed_foll1() {
 #[test]
 fn test_typed_foll2() {
     let mut xoz = Xoz::new();
-    let root = xoz.parse_str(r#"<doc><f/><a><b><c/></b><d><e/><f/></d></a></doc>"#).unwrap();
+    let root = xoz
+        .parse_str(r#"<doc><f/><a><b><c/></b><d><e/><f/></d></a></doc>"#)
+        .unwrap();
     let doc_el = xoz.document_element(root);
     let f1 = xoz.first_child(doc_el).unwrap();
     let a = xoz.next_sibling(f1).unwrap();

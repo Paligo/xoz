@@ -7,4 +7,5 @@ mod nav;
 mod ns;
 mod str;
 
+pub(crate) use core::DocumentId;
 pub use core::{Document, Node};

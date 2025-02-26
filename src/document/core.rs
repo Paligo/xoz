@@ -1,3 +1,5 @@
+use std::num::NonZeroI64;
+
 use vers_vecs::trees::Tree;
 
 use crate::{
@@ -5,7 +7,22 @@ use crate::{
     structure::Structure, text::TextUsage, QuickXMLError,
 };
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+// we start counting at 1 so the Option of a Node is the same size as a Node
+pub(crate) struct DocumentId(NonZeroI64);
+
+impl DocumentId {
+    pub(crate) fn new(index: usize) -> Self {
+        DocumentId(NonZeroI64::new(index as i64 + 1).unwrap())
+    }
+
+    pub(crate) fn index(self) -> usize {
+        self.0.get() as usize - 1
+    }
+}
+
 pub struct Document {
+    pub(crate) id: DocumentId,
     pub(crate) structure: Structure<SArrayMatrix>,
     pub(crate) text_usage: TextUsage,
 }
@@ -26,17 +43,6 @@ impl Node {
 impl Document {
     pub fn parse_str(xml: &str) -> Result<Self, QuickXMLError> {
         parse_document(xml)
-    }
-
-    pub fn subtree_tags(&self, node: Node, node_type: NodeType) -> usize {
-        let node_info_id = self.node_info_id(node_type);
-        if let Some(node_info_id) = node_info_id {
-            self.structure
-                .subtree_tags(node.0, node_info_id)
-                .unwrap_or(0)
-        } else {
-            0
-        }
     }
 
     pub(crate) fn primitive_parent(&self, node: Node) -> Option<Node> {

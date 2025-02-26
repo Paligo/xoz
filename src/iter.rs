@@ -538,7 +538,7 @@ impl Iterator for TypedFollowingIter<'_> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::parser::parse_document;
+    use crate::{document::DocumentId, parser::parse_document};
 
     #[test]
     fn test_double_ended_children() {
