@@ -18,7 +18,7 @@ mod traverse;
 mod tree_builder;
 mod xozdata;
 
-pub use document::{Document, Node};
+pub use document::{Document, Node, ProcessingInstruction};
 pub use parser::{parse_document, QuickXMLError};
 // pub use builder::parse_document;
 pub use name::{Namespace, NodeName};

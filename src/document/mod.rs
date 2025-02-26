@@ -9,3 +9,4 @@ mod str;
 
 pub(crate) use core::DocumentId;
 pub use core::{Document, Node};
+pub use str::ProcessingInstruction;
