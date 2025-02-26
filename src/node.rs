@@ -10,7 +10,7 @@ pub enum NodeType<'a> {
     // holds attribute nodes
     Attributes,
     // under namespaces
-    Namespace(Namespace),
+    Namespace(Namespace<'a>),
     // under attributes. has associated text
     Attribute(NodeName<'a>),
     // under document. contains namespaces, attributes, children
@@ -29,7 +29,7 @@ impl<'a> NodeType<'a> {
             NodeType::Document => NodeType::Document,
             NodeType::Namespaces => NodeType::Namespaces,
             NodeType::Attributes => NodeType::Attributes,
-            NodeType::Namespace(namespace) => NodeType::Namespace(namespace.clone()),
+            NodeType::Namespace(namespace) => NodeType::Namespace(namespace.into_owned()),
             NodeType::Attribute(node_name) => NodeType::Attribute(node_name.into_owned()),
             NodeType::Element(node_name) => NodeType::Element(node_name.into_owned()),
             NodeType::Text => NodeType::Text,

@@ -114,16 +114,14 @@ fn build_element_attributes(
     for attribute in attributes_iter {
         let attribute = attribute?;
         let qname = attribute.key;
-        let value = attribute.decode_and_unescape_value(reader.decoder())?;
         if let Some(prefix_declaration) = qname.as_namespace_binding() {
-            let node_type = match prefix_declaration {
-                PrefixDeclaration::Default => NodeType::Namespace(Namespace::new("", &*value)),
-                PrefixDeclaration::Named(prefix) => {
-                    NodeType::Namespace(Namespace::new(prefix, &*value))
-                }
+            let prefix = match prefix_declaration {
+                PrefixDeclaration::Default => b"",
+                PrefixDeclaration::Named(prefix) => prefix,
             };
-            namespaces.push(node_type);
+            namespaces.push((prefix, attribute.value));
         } else {
+            let value = attribute.decode_and_unescape_value(reader.decoder())?;
             let name = node_name(reader.resolve_attribute(qname))?;
             let node_type = NodeType::Attribute(name);
             attributes.push((node_type, value));
@@ -131,9 +129,10 @@ fn build_element_attributes(
     }
     if !namespaces.is_empty() {
         tags_builder.open(NodeType::Namespaces);
-        for namespace in namespaces {
-            tags_builder.open(namespace.clone());
-            tags_builder.close(namespace);
+        for (prefix, uri) in namespaces {
+            let node_type = NodeType::Namespace(Namespace::from_bytes(prefix, &uri));
+            tags_builder.open(node_type.clone());
+            tags_builder.close(node_type);
         }
         tags_builder.close(NodeType::Namespaces);
     }

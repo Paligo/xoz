@@ -4,17 +4,36 @@ use std::borrow::Cow;
 ///
 /// This consists of a prefix and the namespace URI it maps to.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct Namespace {
-    prefix: Vec<u8>,
-    uri: Vec<u8>,
+pub struct Namespace<'a> {
+    prefix: Cow<'a, [u8]>,
+    uri: Cow<'a, [u8]>,
 }
 
-impl Namespace {
-    /// Create a new namespace declaration node, either from u8 or from &str
-    pub fn new(prefix: impl AsRef<[u8]>, uri: impl AsRef<[u8]>) -> Self {
+impl<'a> Namespace<'a> {
+    /// Construct a new Namespace from a prefix and a namespace URI.
+    ///
+    /// This borrows the input strings.
+    pub fn new(prefix: &'a str, uri: &'a str) -> Self {
         Self {
-            prefix: prefix.as_ref().to_vec(),
-            uri: uri.as_ref().to_vec(),
+            prefix: Cow::Borrowed(prefix.as_bytes()),
+            uri: Cow::Borrowed(uri.as_bytes()),
+        }
+    }
+
+    /// Construct a new Namespace from prefix bytes and URI bytes.
+    ///
+    /// This borrows the input slices.
+    pub fn from_bytes(prefix: &'a [u8], uri: &'a [u8]) -> Self {
+        Self {
+            prefix: Cow::Borrowed(prefix),
+            uri: Cow::Borrowed(uri),
+        }
+    }
+
+    pub(crate) fn into_owned(self) -> Namespace<'static> {
+        Namespace {
+            prefix: Cow::Owned(self.prefix.into_owned()),
+            uri: Cow::Owned(self.uri.into_owned()),
         }
     }
 
