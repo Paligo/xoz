@@ -1,4 +1,5 @@
 mod attr;
+mod comp;
 mod core;
 mod info;
 mod iter;

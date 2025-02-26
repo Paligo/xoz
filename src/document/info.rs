@@ -115,4 +115,9 @@ impl Document {
             0
         }
     }
+
+    /// Count how many nodes there are in a subtree of this node.
+    pub fn subtree_size(&self, node: Node) -> usize {
+        self.structure.subtree_size(node.get())
+    }
 }

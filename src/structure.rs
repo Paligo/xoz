@@ -2,7 +2,7 @@ use std::ops::Range;
 
 use vers_vecs::{
     trees::{bp::BpTree, Tree},
-    RsVec,
+    RsVec, SubtreeSize,
 };
 
 use crate::{
@@ -109,6 +109,12 @@ impl<T: NodeInfoVec> Structure<T> {
         node_info_id: NodeInfoId,
     ) -> Option<usize> {
         self.tag_vec.select_node_info_id(rank, node_info_id)
+    }
+
+    pub(crate) fn subtree_size(&self, i: usize) -> usize {
+        self.tree
+            .subtree_size(i)
+            .expect("Tree cannot be unbalanced")
     }
 
     // the number of occurrences of tag within the subtree rooted at i

@@ -85,7 +85,7 @@ impl Document {
         }
     }
 
-    fn node_str(&self, node: Node) -> Option<&str> {
+    pub(crate) fn node_str(&self, node: Node) -> Option<&str> {
         let text_id = self.structure.text_id(node.get());
         Some(self.text_usage.text_value(text_id))
     }
