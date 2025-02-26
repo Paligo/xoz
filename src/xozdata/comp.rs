@@ -1,5 +1,6 @@
-use crate::xozdata::{Node, Xoz};
 use crate::{NodeType, TagState};
+
+use super::core::{Node, Xoz};
 
 impl Xoz {
     /// XPath deep equal

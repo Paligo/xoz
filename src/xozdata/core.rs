@@ -75,7 +75,7 @@ impl Xoz {
     }
 
     // nav
-    
+
     /// Obtain the document element.
     ///
     /// ```rust
@@ -406,7 +406,7 @@ impl Xoz {
     }
 
     // attr
-    
+
     /// Get the attribute node with the given name.
     ///
     /// If this is not an element node, or there is no attribute with the given name,
@@ -473,7 +473,7 @@ impl Xoz {
     }
 
     // str
-    
+
     /// Text node string.
     ///
     /// If the node is not a text node, this returns `None`.
@@ -535,7 +535,7 @@ impl Xoz {
     }
 
     // ns
-    
+
     /// Get a node which contains the namespace declarations ("xmlns") children of
     /// of this node.
     ///
@@ -591,7 +591,7 @@ impl Xoz {
     }
 
     // iter
-    
+
     /// Iterator over the child nodes of this node.
     ///
     /// Note that the special Namespaces and Attributes nodes are not

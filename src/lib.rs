@@ -1,6 +1,5 @@
 mod access;
 mod builder;
-mod comp;
 mod document;
 mod error;
 mod iter;
@@ -24,4 +23,4 @@ pub use name::{Namespace, NodeName};
 pub use node::NodeType;
 pub use parser::{parse_document, QuickXMLError};
 pub use traverse::TagState;
-pub use xozdata::Xoz;
+pub use xozdata::{Node, Xoz};
