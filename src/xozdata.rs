@@ -1,10 +1,8 @@
-use std::num::NonZeroI64;
-
 use quick_xml::Error as QuickXMLError;
 
 use crate::document::{Document, DocumentId, Node as DocumentNode};
 use crate::parser::parse_document_with_id;
-use crate::{node_info_vec::SArrayMatrix, structure::Structure, text::TextUsage};
+
 use crate::{NodeName, NodeType};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -163,9 +161,69 @@ impl Xoz {
 
     // info
 
+    pub fn preorder(&self, node: Node) -> usize {
+        let document = self.document(node.document_id);
+        document.preorder(node.document_node)
+    }
+
+    pub fn sort_key(&self, node: Node) -> (usize, usize) {
+        let document = self.document(node.document_id);
+        (document.id.index(), document.preorder(node.document_node))
+    }
+
     pub fn node_name(&self, node: Node) -> Option<&NodeName> {
         let document = self.document(node.document_id);
         document.node_name(node.document_node)
+    }
+
+    pub fn node_type(&self, node: Node) -> &NodeType {
+        let document = self.document(node.document_id);
+        document.node_type(node.document_node)
+    }
+
+    pub fn is_document(&self, node: Node) -> bool {
+        let document = self.document(node.document_id);
+        document.is_document(node.document_node)
+    }
+
+    pub fn is_element(&self, node: Node) -> bool {
+        let document = self.document(node.document_id);
+        document.is_element(node.document_node)
+    }
+
+    pub fn is_text(&self, node: Node) -> bool {
+        let document = self.document(node.document_id);
+        document.is_text(node.document_node)
+    }
+
+    pub fn is_comment(&self, node: Node) -> bool {
+        let document = self.document(node.document_id);
+        document.is_comment(node.document_node)
+    }
+
+    pub fn is_processing_instruction(&self, node: Node) -> bool {
+        let document = self.document(node.document_id);
+        document.is_processing_instruction(node.document_node)
+    }
+
+    pub fn is_attribute(&self, node: Node) -> bool {
+        let document = self.document(node.document_id);
+        document.is_attribute(node.document_node)
+    }
+
+    pub fn is_namespace(&self, node: Node) -> bool {
+        let document = self.document(node.document_id);
+        document.is_namespace(node.document_node)
+    }
+
+    pub fn subtree_count(&self, node: Node, node_type: NodeType) -> usize {
+        let document = self.document(node.document_id);
+        document.subtree_count(node.document_node, node_type)
+    }
+
+    pub fn subtree_size(&self, node: Node) -> usize {
+        let document = self.document(node.document_id);
+        document.subtree_size(node.document_node)
     }
 
     // attr
