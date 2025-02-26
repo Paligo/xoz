@@ -203,9 +203,24 @@ impl Xoz {
         document.child_index(parent.document_node, node.document_node)
     }
 
-    /// Descendant of node type
+    /// Jump to descendant of node type
     ///
-    /// Look for the first descendant of node in document order that has NodeType.
+    /// Look for the first descendant of node in document order that has
+    /// [`NodeType`].
+    ///
+    /// This jumps directly to this node without having to traverse the tree.
+    ///
+    /// ```rust
+    /// use xoz::{Xoz, NodeType};
+    ///
+    /// let mut xoz = Xoz::new();
+    /// let root = xoz.parse_str("<p><a><b/></a></p>").unwrap();
+    /// let p = xoz.document_element(root);
+    /// let a = xoz.first_child(p).unwrap();
+    /// let b = xoz.first_child(a).unwrap();
+    ///
+    /// assert_eq!(xoz.typed_descendant(p, NodeType::element("b")), Some(b));
+    /// ```
     pub fn typed_descendant(&self, node: Node, node_type: NodeType) -> Option<Node> {
         let document = self.document(node.document_id);
         document
@@ -213,10 +228,12 @@ impl Xoz {
             .map(|n| document.new_node(n))
     }
 
-    /// Following node of node type.
+    /// Jumped to following node of node type.
     ///
     /// Look for the first following node (after node) in document order that
-    /// has node type.
+    /// has [`NodeType]`.
+    ///
+    /// This jumps directly to this node without having to traverse the tree.
     pub fn typed_foll(&self, node: Node, node_type: NodeType) -> Option<Node> {
         let document = self.document(node.document_id);
         document
