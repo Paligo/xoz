@@ -20,6 +20,15 @@ impl NodeInfoLookup {
         }
     }
 
+    pub(crate) fn heap_size(&self) -> usize {
+        // TODO: node_info_lookup heap size is tricky as it has a hashmap and contains
+        // (owned) cows. it's not going to be most of the data though - the size of the
+        // tags and the hashmap itself
+        // TODO: we should go through every element in the vector and add the heap
+        // size of the cows
+        self.node_infos.len() * std::mem::size_of::<NodeInfo>()
+    }
+
     fn register(&mut self, node_info: NodeInfo) -> NodeInfoId {
         if let Some(&idx) = self.node_info_lookup.get(&node_info) {
             return idx;

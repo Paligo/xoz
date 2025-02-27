@@ -1,26 +1,65 @@
+#[cfg(doc)]
+use crate::xozdata::Xoz;
+
 use crate::{Namespace, NodeName};
 
 /// Which type of node we are in the XML tree.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum NodeType<'a> {
-    // contains namespaces, elements, other nodes
+    /// Document node: the root of an XML document
     Document,
-    // holds namespace nodes
-    Namespaces,
-    // holds attribute nodes
-    Attributes,
-    // under namespaces
+    /// Namespace declaration node.
+    ///
+    /// Example: `xmlns:prefix="http://example.com"`
+    ///
+    /// Contains the prefix and namespace URI.
     Namespace(Namespace<'a>),
-    // under attributes. has associated text
+    /// Attribute node.
+    ///
+    /// Example: `name="value"`
+    ///
+    /// Has a node name. Value is in associated text data.
+    ///
+    /// Access it via [`Xoz::attribute_str`] or [`Xoz::node_str`] if you
+    /// already know it's an attribute node.
     Attribute(NodeName<'a>),
-    // under document. contains namespaces, attributes, children
+    /// Element node.
+    ///
+    /// Example: `<element>...</element>`
+    ///
+    /// Has a node name.
     Element(NodeName<'a>),
-    // child node, has associated text
+    /// Text node.
+    ///
+    /// Example: `This is a text node.`
+    ///
+    /// Has associated text data. Access it via [`Xoz::text_str`] or
+    /// [`Xoz::node_str`] if you already know it's a text node.
     Text,
-    // child node, has associated text
+    /// Comment node.
+    ///
+    /// Example: `<!-- This is a comment -->`
+    ///
+    /// Has associated text data. Access it via [`Xoz::comment_str`] or
+    /// [`Xoz::node_str`] if you already know it's a comment node..
     Comment,
-    // child node, has associated text
+    /// Processing instruction node.
+    ///
+    /// Example: `<?target data?>`
+    ///
+    /// Access contents via [`Xoz::processing_instruction`] or [`Xoz::node_str`] to
+    /// get the raw data.
     ProcessingInstruction,
+    /// Namespaces holder node.
+    ///
+    /// Internal marker of all namespace declarations in an element. It should
+    /// never occur in the public API.
+    Namespaces,
+    /// Attributes holder node.
+    ///
+    /// Internal marker of all attributes in an element. It should never occur
+    /// in the public API.
+    Attributes,
 }
 
 impl<'a> NodeType<'a> {
@@ -38,10 +77,18 @@ impl<'a> NodeType<'a> {
         }
     }
 
+    /// Convenience method to create an attribute node.
+    ///
+    /// You can pass in a string for an attribute outside of a namespace,
+    /// or a `NodeName` if the attribute has a namespace URI.
     pub fn attribute(name: impl Into<NodeName<'a>>) -> Self {
         NodeType::Attribute(name.into())
     }
 
+    /// Convenience method to create an element node.
+    ///
+    /// You can pass in a string for an element outside of a namespace,
+    /// or a `NodeName` if the element has a namespace URI.
     pub fn element(name: impl Into<NodeName<'a>>) -> Self {
         NodeType::Element(name.into())
     }

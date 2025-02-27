@@ -63,6 +63,11 @@ impl Xoz {
         }
     }
 
+    /// Heap size used by the Xoz structure.
+    pub fn heap_size(&self) -> usize {
+        self.documents.iter().map(|d| d.heap_size()).sum()
+    }
+
     pub(crate) fn new_document_id(&self) -> DocumentId {
         DocumentId::new(self.documents.len())
     }

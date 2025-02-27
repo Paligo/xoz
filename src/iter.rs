@@ -222,6 +222,22 @@ impl<'a> DescendantsIter<'a> {
             doc,
         }
     }
+
+    pub(crate) fn following(&self, node: Node) -> Option<Node> {
+        // otherwise, go up parent chain until we find a next sibling
+        let mut current = node;
+        while let Some(parent) = self.doc.parent(current) {
+            if parent == self.root {
+                return None;
+            }
+            let sibling = self.doc.next_sibling(parent);
+            if let Some(sibling) = sibling {
+                return Some(sibling);
+            }
+            current = parent;
+        }
+        None
+    }
 }
 
 impl Iterator for DescendantsIter<'_> {
@@ -234,14 +250,7 @@ impl Iterator for DescendantsIter<'_> {
         } else if let Some(sibling) = self.doc.next_sibling(node) {
             Some(sibling)
         } else {
-            // go up one to the parent and take next sibling of parent
-            let parent = self.doc.parent(node)?;
-            if parent != self.root {
-                self.doc.next_sibling(parent)
-            } else {
-                // we're done
-                None
-            }
+            self.following(node)
         };
         Some(node)
     }

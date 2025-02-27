@@ -3,6 +3,8 @@ use std::borrow::Cow;
 /// A namespace declaration.
 ///
 /// This consists of a prefix and the namespace URI it maps to.
+///
+/// The empty prefix means the default namespace.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Namespace<'a> {
     prefix: Cow<'a, [u8]>,

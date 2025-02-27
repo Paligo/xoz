@@ -1,6 +1,9 @@
 use std::ops::Range;
 
-use sucds::bit_vectors::{Rank, SArray, Select};
+use sucds::{
+    bit_vectors::{Rank, SArray, Select},
+    Serializable,
+};
 use vers_vecs::BitVec;
 
 pub(crate) struct TextBuilder {
@@ -56,6 +59,10 @@ pub(crate) struct TextUsage {
 }
 
 impl TextUsage {
+    pub(crate) fn heap_size(&self) -> usize {
+        self.text.len() + self.sarray.size_in_bytes()
+    }
+
     #[allow(dead_code)]
     pub(crate) fn text_id(&self, index: usize) -> TextId {
         TextId(

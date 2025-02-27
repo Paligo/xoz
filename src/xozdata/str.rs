@@ -14,6 +14,14 @@ impl Xoz {
         document.text_str(node.document_node)
     }
 
+    /// Attribute node value.
+    ///
+    /// If the node is not an attribute node, this returns `None`.
+    pub fn attribute_str(&self, node: Node) -> Option<&str> {
+        let document = self.document(node.document_id);
+        document.attribute_str(node.document_node)
+    }
+
     /// Comment node string.
     ///
     /// If the node is not a comment node, this returns `None`.
@@ -61,6 +69,9 @@ impl Xoz {
     }
 
     /// Get the string content of a node.
+    ///
+    /// This works for text, attribute, comment, and processing instruction
+    /// nodes.
     pub fn node_str(&self, node: Node) -> Option<&str> {
         let document = self.document(node.document_id);
         document.node_str(node.document_node)

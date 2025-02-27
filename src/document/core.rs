@@ -16,7 +16,7 @@ impl DocumentId {
         DocumentId(NonZeroI64::new(index as i64 + 1).unwrap())
     }
 
-    pub(crate) fn index(self) -> usize {
+    pub(crate) fn index(&self) -> usize {
         self.0.get() as usize - 1
     }
 }
@@ -35,15 +35,19 @@ impl Node {
         Node(index)
     }
 
-    pub(crate) fn get(self) -> usize {
+    pub(crate) fn get(&self) -> usize {
         self.0
     }
 }
 
 impl Document {
     /// Serializes a node to a string.
-    pub fn serialize_node_to_string(&self, node: Node) -> String {
+    pub(crate) fn serialize_node_to_string(&self, node: Node) -> String {
         serialize_node_to_string(self, node)
+    }
+
+    pub(crate) fn heap_size(&self) -> usize {
+        self.structure.heap_size() + self.text_usage.heap_size()
     }
 
     pub(crate) fn primitive_parent(&self, node: Node) -> Option<Node> {

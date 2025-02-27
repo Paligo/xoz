@@ -79,7 +79,9 @@ fn test_ancestors_or_self_of_attribute() {
 #[test]
 fn test_descendants() {
     let mut xoz = Xoz::new();
-    let root = xoz.parse_str(r#"<doc><a><b><c/></b><d><e/><f/></d></a></doc>"#).unwrap();
+    let root = xoz
+        .parse_str(r#"<doc><a><b><c/></b><d><e/><f/></d></a></doc>"#)
+        .unwrap();
     let doc_el = xoz.document_element(root);
     let a = xoz.first_child(doc_el).unwrap();
     let b = xoz.first_child(a).unwrap();
@@ -99,9 +101,27 @@ fn test_descendants() {
 }
 
 #[test]
+fn test_descendants_bug() {
+    let mut xoz = Xoz::new();
+    let xml = r#"<employees><employee><id>1</id><firstName>FirstName1</firstName><lastName>LastName1</lastName><position>Project Manager</position><department>Operations</department><hireDate>2019-02-01</hireDate><salary>71000</salary><projects><project><name>Project B</name><startDate>2019-01-01</startDate><endDate>2019-07-30</endDate></project><project><name>Project C</name><startDate>2019-02-01</startDate><endDate>2019-08-30</endDate></project></projects></employee><employee><id>2</id><firstName>FirstName2</firstName><lastName>LastName2</lastName><position>Software Engineer</position><department>IT</department><hireDate>2019-03-01</hireDate><salary>72000</salary><projects><project><name>Project C</name><startDate>2019-01-01</startDate><endDate>2019-07-30</endDate></project><project><name>Project D</name><startDate>2019-02-01</startDate><endDate>2019-08-30</endDate></project></projects></employee></employees>"#;
+
+    let root = xoz.parse_str(xml).unwrap();
+
+    let doc_el = xoz.document_element(root);
+    let employee1 = xoz.first_child(doc_el).unwrap();
+    let employee2 = xoz.next_sibling(employee1).unwrap();
+
+    let descendants: Vec<_> = xoz.descendants(doc_el).collect();
+    assert!(descendants.contains(&employee1));
+    assert!(descendants.contains(&employee2));
+}
+
+#[test]
 fn test_descendants_or_self() {
     let mut xoz = Xoz::new();
-    let root = xoz.parse_str(r#"<doc><a><b><c/></b><d><e/><f/></d></a></doc>"#).unwrap();
+    let root = xoz
+        .parse_str(r#"<doc><a><b><c/></b><d><e/><f/></d></a></doc>"#)
+        .unwrap();
     let doc_el = xoz.document_element(root);
     let a = xoz.first_child(doc_el).unwrap();
     let b = xoz.first_child(a).unwrap();
@@ -143,7 +163,9 @@ fn test_descendants_or_self_one_node() {
 #[test]
 fn test_following() {
     let mut xoz = Xoz::new();
-    let root = xoz.parse_str(r#"<doc><a><b><c/></b><d><e/><f/></d></a></doc>"#).unwrap();
+    let root = xoz
+        .parse_str(r#"<doc><a><b><c/></b><d><e/><f/></d></a></doc>"#)
+        .unwrap();
     let doc_el = xoz.document_element(root);
     let a = xoz.first_child(doc_el).unwrap();
     let b = xoz.first_child(a).unwrap();
@@ -158,7 +180,9 @@ fn test_following() {
 #[test]
 fn test_preceding() {
     let mut xoz = Xoz::new();
-    let root = xoz.parse_str(r#"<doc><a><b><c/></b><d><e/><f/></d></a></doc>"#).unwrap();
+    let root = xoz
+        .parse_str(r#"<doc><a><b><c/></b><d><e/><f/></d></a></doc>"#)
+        .unwrap();
     let doc_el = xoz.document_element(root);
     let a = xoz.first_child(doc_el).unwrap();
     let b = xoz.first_child(a).unwrap();
@@ -174,7 +198,8 @@ fn test_preceding() {
 fn test_following_two() {
     let mut xoz = Xoz::new();
     let root = xoz
-        .parse_str(r#"<x><a><b><d/><e/></b><c><f/><g/></c></a><y/></x>"#).unwrap();
+        .parse_str(r#"<x><a><b><d/><e/></b><c><f/><g/></c></a><y/></x>"#)
+        .unwrap();
     let x = xoz.document_element(root);
     let a = xoz.first_child(x).unwrap();
     let b = xoz.first_child(a).unwrap();
@@ -193,7 +218,8 @@ fn test_following_two() {
 fn test_preceding_two() {
     let mut xoz = Xoz::new();
     let root = xoz
-        .parse_str(r#"<x><a><b><d/><e/></b><c><f/><g/></c></a><y/></x>"#).unwrap();
+        .parse_str(r#"<x><a><b><d/><e/></b><c><f/><g/></c></a><y/></x>"#)
+        .unwrap();
     let x = xoz.document_element(root);
     let a = xoz.first_child(x).unwrap();
     let b = xoz.first_child(a).unwrap();
@@ -229,7 +255,9 @@ fn test_tagged_descendants() {
 #[test]
 fn test_tagged_descendants_next_sibling() {
     let mut xoz = Xoz::new();
-    let root = xoz.parse_str(r#"<doc><a><b/></a><c><b/></c></doc>"#).unwrap();
+    let root = xoz
+        .parse_str(r#"<doc><a><b/></a><c><b/></c></doc>"#)
+        .unwrap();
     let doc_el = xoz.document_element(root);
     let tagged_descendants: Vec<_> = xoz
         .typed_descendants(doc_el, NodeType::element("b"))
@@ -275,7 +303,9 @@ fn test_tagged_descendants_or_self() {
 #[test]
 fn test_tagged_descendants_or_self_next_sibling() {
     let mut xoz = Xoz::new();
-    let root = xoz.parse_str(r#"<doc><a><b/></a><c><b/></c></doc>"#).unwrap();
+    let root = xoz
+        .parse_str(r#"<doc><a><b/></a><c><b/></c></doc>"#)
+        .unwrap();
     let doc_el = xoz.document_element(root);
     let tagged_descendants: Vec<_> = xoz
         .typed_descendants_or_self(doc_el, NodeType::element("b"))
@@ -310,7 +340,9 @@ fn test_tagged_descendants_or_self_including_self2() {
 #[test]
 fn test_typed_descendants_bug() {
     let mut xoz = Xoz::new();
-    let root = xoz.parse_str("<d><p>foo<a/>bar</p><p>baz<a/></p></d>").unwrap();
+    let root = xoz
+        .parse_str("<d><p>foo<a/>bar</p><p>baz<a/></p></d>")
+        .unwrap();
     let d = xoz.document_element(root);
     let p = xoz.first_child(d).unwrap();
     let text = xoz.first_child(p).unwrap();
@@ -332,7 +364,9 @@ fn test_typed_descendants_bug() {
 #[test]
 fn test_typed_following1() {
     let mut xoz = Xoz::new();
-    let root = xoz.parse_str(r#"<doc><a><b><c/></b><d><e/><f/></d></a></doc>"#).unwrap();
+    let root = xoz
+        .parse_str(r#"<doc><a><b><c/></b><d><e/><f/></d></a></doc>"#)
+        .unwrap();
     let doc_el = xoz.document_element(root);
     let a = xoz.first_child(doc_el).unwrap();
     let b = xoz.first_child(a).unwrap();
@@ -348,7 +382,8 @@ fn test_typed_following1() {
 #[test]
 fn test_typed_following2() {
     let mut xoz = Xoz::new();
-    let root = xoz.parse_str(r#"<doc><f/><a><b><c/></b><d><e/><f/></d></a><f/></doc>"#)
+    let root = xoz
+        .parse_str(r#"<doc><f/><a><b><c/></b><d><e/><f/></d></a><f/></doc>"#)
         .unwrap();
     let doc_el = xoz.document_element(root);
     let f1 = xoz.first_child(doc_el).unwrap();

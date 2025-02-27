@@ -17,6 +17,11 @@ impl Xoz {
         document.preorder(node.document_node)
     }
 
+    /// Sort key for node.
+    ///
+    /// This can be used to sort nodes in a stable way: nodes in the
+    /// same document sort together, and within the same document
+    /// sort in preorder.
     pub fn sort_key(&self, node: Node) -> (usize, usize) {
         let document = self.document(node.document_id);
         (document.id.index(), document.preorder(node.document_node))

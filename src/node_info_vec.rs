@@ -1,6 +1,7 @@
 use sucds::{
     bit_vectors::{Rank, SArray, Select},
     int_vectors::CompactVector,
+    Serializable,
 };
 use vers_vecs::{BitVec, WaveletMatrix};
 
@@ -37,6 +38,9 @@ impl NodeInfoId {
     }
 }
 pub(crate) trait NodeInfoVec {
+    /// heap size
+    fn heap_size(&self) -> usize;
+
     /// Returns the node info id at position `i`.
     ///
     /// Returns `None` if `i` is out of bounds.
@@ -55,6 +59,10 @@ pub(crate) trait NodeInfoVec {
 
 // A wavelet matrix implementation, based on Vers' wavelet matrix
 impl NodeInfoVec for WaveletMatrix {
+    fn heap_size(&self) -> usize {
+        self.heap_size()
+    }
+
     fn get_node_info_id(&self, i: usize) -> Option<NodeInfoId> {
         self.get_u64(i).map(NodeInfoId::new)
     }
@@ -113,6 +121,15 @@ impl SArrayMatrix {
 }
 
 impl NodeInfoVec for SArrayMatrix {
+    fn heap_size(&self) -> usize {
+        self.tags.size_in_bytes()
+            + self
+                .sarrays
+                .iter()
+                .map(|s| s.size_in_bytes())
+                .sum::<usize>()
+    }
+
     fn get_node_info_id(&self, i: usize) -> Option<NodeInfoId> {
         self.tags.get_int(i).map(|i| NodeInfoId::new(i as u64))
     }

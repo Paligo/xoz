@@ -35,6 +35,13 @@ impl<T: NodeInfoVec> Structure<T> {
         })
     }
 
+    pub(crate) fn heap_size(&self) -> usize {
+        self.node_info_lookup.heap_size()
+            + self.text_opening_parens.heap_size()
+            + self.tree.heap_size()
+            + self.tag_vec.heap_size()
+    }
+
     /// Given a node info, return the tag id if it exists
     pub(crate) fn lookup_node_info_id(&self, node_info: &NodeInfo) -> Option<NodeInfoId> {
         self.node_info_lookup.by_node_info(node_info)

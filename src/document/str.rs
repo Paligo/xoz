@@ -13,6 +13,14 @@ impl Document {
         }
     }
 
+    pub fn attribute_str(&self, node: Node) -> Option<&str> {
+        if matches!(self.node_type(node), NodeType::Attribute(_)) {
+            self.node_str(node)
+        } else {
+            None
+        }
+    }
+
     pub fn comment_str(&self, node: Node) -> Option<&str> {
         if matches!(self.node_type(node), NodeType::Comment) {
             self.node_str(node)
