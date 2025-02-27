@@ -11,3 +11,10 @@ vers-vecs = { path = "../vers" }
 xot = "0.28.0"
 quick-xml = { version = "0.37.2", features = ["encoding"] }
 thiserror = "2.0.11"
+
+[dev-dependencies]
+divan = "0.1.17"
+
+[[bench]]
+name = "descendants"
+harness = false
