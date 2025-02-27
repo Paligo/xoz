@@ -1,6 +1,5 @@
-use quick_xml::Error as QuickXMLError;
-
 use crate::document::{Document, DocumentId, Node as DocumentNode};
+use crate::error::quickxml::Result;
 use crate::parser::parse_document_with_id;
 
 /// A node in the Xoz structure.
@@ -95,7 +94,7 @@ impl Xoz {
     }
 
     /// Parse a string slice into a document and return the root node.
-    pub fn parse_str(&mut self, xml: &str) -> Result<Node, QuickXMLError> {
+    pub fn parse_str(&mut self, xml: &str) -> Result<Node> {
         let document = parse_document_with_id(self.new_document_id(), xml)?;
         let root = document.root();
         let root = document.new_node(root);

@@ -59,7 +59,7 @@
 mod access;
 mod builder;
 mod document;
-mod error;
+pub mod error;
 mod iter;
 mod mta;
 mod mta_compiler;
@@ -79,7 +79,5 @@ mod xozdata;
 pub use document::ProcessingInstruction;
 pub use name::{Namespace, NodeName};
 pub use node::NodeType;
-/// Re-export of the parser error from the [`quick_xml`] crate used for parsing.
-pub use quick_xml::errors::Error as QuickXMLError;
 pub use traverse::TraverseState;
 pub use xozdata::{Node, Xoz};

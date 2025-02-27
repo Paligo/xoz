@@ -1,10 +1,10 @@
-pub use quick_xml::errors::Error as QuickXMLError;
 use quick_xml::events::attributes::Attributes;
 use quick_xml::events::Event;
-use quick_xml::name::{LocalName, NamespaceError, PrefixDeclaration, ResolveResult};
+use quick_xml::name::{LocalName, PrefixDeclaration, ResolveResult};
 use quick_xml::reader::NsReader;
 
 use crate::document::{Document, DocumentId};
+use crate::error::quickxml::{Error, NamespaceError, Result};
 use crate::name::NodeName;
 use crate::node_info_vec::SArrayMatrix;
 use crate::structure::Structure;
@@ -13,11 +13,11 @@ use crate::tree_builder::TreeBuilder;
 use crate::{Namespace, NodeType};
 
 #[cfg(test)]
-pub(crate) fn parse_document(xml: &str) -> Result<Document, QuickXMLError> {
+pub(crate) fn parse_document(xml: &str) -> Result<Document> {
     parse_document_with_id(DocumentId::new(0), xml)
 }
 
-pub(crate) fn parse_document_with_id(id: DocumentId, xml: &str) -> Result<Document, QuickXMLError> {
+pub(crate) fn parse_document_with_id(id: DocumentId, xml: &str) -> Result<Document> {
     let mut reader = NsReader::from_str(xml);
     reader.config_mut().enable_all_checks(true);
     let mut tree_builder = TreeBuilder::new();
@@ -84,7 +84,6 @@ pub(crate) fn parse_document_with_id(id: DocumentId, xml: &str) -> Result<Docume
                     todo!()
                 }
                 Event::Eof => {
-                    // quick-xml seems to check unmatched stuff
                     break;
                 }
             },
@@ -109,7 +108,7 @@ fn build_element_attributes(
     tags_builder: &mut TreeBuilder,
     text_builder: &mut TextBuilder,
     attributes_iter: Attributes<'_>,
-) -> Result<(), QuickXMLError> {
+) -> Result<()> {
     let mut namespaces = Vec::new();
     let mut attributes = Vec::new();
     for attribute in attributes_iter {
@@ -149,7 +148,7 @@ fn build_element_attributes(
     Ok(())
 }
 
-fn node_name<'a>(r: (ResolveResult<'a>, LocalName<'a>)) -> Result<NodeName<'a>, QuickXMLError> {
+fn node_name<'a>(r: (ResolveResult<'a>, LocalName<'a>)) -> Result<NodeName<'a>> {
     let (resolved, local_name) = r;
     Ok(match resolved {
         ResolveResult::Unbound => NodeName::from_bytes(b"", local_name.into_inner()),
@@ -157,9 +156,7 @@ fn node_name<'a>(r: (ResolveResult<'a>, LocalName<'a>)) -> Result<NodeName<'a>, 
             NodeName::from_bytes(namespace.into_inner(), local_name.into_inner())
         }
         ResolveResult::Unknown(prefix) => {
-            return Err(QuickXMLError::Namespace(NamespaceError::UnknownPrefix(
-                prefix,
-            )));
+            return Err(Error::Namespace(NamespaceError::UnknownPrefix(prefix)));
         }
     })
 }
