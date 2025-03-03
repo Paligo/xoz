@@ -1,6 +1,12 @@
 use vers_vecs::trees::Tree;
 
-use crate::{node_info_vec::NodeInfoId, NodeName, NodeType};
+use crate::{
+    node_info_vec::{
+        NodeInfoId, COMMENT_NODE_INFO_OPEN_ID, DOCUMENT_NODE_INFO_OPEN_ID,
+        PROCESSING_INSTRUCTION_NODE_INFO_OPEN_ID, TEXT_NODE_INFO_OPEN_ID,
+    },
+    NodeName, NodeType,
+};
 
 use super::{Document, Node};
 
@@ -34,8 +40,12 @@ impl Document {
         node_info.node_type()
     }
 
+    fn is_known_node_info_id(&self, node: Node, node_info_id: NodeInfoId) -> bool {
+        self.structure.node_info_id(node.get()) == node_info_id
+    }
+
     pub fn is_document(&self, node: Node) -> bool {
-        matches!(self.node_type(node), NodeType::Document)
+        self.is_known_node_info_id(node, DOCUMENT_NODE_INFO_OPEN_ID)
     }
 
     pub fn is_element(&self, node: Node) -> bool {
@@ -43,15 +53,15 @@ impl Document {
     }
 
     pub fn is_text(&self, node: Node) -> bool {
-        matches!(self.node_type(node), NodeType::Text)
+        self.is_known_node_info_id(node, TEXT_NODE_INFO_OPEN_ID)
     }
 
     pub fn is_comment(&self, node: Node) -> bool {
-        matches!(self.node_type(node), NodeType::Comment)
+        self.is_known_node_info_id(node, COMMENT_NODE_INFO_OPEN_ID)
     }
 
     pub fn is_processing_instruction(&self, node: Node) -> bool {
-        matches!(self.node_type(node), NodeType::ProcessingInstruction)
+        self.is_known_node_info_id(node, PROCESSING_INSTRUCTION_NODE_INFO_OPEN_ID)
     }
 
     pub fn is_attribute(&self, node: Node) -> bool {
