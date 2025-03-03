@@ -1,8 +1,4 @@
-use sucds::{
-    bit_vectors::{Rank, SArray, Select},
-    int_vectors::CompactVector,
-    Serializable,
-};
+use sucds::{int_vectors::CompactVector, Serializable};
 use vers_vecs::{BitVec, SparseRSVec, WaveletMatrix};
 
 use crate::error::Error;
@@ -159,25 +155,6 @@ impl NodeInfoVec for SArrayMatrix {
         } else {
             None
         }
-    }
-}
-
-struct BitIterator<'a> {
-    tags_usage: &'a [u64],
-    id: u64,
-    index: usize,
-}
-
-impl Iterator for BitIterator<'_> {
-    type Item = bool;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.index >= self.tags_usage.len() {
-            return None;
-        }
-        let bit = self.tags_usage[self.index] == self.id;
-        self.index += 1;
-        Some(bit)
     }
 }
 
