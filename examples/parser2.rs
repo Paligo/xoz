@@ -5,9 +5,11 @@ use xoz::Xoz;
 fn main() {
     let xml = load_xml_data("treebank_e.xml");
     let mut xoz = Xoz::new();
+    let start = std::time::Instant::now();
     let root = xoz.parse_str(&xml).unwrap();
     black_box(root);
-    println!("Parsed treebank_e.xml");
+    let elapsed = start.elapsed();
+    println!("Parsed treebank_e.xml, elapsed: {:?}", elapsed);
 }
 
 fn load_xml_data(name: &str) -> String {
