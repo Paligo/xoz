@@ -107,21 +107,16 @@ impl SArrayMatrix {
     pub(crate) fn new(tags_usage: &[u64], amount: usize) -> Result<SArrayMatrix, Error> {
         // we can unwrap as we know that u64 can be converted to usize
         let tags = CompactVector::from_slice(tags_usage).unwrap();
-        let sarrays = (0..amount)
-            .map(|id| {
-                let positions: Vec<u64> = tags_usage
-                    .iter()
-                    .enumerate()
-                    .filter_map(|(i, &tag)| {
-                        if tag == id as u64 {
-                            Some(i as u64)
-                        } else {
-                            None
-                        }
-                    })
-                    .collect();
-                SparseRSVec::new(&positions, tags_usage.len() as u64)
-            })
+        let mut sarray_positions: Vec<Vec<u64>> = vec![vec![]; amount];
+        for (i, entry) in tags_usage.iter().enumerate() {
+            let positions = sarray_positions
+                .get_mut(*entry as usize)
+                .expect("entry should be present");
+            positions.push(i as u64);
+        }
+        let sarrays = sarray_positions
+            .into_iter()
+            .map(|positions| SparseRSVec::new(&positions, tags_usage.len() as u64))
             .collect();
         Ok(SArrayMatrix {
             tags,
