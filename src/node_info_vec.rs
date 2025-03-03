@@ -3,7 +3,7 @@ use sucds::{
     int_vectors::CompactVector,
     Serializable,
 };
-use vers_vecs::{BitVec, WaveletMatrix};
+use vers_vecs::{BitVec, SparseRSVec, WaveletMatrix};
 
 use crate::error::Error;
 
@@ -46,14 +46,18 @@ pub(crate) trait NodeInfoVec {
     /// Returns `None` if `i` is out of bounds.
     fn get_node_info_id(&self, i: usize) -> Option<NodeInfoId>;
 
+    // TODO: are out of bound queries something that happens in
+    // practice? otherwise this API could be simplified maybe
+
     /// Returns the number of occurrences of `node_info_id` up to position `i`.
     ///
-    /// If `i` is out of bounds, it returns `None`.
+    /// If `i` is out of bounds, it returns `None`. The length itself is
+    /// still considered in bounds.
     fn rank_node_info_id(&self, i: usize, node_info_id: NodeInfoId) -> Option<usize>;
 
     /// Returns the position of the `rank`-th occurrence of `node_info_id`.
     ///
-    /// Of the rankth occurrence of `node_info_id` does not exist, it returns `None`
+    /// If the rankth occurrence of `node_info_id` does not exist, it returns `None`
     fn select_node_info_id(&self, rank: usize, node_info_id: NodeInfoId) -> Option<usize>;
 }
 
@@ -99,7 +103,8 @@ pub(crate) fn make_wavelet_matrix_tag_vec(
 #[derive(Debug)]
 pub(crate) struct SArrayMatrix {
     tags: CompactVector,
-    sarrays: Vec<SArray>,
+    sarrays: Vec<SparseRSVec>,
+    len: usize,
 }
 
 impl SArrayMatrix {
@@ -108,26 +113,31 @@ impl SArrayMatrix {
         let tags = CompactVector::from_slice(tags_usage).unwrap();
         let sarrays = (0..amount)
             .map(|id| {
-                SArray::from_bits(BitIterator {
-                    tags_usage,
-                    id: id as u64,
-                    index: 0,
-                })
-                .enable_rank()
+                let positions: Vec<u64> = tags_usage
+                    .iter()
+                    .enumerate()
+                    .filter_map(|(i, &tag)| {
+                        if tag == id as u64 {
+                            Some(i as u64)
+                        } else {
+                            None
+                        }
+                    })
+                    .collect();
+                SparseRSVec::new(&positions, tags_usage.len() as u64)
             })
             .collect();
-        Ok(SArrayMatrix { tags, sarrays })
+        Ok(SArrayMatrix {
+            tags,
+            sarrays,
+            len: tags_usage.len(),
+        })
     }
 }
 
 impl NodeInfoVec for SArrayMatrix {
     fn heap_size(&self) -> usize {
-        self.tags.size_in_bytes()
-            + self
-                .sarrays
-                .iter()
-                .map(|s| s.size_in_bytes())
-                .sum::<usize>()
+        self.tags.size_in_bytes() + self.sarrays.iter().map(|s| s.heap_size()).sum::<usize>()
     }
 
     fn get_node_info_id(&self, i: usize) -> Option<NodeInfoId> {
@@ -135,11 +145,20 @@ impl NodeInfoVec for SArrayMatrix {
     }
 
     fn rank_node_info_id(&self, i: usize, node_info_id: NodeInfoId) -> Option<usize> {
-        self.sarrays[node_info_id.id() as usize].rank1(i)
+        if i <= self.len {
+            Some(self.sarrays[node_info_id.id() as usize].rank1(i as u64) as usize)
+        } else {
+            None
+        }
     }
 
     fn select_node_info_id(&self, rank: usize, node_info_id: NodeInfoId) -> Option<usize> {
-        self.sarrays[node_info_id.id() as usize].select1(rank)
+        let s = self.sarrays[node_info_id.id() as usize].select1(rank) as usize;
+        if self.len != s {
+            Some(s)
+        } else {
+            None
+        }
     }
 }
 
