@@ -14,10 +14,16 @@ pub(crate) struct NodeInfoLookup {
 
 impl NodeInfoLookup {
     pub(crate) fn new() -> Self {
-        Self {
+        let mut o = Self {
             node_infos: Vec::new(),
             node_info_lookup: HashMap::new(),
-        }
+        };
+        // we ensure these always exist, so that we quickly compare with tag id
+        let namespaces_node_info_id = o.register(NodeInfo::open(NodeType::Namespaces));
+        let attributes_node_info_id = o.register(NodeInfo::open(NodeType::Attributes));
+        debug_assert_eq!(namespaces_node_info_id.id(), NAMESPACES_NODE_INFO_ID.id());
+        debug_assert_eq!(attributes_node_info_id.id(), ATTRIBUTES_NODE_INFO_ID.id());
+        o
     }
 
     pub(crate) fn heap_size(&self) -> usize {
@@ -69,16 +75,8 @@ pub(crate) struct TreeBuilder {
 
 impl TreeBuilder {
     pub(crate) fn new() -> Self {
-        let mut node_info_lookup = NodeInfoLookup::new();
-        // we ensure these always exist, so that we quickly compare with tag id
-        let namespaces_node_info_id =
-            node_info_lookup.register(NodeInfo::open(NodeType::Namespaces));
-        let attributes_node_info_id =
-            node_info_lookup.register(NodeInfo::open(NodeType::Attributes));
-        debug_assert_eq!(namespaces_node_info_id.id(), NAMESPACES_NODE_INFO_ID.id());
-        debug_assert_eq!(attributes_node_info_id.id(), ATTRIBUTES_NODE_INFO_ID.id());
         Self {
-            node_info_lookup,
+            node_info_lookup: NodeInfoLookup::new(),
             parentheses: BitVec::new(),
             text_opening_parens: BitVec::new(),
             usage: Vec::new(),
