@@ -1,40 +1,33 @@
 use std::ops::Range;
 
-use sucds::{
-    bit_vectors::{Rank, SArray, Select},
-    Serializable,
-};
-use vers_vecs::BitVec;
+use vers_vecs::SparseRSVec;
 
 pub(crate) struct TextBuilder {
     s: String,
-    bitmap: BitVec,
+    positions: Vec<u64>,
+    // bitmap: BitVec,
 }
 
 impl TextBuilder {
     pub(crate) fn new() -> Self {
         Self {
             s: String::new(),
-            bitmap: BitVec::new(),
+            positions: Vec::new(), // bitmap: BitVec::new(),
         }
     }
 
     pub(crate) fn text_node(&mut self, text: &str) {
         self.s.push_str(text);
-        // add as many false as there are bytes in the text
-        for _ in 0..text.len() {
-            self.bitmap.append(false);
-        }
         // terminator $, the 0 byte
+        let position = self.s.len() as u64;
         self.s.push('\0');
-        // we have a single true we append now
-        self.bitmap.append(true);
+        self.positions.push(position);
     }
 
     pub(crate) fn build(self) -> TextUsage {
         TextUsage {
+            sarray: SparseRSVec::new(&self.positions, self.s.len() as u64),
             text: self.s,
-            sarray: SArray::from_bits(self.bitmap.iter().map(|b| b != 0)).enable_rank(),
         }
     }
 }
@@ -55,21 +48,17 @@ impl TextId {
 #[derive(Debug)]
 pub(crate) struct TextUsage {
     text: String,
-    sarray: SArray,
+    sarray: SparseRSVec,
 }
 
 impl TextUsage {
     pub(crate) fn heap_size(&self) -> usize {
-        self.text.len() + self.sarray.size_in_bytes()
+        self.text.len() + self.sarray.heap_size()
     }
 
     #[allow(dead_code)]
     pub(crate) fn text_id(&self, index: usize) -> TextId {
-        TextId(
-            self.sarray
-                .rank1(index)
-                .expect("Text index should be in bounds"),
-        )
+        TextId(self.sarray.rank1(index as u64) as usize)
     }
 
     pub(crate) fn text_index(&self, text_id: TextId) -> usize {
@@ -80,7 +69,7 @@ impl TextUsage {
             // we add 1 here as we want the index of the actual start of the
             // text rather than the terminator
             // unwrap is okay as we know we have a text id already
-            self.sarray.select1(id - 1).unwrap() + 1
+            self.sarray.select1(id - 1) as usize + 1
         }
     }
 
