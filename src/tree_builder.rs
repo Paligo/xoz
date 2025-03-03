@@ -3,7 +3,13 @@ use vers_vecs::BitVec;
 
 use crate::{
     node::{NodeInfo, NodeType},
-    node_info_vec::{NodeInfoId, ATTRIBUTES_NODE_INFO_ID, NAMESPACES_NODE_INFO_ID},
+    node_info_vec::{
+        NodeInfoId, ATTRIBUTES_NODE_INFO_CLOSE_ID, ATTRIBUTES_NODE_INFO_OPEN_ID,
+        COMMENT_NODE_INFO_CLOSE_ID, COMMENT_NODE_INFO_OPEN_ID, DOCUMENT_NODE_INFO_CLOSE_ID,
+        DOCUMENT_NODE_INFO_OPEN_ID, NAMESPACES_NODE_INFO_CLOSE_ID, NAMESPACES_NODE_INFO_OPEN_ID,
+        PROCESSING_INSTRUCTION_NODE_INFO_CLOSE_ID, PROCESSING_INSTRUCTION_NODE_INFO_OPEN_ID,
+        TEXT_NODE_INFO_CLOSE_ID, TEXT_NODE_INFO_OPEN_ID,
+    },
 };
 
 #[derive(Debug)]
@@ -18,11 +24,76 @@ impl NodeInfoLookup {
             node_infos: Vec::new(),
             node_info_lookup: HashMap::new(),
         };
-        // we ensure these always exist, so that we quickly compare with tag id
-        let namespaces_node_info_id = o.register(NodeInfo::open(NodeType::Namespaces));
-        let attributes_node_info_id = o.register(NodeInfo::open(NodeType::Attributes));
-        debug_assert_eq!(namespaces_node_info_id.id(), NAMESPACES_NODE_INFO_ID.id());
-        debug_assert_eq!(attributes_node_info_id.id(), ATTRIBUTES_NODE_INFO_ID.id());
+
+        // we ensure the node ids we can recognize quickly without
+        // hash lookup are always the same
+
+        let document_node_info_open_id = o.register_hash_map(NodeInfo::open(NodeType::Document));
+        debug_assert_eq!(
+            document_node_info_open_id.id(),
+            DOCUMENT_NODE_INFO_OPEN_ID.id()
+        );
+        let document_node_info_close_id = o.register_hash_map(NodeInfo::close(NodeType::Document));
+        debug_assert_eq!(
+            document_node_info_close_id.id(),
+            DOCUMENT_NODE_INFO_CLOSE_ID.id()
+        );
+
+        let text_node_info_open_id = o.register_hash_map(NodeInfo::open(NodeType::Text));
+        debug_assert_eq!(text_node_info_open_id.id(), TEXT_NODE_INFO_OPEN_ID.id());
+        let text_node_info_close_id = o.register_hash_map(NodeInfo::close(NodeType::Text));
+        debug_assert_eq!(text_node_info_close_id.id(), TEXT_NODE_INFO_CLOSE_ID.id());
+
+        let comment_node_info_open_id = o.register_hash_map(NodeInfo::open(NodeType::Comment));
+        debug_assert_eq!(
+            comment_node_info_open_id.id(),
+            COMMENT_NODE_INFO_OPEN_ID.id()
+        );
+        let comment_node_info_close_id = o.register_hash_map(NodeInfo::close(NodeType::Comment));
+        debug_assert_eq!(
+            comment_node_info_close_id.id(),
+            COMMENT_NODE_INFO_CLOSE_ID.id()
+        );
+
+        let processing_instruction_node_info_open_id =
+            o.register_hash_map(NodeInfo::open(NodeType::ProcessingInstruction));
+        debug_assert_eq!(
+            processing_instruction_node_info_open_id.id(),
+            PROCESSING_INSTRUCTION_NODE_INFO_OPEN_ID.id()
+        );
+        let processing_instruction_node_info_close_id =
+            o.register_hash_map(NodeInfo::close(NodeType::ProcessingInstruction));
+        debug_assert_eq!(
+            processing_instruction_node_info_close_id.id(),
+            PROCESSING_INSTRUCTION_NODE_INFO_CLOSE_ID.id()
+        );
+
+        let namespaces_node_info_open_id =
+            o.register_hash_map(NodeInfo::open(NodeType::Namespaces));
+        debug_assert_eq!(
+            namespaces_node_info_open_id.id(),
+            NAMESPACES_NODE_INFO_OPEN_ID.id()
+        );
+        let namespaces_node_info_close_id =
+            o.register_hash_map(NodeInfo::close(NodeType::Namespaces));
+        debug_assert_eq!(
+            namespaces_node_info_close_id.id(),
+            NAMESPACES_NODE_INFO_CLOSE_ID.id()
+        );
+
+        let attributes_node_info_open_id =
+            o.register_hash_map(NodeInfo::open(NodeType::Attributes));
+        debug_assert_eq!(
+            attributes_node_info_open_id.id(),
+            ATTRIBUTES_NODE_INFO_OPEN_ID.id()
+        );
+        let attributes_node_info_close_id =
+            o.register_hash_map(NodeInfo::close(NodeType::Attributes));
+        debug_assert_eq!(
+            attributes_node_info_close_id.id(),
+            ATTRIBUTES_NODE_INFO_CLOSE_ID.id()
+        );
+
         o
     }
 
@@ -35,7 +106,30 @@ impl NodeInfoLookup {
         self.node_infos.len() * std::mem::size_of::<NodeInfo>()
     }
 
-    fn register(&mut self, node_info: NodeInfo) -> NodeInfoId {
+    fn register_fast_path(&mut self, node_info: &NodeInfo) -> Option<NodeInfoId> {
+        // first we use the fast path
+        match (node_info.is_open_tag(), node_info.node_type()) {
+            (true, NodeType::Document) => Some(DOCUMENT_NODE_INFO_OPEN_ID),
+            (false, NodeType::Document) => Some(DOCUMENT_NODE_INFO_CLOSE_ID),
+            (true, NodeType::Text) => Some(TEXT_NODE_INFO_OPEN_ID),
+            (false, NodeType::Text) => Some(TEXT_NODE_INFO_CLOSE_ID),
+            (true, NodeType::Comment) => Some(COMMENT_NODE_INFO_OPEN_ID),
+            (false, NodeType::Comment) => Some(COMMENT_NODE_INFO_CLOSE_ID),
+            (true, NodeType::ProcessingInstruction) => {
+                Some(PROCESSING_INSTRUCTION_NODE_INFO_OPEN_ID)
+            }
+            (false, NodeType::ProcessingInstruction) => {
+                Some(PROCESSING_INSTRUCTION_NODE_INFO_CLOSE_ID)
+            }
+            (true, NodeType::Namespaces) => Some(NAMESPACES_NODE_INFO_OPEN_ID),
+            (false, NodeType::Namespaces) => Some(NAMESPACES_NODE_INFO_CLOSE_ID),
+            (true, NodeType::Attributes) => Some(ATTRIBUTES_NODE_INFO_OPEN_ID),
+            (false, NodeType::Attributes) => Some(ATTRIBUTES_NODE_INFO_CLOSE_ID),
+            _ => None,
+        }
+    }
+
+    fn register_hash_map(&mut self, node_info: NodeInfo) -> NodeInfoId {
         if let Some(&idx) = self.node_info_lookup.get(&node_info) {
             return idx;
         }
@@ -44,6 +138,13 @@ impl NodeInfoLookup {
         self.node_infos.push(owned_node_info.clone());
         self.node_info_lookup.insert(owned_node_info, idx);
         idx
+    }
+
+    fn register(&mut self, node_info: NodeInfo) -> NodeInfoId {
+        if let Some(idx) = self.register_fast_path(&node_info) {
+            return idx;
+        }
+        self.register_hash_map(node_info)
     }
 
     pub(crate) fn by_node_info(&self, node_info: &NodeInfo) -> Option<NodeInfoId> {
@@ -138,8 +239,8 @@ mod tests {
         builder.close(NodeType::Element(NodeName::new("", "doc")));
 
         let usage = builder.usage();
-        // starts at 2 because of the namespaces and attributes tags
-        assert_eq!(usage, &[2, 3, 4, 5, 6, 7]);
+        // starts at 12 because of the namespaces and attributes tags
+        assert_eq!(usage, &[12, 13, 14, 15, 16, 17]);
     }
 
     #[test]
@@ -154,6 +255,6 @@ mod tests {
         builder.close(NodeType::Element(NodeName::new("", "doc")));
 
         let usage = builder.usage();
-        assert_eq!(usage, &[2, 3, 4, 3, 4, 5]);
+        assert_eq!(usage, &[12, 13, 14, 13, 14, 15]);
     }
 }

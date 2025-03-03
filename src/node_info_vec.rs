@@ -7,20 +7,30 @@ use crate::error::Error;
 pub(crate) struct NodeInfoId(u64);
 
 // we ensure we always register these first in any document
-pub(crate) const NAMESPACES_NODE_INFO_ID: NodeInfoId = NodeInfoId(0);
-pub(crate) const ATTRIBUTES_NODE_INFO_ID: NodeInfoId = NodeInfoId(1);
+pub(crate) const DOCUMENT_NODE_INFO_OPEN_ID: NodeInfoId = NodeInfoId(0);
+pub(crate) const DOCUMENT_NODE_INFO_CLOSE_ID: NodeInfoId = NodeInfoId(1);
+pub(crate) const TEXT_NODE_INFO_OPEN_ID: NodeInfoId = NodeInfoId(2);
+pub(crate) const TEXT_NODE_INFO_CLOSE_ID: NodeInfoId = NodeInfoId(3);
+pub(crate) const COMMENT_NODE_INFO_OPEN_ID: NodeInfoId = NodeInfoId(4);
+pub(crate) const COMMENT_NODE_INFO_CLOSE_ID: NodeInfoId = NodeInfoId(5);
+pub(crate) const PROCESSING_INSTRUCTION_NODE_INFO_OPEN_ID: NodeInfoId = NodeInfoId(6);
+pub(crate) const PROCESSING_INSTRUCTION_NODE_INFO_CLOSE_ID: NodeInfoId = NodeInfoId(7);
+pub(crate) const NAMESPACES_NODE_INFO_OPEN_ID: NodeInfoId = NodeInfoId(8);
+pub(crate) const NAMESPACES_NODE_INFO_CLOSE_ID: NodeInfoId = NodeInfoId(9);
+pub(crate) const ATTRIBUTES_NODE_INFO_OPEN_ID: NodeInfoId = NodeInfoId(10);
+pub(crate) const ATTRIBUTES_NODE_INFO_CLOSE_ID: NodeInfoId = NodeInfoId(11);
 
 impl NodeInfoId {
     pub(crate) fn is_special(&self) -> bool {
-        *self == NAMESPACES_NODE_INFO_ID || *self == ATTRIBUTES_NODE_INFO_ID
+        *self == NAMESPACES_NODE_INFO_OPEN_ID || *self == ATTRIBUTES_NODE_INFO_OPEN_ID
     }
 
     pub(crate) fn is_namespaces(&self) -> bool {
-        *self == NAMESPACES_NODE_INFO_ID
+        *self == NAMESPACES_NODE_INFO_OPEN_ID
     }
 
     pub(crate) fn is_attributes(&self) -> bool {
-        *self == ATTRIBUTES_NODE_INFO_ID
+        *self == ATTRIBUTES_NODE_INFO_OPEN_ID
     }
 }
 
