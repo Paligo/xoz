@@ -1,3 +1,5 @@
+// this module contains wrappers for the APIs presented by document,
+// supporting multi-document access.
 mod attr;
 mod comp;
 mod core;

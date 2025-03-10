@@ -10,6 +10,7 @@ fn main() {
     black_box(root);
     let elapsed = start.elapsed();
     println!("Parsed mondial-3.0.xml, elapsed: {:?}", elapsed);
+    println!("Heap size: {}", xoz.heap_size())
 }
 
 fn load_xml_data(name: &str) -> String {

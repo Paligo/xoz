@@ -10,6 +10,7 @@ fn main() {
     black_box(root);
     let elapsed = start.elapsed();
     println!("Parsed treebank_e.xml, elapsed: {:?}", elapsed);
+    println!("Heap size: {} bytes", xoz.heap_size())
 }
 
 fn load_xml_data(name: &str) -> String {
