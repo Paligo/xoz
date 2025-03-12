@@ -1,6 +1,6 @@
 # Xoz
 
-Xoz is an experimental read-only XML library with the following features:
+Xoz is read-only XML library with the following features:
 
 * small representation of the XML in memory.
 
@@ -24,5 +24,6 @@ We make use of:
   compressed text. This is based on vers for both rank/select as well as its
   wavelet matrix.
 
-* [sucds](https://crates.io/crates/sucds) - for a sparse sarray that supports
-  rank and select. We use this as an alternative way to connect tags to trees.
+* [sucds](https://crates.io/crates/sucds) - right now still used for arrays
+  that use the minimal amounts of bits, but we aim to build this on top of
+  vers.
